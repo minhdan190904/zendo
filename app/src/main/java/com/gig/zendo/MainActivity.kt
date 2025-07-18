@@ -68,10 +68,8 @@ class MainActivity : ComponentActivity() {
 //                    houseAddress = houseAddress,
 //                    onHouseAddressChange = { houseAddress = it },
 //                    onSaveClick = {
-//                        // TODO: lưu thông tin houseName & houseAddress vào Firebase/Room/…
 //                    },
 //                    onBack = {
-//                        // TODO: nếu muốn quay về màn trước, ví dụ finish()
 //                        finish()
 //                    }
 //                )

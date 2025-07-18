@@ -81,7 +81,6 @@ class LoginActivity : ComponentActivity() {
                         },
 
                         onLoginClick = { email, pass ->
-                            // TODO: Xử lý login bằng email/pass
                         }
                     )
 //                    GoogleLoadingScreen {
