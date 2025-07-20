@@ -1,8 +1,7 @@
 pluginManagement {
     plugins {
-        id("org.jetbrains.kotlin.plugin.compose") version "2.1.0"
-        id("org.jetbrains.kotlin.android") version "2.1.0"
-        id("com.android.application") version "8.3.0"
+        id("org.jetbrains.kotlin.android") version "1.9.24"
+        id("com.android.application") version "8.5.1" // Cập nhật từ 8.3.0
     }
     repositories {
         google {
@@ -26,4 +25,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Zendo"
 include(":app")
- 

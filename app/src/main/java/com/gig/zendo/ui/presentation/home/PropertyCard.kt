@@ -1,29 +1,25 @@
-package com.gig.zendo
+package com.gig.zendo.ui.presentation.home
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
+import com.gig.zendo.ui.common.ConfirmDialog
+import com.gig.zendo.utils.MenuAction
+import com.gig.zendo.ui.common.CustomElevatedButton
 
 @Composable
 fun PropertyCard(
@@ -37,14 +33,16 @@ fun PropertyCard(
     billingMonth: String,
     billingDay: Int,
     onDetailClick: () -> Unit,
-    onMenuClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onExportClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
     ) {
@@ -59,11 +57,12 @@ fun PropertyCard(
                     style = MaterialTheme.typography.titleMedium.copy(color = Color(0xFFFF7043)),
                     modifier = Modifier.weight(1f)
                 )
+
                 MyPopupMenu(actions = listOf(MenuAction.Edit, MenuAction.Delete, MenuAction.Export)) {
                     when (it) {
-                        MenuAction.Edit -> onMenuClick() // Handle edit action
-                        MenuAction.Delete -> onMenuClick() // Handle delete action
-                        MenuAction.Export -> onMenuClick() // Handle export action
+                        MenuAction.Edit -> onEditClick()
+                        MenuAction.Delete -> onDeleteClick()
+                        MenuAction.Export -> onExportClick()
                     }
                 }
             }
@@ -79,7 +78,7 @@ fun PropertyCard(
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(Modifier.width(4.dp))
-                Text(address, style = MaterialTheme.typography.bodyMedium)
+                Text(address, style = MaterialTheme.typography.bodyMedium, color = Color.Black)
             }
 
             Spacer(Modifier.height(12.dp))
@@ -96,7 +95,7 @@ fun PropertyCard(
 
                 // Calendar badge
                 Column {
-                    Text("Ngày thu:", fontSize = 14.sp);
+                    Text("Ngày thu:", fontSize = 14.sp, color = Color.Black);
                     Spacer(modifier = Modifier.height(4.dp))
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -133,12 +132,11 @@ fun PropertyCard(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Doanh thu tháng:", fontSize = 14.sp)
-                    Text("${revenueThisMonth}₫", style = MaterialTheme.typography.titleSmall)
+                    Text("Doanh thu tháng:", fontSize = 14.sp, color = Color.Black)
+                    Text("${revenueThisMonth}₫", style = MaterialTheme.typography.titleSmall, color = Color(0xFFFF7043))
                 }
-                Button(onClick = onDetailClick) {
-                    Text("Chi tiết")
-                }
+
+                CustomElevatedButton(onClick = onDetailClick, text = "Chi tiết")
             }
         }
     }

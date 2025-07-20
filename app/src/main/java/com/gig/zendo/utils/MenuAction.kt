@@ -1,4 +1,4 @@
-package com.gig.zendo
+package com.gig.zendo.utils
 
 sealed class MenuAction(val label: String) {
     data object Edit : MenuAction("Sửa")
