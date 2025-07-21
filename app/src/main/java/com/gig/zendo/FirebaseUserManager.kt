@@ -6,7 +6,6 @@ import android.util.Log
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.userProfileChangeRequest
 
 object FirebaseUserManager {
     private const val TAG = "FirebaseUserManager"

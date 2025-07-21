@@ -83,9 +83,7 @@ fun LabeledTextField(
                 if (onValueChange != null && enabled) {
                     when (inputType) {
                         InputType.TEXT -> {
-                            if (newValue.all { it.isLetter() || it.isWhitespace() }) {
-                                onValueChange(newValue)
-                            }
+                            onValueChange(newValue)
                         }
                         InputType.NUMBER, InputType.MONEY -> {
                             if (newValue.all { it.isDigit() }) {

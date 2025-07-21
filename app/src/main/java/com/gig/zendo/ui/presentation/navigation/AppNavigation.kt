@@ -9,13 +9,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.gig.zendo.ui.presentation.auth.login.GoogleLoginScreen
 import com.gig.zendo.ui.presentation.auth.login.LoginScreen
 import com.gig.zendo.ui.presentation.auth.register.RegisterScreen
 import com.gig.zendo.ui.presentation.home.CreateHouseScreen
+import com.gig.zendo.ui.presentation.instruction.InstructionScreen
+import com.gig.zendo.ui.presentation.room.CreateRoomScreen
+import com.gig.zendo.ui.presentation.room.RoomScreen
 
 @Composable
 fun AppNavigation() {
@@ -42,7 +47,7 @@ fun AppNavigation() {
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = Screens.LoginScreen.route,
+            startDestination = Screens.HouseScreen.route,
             modifier = Modifier.padding(0.dp)
         ) {
             composable(
@@ -90,16 +95,65 @@ fun AppNavigation() {
             }
 
             composable(
-                route = Screens.CreateHouseScreen.route,
+                route = Screens.CreateHouseScreen.route + "/{uid}",
+                arguments = listOf(navArgument("uid") { type = NavType.StringType }),
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ) { backStackEntry ->
+                val uid = backStackEntry.arguments?.getString("uid") ?: ""
+                CreateHouseScreen(
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
+                    uid = uid
+                )
+            }
+
+            composable(
+                route = Screens.RoomScreen.route + "/{houseId}/{houseName}",
+                arguments = listOf(
+                    navArgument("houseId") { type = NavType.StringType },
+                    navArgument("houseName") { type = NavType.StringType }
+                ),
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ) { backStackEntry ->
+                val houseId = backStackEntry.arguments?.getString("houseId") ?: ""
+                val houseName = backStackEntry.arguments?.getString("houseName") ?: ""
+                RoomScreen(
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
+                    houseId = houseId,
+                    houseName = houseName
+                )
+            }
+
+            composable(
+                route = Screens.CreateRoomScreen.route + "/{houseId}",
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ){ backStackEntry ->
+                val houseId = backStackEntry.arguments?.getString("houseId") ?: ""
+                CreateRoomScreen(
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
+                    houseId = houseId
+                )
+            }
+
+            composable(
+                route = Screens.InstructionScreen.route,
                 enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
                 exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
                 popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
                 popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
             ) {
-                CreateHouseScreen(
-                    navController = navController,
-                    snackbarHostState = snackbarHostState
-                )
+                InstructionScreen(navController = navController)
             }
         }
     }

@@ -1,4 +1,4 @@
-import androidx.compose.animation.AnimatedVisibility
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,10 +19,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.gig.zendo.ui.presentation.home.PropertyCard
+import com.gig.zendo.ui.presentation.home.PropertyHouseCard
 import com.gig.zendo.R
 import com.gig.zendo.domain.model.House
 import com.gig.zendo.ui.common.ConfirmDialog
+import com.gig.zendo.ui.common.FunctionIcon
 import com.gig.zendo.ui.presentation.auth.AuthViewModel
 import com.gig.zendo.ui.presentation.home.HouseViewModel
 import com.gig.zendo.ui.presentation.home.ProfilePopupMenu
@@ -43,15 +44,16 @@ fun HouseScreen(
     val showDeleteDialog by viewModel.showDeleteDialog.collectAsStateWithLifecycle()
     val showLogoutDialog by viewModelAuth.showLogoutDialog.collectAsStateWithLifecycle()
     val authState by viewModelAuth.authState.collectAsStateWithLifecycle()
+    val currentUser by viewModelAuth.currentUser.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        viewModel.fetchHouses()
+        viewModel.fetchHouses(currentUser?.uid ?: "")
     }
 
     LaunchedEffect(deleteHouseState) {
         when (deleteHouseState) {
             is UiState.Success -> {
-                viewModel.fetchHouses()
+                viewModel.fetchHouses(currentUser?.uid ?: "")
                 snackbarHostState.showSnackbar("Xóa nhà trọ thành công")
                 viewModel.clearDeleteState()
             }
@@ -135,7 +137,7 @@ fun HouseScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 24.dp, vertical = 16.dp),
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = if (houseState is UiState.Success)
                             Arrangement.Top
@@ -145,14 +147,10 @@ fun HouseScreen(
 
                         when (houseState) {
                             is UiState.Empty -> {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_add),
-                                    contentDescription = null,
-                                    tint = DarkGreen,
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clickable(onClick = { navController.navigate(Screens.CreateHouseScreen.route) })
-                                )
+                                IconButton(onClick = { navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}" ) }) {
+                                    FunctionIcon(iconRes = R.drawable.ic_add, contentDescription = "Tạo nhà trọ mới")
+                                }
+
 
                                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -185,17 +183,12 @@ fun HouseScreen(
 
                             is UiState.Success -> {
 
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_add),
-                                    contentDescription = null,
-                                    tint = DarkGreen,
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clickable(onClick = { navController.navigate(Screens.CreateHouseScreen.route) })
-                                )
+                                IconButton(onClick = { navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}" ) }) {
+                                    FunctionIcon(iconRes = R.drawable.ic_add, contentDescription = "Tạo nhà trọ mới")
+                                }
 
                                 for (house in (houseState as UiState.Success<List<House>>).data) {
-                                    PropertyCard(
+                                    PropertyHouseCard(
                                         title = house.name,
                                         address = house.address,
                                         roomCount = 0,
@@ -205,16 +198,15 @@ fun HouseScreen(
                                         revenueThisMonth = 0,
                                         billingMonth = "7",
                                         billingDay = 1,
-                                        onDetailClick = { /* no-op */ },
+                                        onDetailClick = {
+                                            navController.navigate(Screens.RoomScreen.route + "/${house.id}" + "/${house.name}")
+                                        },
                                         onDeleteClick = {
                                             viewModel.showDeleteHouseDialog(house.id)
                                         },
                                         onExportClick = { /* no-op */ },
                                         onEditClick = {
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp)
+                                        }
                                     )
                                 }
                             }
@@ -248,9 +240,12 @@ fun HouseScreen(
         )
     }
 
-    ProfilePopupMenu(
-        onUpgradeProClick = {},
-        onSupportClick = {},
-        onLogoutClick = {viewModelAuth.showLogoutDialog() },
-    )
+    currentUser?.let {
+        ProfilePopupMenu(
+            onUpgradeProClick = {},
+            onSupportClick = {},
+            onLogoutClick = {viewModelAuth.showLogoutDialog() },
+            currentUser = it,
+        )
+    }
 }

@@ -1,0 +1,182 @@
+package com.gig.zendo.ui.presentation.room
+
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import com.gig.zendo.R
+import com.gig.zendo.ui.common.FunctionIcon
+import com.gig.zendo.ui.presentation.navigation.Screens
+import com.gig.zendo.ui.theme.DarkGreen
+import com.gig.zendo.utils.UiState
+import com.gig.zendo.domain.model.Room
+
+
+data class HomeAction(
+    @DrawableRes val iconRes: Int,
+    val label: String,
+    val onClick: () -> Unit
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RoomScreen(
+    navController: NavController,
+    viewModel: RoomViewModel = hiltViewModel(),
+    snackbarHostState: SnackbarHostState,
+    houseId: String? = null,
+    houseName: String? = null
+) {
+    val actions = listOf(
+        HomeAction(
+            R.drawable.ic_add,
+            "Thêm phòng"
+        ) { navController.navigate(Screens.CreateRoomScreen.route + "/${houseId}") },
+        HomeAction(R.drawable.ic_lightbub, "Ghi điện nước") { /* onRecord() */ },
+        HomeAction(R.drawable.ic_money, "Thu tiền") { /* onCollect() */ },
+        HomeAction(R.drawable.ic_setting, "Cài đặt") { /* onSettings() */ },
+        HomeAction(
+            R.drawable.ic_guide,
+            "Hướng dẫn"
+        ) { navController.navigate(Screens.InstructionScreen.route) },
+    )
+
+    val roomState by viewModel.roomState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchRooms(houseId ?: "")
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text(houseName ?: "Nhà trọ") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                            contentDescription = "Quay lại"
+                        )
+                    }
+                }, colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White,
+                    titleContentColor = Color.Black
+                )
+            )
+        },
+        containerColor = Color.White,
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            ActionMenuRow(actions = actions)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = if (roomState is UiState.Success) Alignment.TopCenter else Alignment.Center
+            ) {
+                if (roomState is UiState.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(48.dp),
+                        color = DarkGreen
+                    )
+                } else if (roomState is UiState.Failure) {
+                    Text(
+                        text = "Lỗi tải dữ liệu",
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center
+                    )
+                } else if (roomState is UiState.Empty) {
+                    EmptyStateMessage()
+                } else {
+                    val rooms = (roomState as UiState.Success<List<Room>>).data
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        items(rooms){ room ->
+                            PropertyRoomCard(
+                                room = room,
+                            )
+                    }
+                }
+            }
+        }
+    }
+}
+}
+
+@Composable
+fun ActionMenuRow(
+    actions: List<HomeAction>,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        actions.forEach { action ->
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = action.onClick
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                FunctionIcon(iconRes = action.iconRes, contentDescription = action.label)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = action.label,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyStateMessage(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Nhà trọ chưa được tạo phòng.",
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Đầu tiên hãy vào “cài đặt” để thiết lập các mặc định.\n" +
+                    "Sau đó hãy tạo phòng mới",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+    }
+}

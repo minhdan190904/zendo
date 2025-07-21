@@ -40,11 +40,13 @@ import com.gig.zendo.utils.UiState
 fun CreateHouseScreen(
     navController: NavController,
     viewModel: HouseViewModel = hiltViewModel(),
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    uid: String
 ) {
     val houseName by viewModel.houseName
     val houseAddress by viewModel.houseAddress
     val createHouseState by viewModel.createHouseState.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -126,7 +128,7 @@ fun CreateHouseScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Button(
-                            onClick = {viewModel.addHouse(houseName, houseAddress)},
+                            onClick = {viewModel.addHouse(houseName, houseAddress, uid)},
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00796B)),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier

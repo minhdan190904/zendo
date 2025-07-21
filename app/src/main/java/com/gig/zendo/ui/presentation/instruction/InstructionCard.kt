@@ -1,4 +1,4 @@
-package com.gig.zendo
+package com.gig.zendo.ui.presentation.instruction
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -14,6 +14,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gig.zendo.ui.common.FunctionIcon
 
 @Composable
 fun InstructionCard(
@@ -26,14 +27,17 @@ fun InstructionCard(
             .padding(vertical = 4.dp, horizontal = 16.dp),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, Color(0xFFDDDDDD)),
-        colors = CardDefaults.outlinedCardColors(containerColor = Color.White)
+        colors = CardDefaults.outlinedCardColors(containerColor = Color.White),
+        elevation = CardDefaults.outlinedCardElevation(
+            defaultElevation = 4.dp
+        )
     ) {
         Row(
             verticalAlignment = Alignment.Top,
             modifier = Modifier
                 .padding(16.dp)
         ) {
-            // Số thứ tự trong vòng tròn
+
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -66,12 +70,7 @@ fun InstructionCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            Icon(
-                painter = painterResource(id = item.iconRes),
-                contentDescription = null,
-                tint = Color(0xFFFF7043),
-                modifier = Modifier.size(24.dp)
-            )
+            FunctionIcon(iconRes = item.iconRes, contentDescription = item.title)
         }
     }
 }

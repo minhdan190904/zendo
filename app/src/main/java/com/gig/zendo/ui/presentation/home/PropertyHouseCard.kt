@@ -17,12 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
-import com.gig.zendo.ui.common.ConfirmDialog
 import com.gig.zendo.utils.MenuAction
 import com.gig.zendo.ui.common.CustomElevatedButton
+import com.gig.zendo.ui.common.MyPopupMenu
+import com.gig.zendo.ui.common.StatOfProperty
 
 @Composable
-fun PropertyCard(
+fun PropertyHouseCard(
     title: String,
     address: String,
     roomCount: Int,
@@ -36,7 +37,6 @@ fun PropertyCard(
     onDeleteClick: () -> Unit,
     onEditClick: () -> Unit,
     onExportClick: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -58,11 +58,12 @@ fun PropertyCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                MyPopupMenu(actions = listOf(MenuAction.Edit, MenuAction.Delete, MenuAction.Export)) {
+                MyPopupMenu(actions = listOf(MenuAction.EditHouse, MenuAction.DeleteHouse, MenuAction.ExportExcel)) {
                     when (it) {
-                        MenuAction.Edit -> onEditClick()
-                        MenuAction.Delete -> onDeleteClick()
-                        MenuAction.Export -> onExportClick()
+                        MenuAction.EditHouse -> onEditClick()
+                        MenuAction.DeleteHouse -> onDeleteClick()
+                        MenuAction.ExportExcel -> onExportClick()
+                        else -> {}
                     }
                 }
             }
@@ -87,10 +88,10 @@ fun PropertyCard(
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
                     // Room stats
-                    StatOfHouse(title = "Tổng phòng:", value = roomCount.toString())
-                    StatOfHouse(title = "Số phòng trống:", value = availableCount.toString())
-                    StatOfHouse(title = "Số phòng thiếu tiền:", value = overdueCount.toString())
-                    StatOfHouse(title = "Số tiền còn thiếu:", value = "${overdueAmount}₫")
+                    StatOfProperty(title = "Tổng phòng:", value = roomCount.toString())
+                    StatOfProperty(title = "Số phòng trống:", value = availableCount.toString())
+                    StatOfProperty(title = "Số phòng thiếu tiền:", value = overdueCount.toString())
+                    StatOfProperty(title = "Số tiền còn thiếu:", value = "${overdueAmount}₫")
                 }
 
                 // Calendar badge
@@ -100,7 +101,6 @@ fun PropertyCard(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-//                        .clip(RoundedCornerShape(8.dp))
                             .border(2.dp, Color.Black, RoundedCornerShape(12.dp))
                             .padding(8.dp)
                             .width(IntrinsicSize.Max)
@@ -139,27 +139,5 @@ fun PropertyCard(
                 CustomElevatedButton(onClick = onDetailClick, text = "Chi tiết")
             }
         }
-    }
-}
-
-@Composable
-fun StatOfHouse(
-    title: String,
-    value: String,
-){
-    Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier.fillMaxWidth(0.65f)
-    ) {
-        Text(
-            text = title,
-            fontSize = 14.sp,
-            color = Color.Black
-        )
-        Text(
-            text = value,
-            fontSize = 14.sp,
-            color = Color.Black
-        )
     }
 }

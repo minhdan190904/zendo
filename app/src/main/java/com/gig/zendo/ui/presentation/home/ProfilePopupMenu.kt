@@ -17,12 +17,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gig.zendo.R
+import com.gig.zendo.domain.model.User
 
 @Composable
 fun ProfilePopupMenu(
     onUpgradeProClick: () -> Unit,
     onSupportClick: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    currentUser: User,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -44,7 +46,8 @@ fun ProfilePopupMenu(
                     ) { expanded = true }
             ) {
                 Text(
-                    text = "D",
+                    text = currentUser.email.takeIf { it!!.isNotEmpty() }?.firstOrNull()?.uppercase()
+                        ?: "?",
                     fontSize = 20.sp,
                     color = Color.White,
                     modifier = Modifier.align(Alignment.Center)
@@ -63,13 +66,13 @@ fun ProfilePopupMenu(
                     onDismissRequest = { expanded = false }
                 ) {
                     Text(
-                        text = "danminh213123",
+                        text = currentUser.getUsernameByEmail(),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
                     Text(
-                        text = "danminh213123@gmail.com",
+                        text = currentUser.email ?: "No email",
                         fontSize = 14.sp,
                         color = Color.Gray
                     )

@@ -31,17 +31,19 @@ class HouseViewModel @Inject constructor(
 
     var houseName = mutableStateOf("")
         private set
+
     var houseAddress = mutableStateOf("")
         private set
 
-    fun addHouse(name: String, address: String) {
+    fun addHouse(name: String, address: String, uid: String) {
         _createHouseState.value = UiState.Loading
         viewModelScope.launch {
             _createHouseState.value = houseRepository.addHouse(
                 House(
                     id = "",
                     name = name,
-                    address = address
+                    address = address,
+                    uid = uid
                 )
             )
         }
@@ -55,10 +57,10 @@ class HouseViewModel @Inject constructor(
         _showDeleteDialog.value = null
     }
 
-    fun fetchHouses() {
+    fun fetchHouses(uid: String) {
         _houseState.value = UiState.Loading
         viewModelScope.launch {
-            _houseState.value = houseRepository.getHouses()
+            _houseState.value = houseRepository.getHouses(uid)
         }
     }
 

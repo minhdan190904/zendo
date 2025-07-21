@@ -18,14 +18,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ZendoTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                )
-                {
-                    AppNavigation()
-                }
+            ZendoTheme(darkTheme = false) {
+                AppNavigation()
             }
         }
     }

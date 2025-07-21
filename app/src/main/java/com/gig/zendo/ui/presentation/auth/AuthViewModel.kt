@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gig.zendo.GoogleSignInHelper
 import com.gig.zendo.data.repository.AuthRepositoryImpl
+import com.gig.zendo.domain.model.User
 import com.gig.zendo.domain.repository.AuthRepository
 import com.gig.zendo.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,9 +28,12 @@ class AuthViewModel @Inject constructor(
     private val _showLogoutDialog = MutableStateFlow(false)
     val showLogoutDialog: StateFlow<Boolean> = _showLogoutDialog
 
-//    init {
+    val currentUser = MutableStateFlow<User?>(null)
+
+    init {
 //        checkUserLoggedIn()
-//    }
+        getCurrentUser()
+    }
 
     //for login screen
     var emailLogin = mutableStateOf("")
@@ -73,6 +77,17 @@ class AuthViewModel @Inject constructor(
                 _authState.value = authRepository.loginWithGoogle(idToken)
             } catch (e: Exception) {
                 _authState.value = UiState.Failure(e.message)
+            }
+        }
+    }
+
+    private fun getCurrentUser() {
+        viewModelScope.launch {
+            val result = authRepository.getCurrentUser()
+            if (result is UiState.Success) {
+                currentUser.value = result.data
+            } else {
+                currentUser.value = null
             }
         }
     }

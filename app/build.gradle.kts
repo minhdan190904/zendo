@@ -109,7 +109,8 @@ dependencies {
 
     // Animation
     implementation("com.google.accompanist:accompanist-navigation-animation:0.34.0")
-
-
     implementation("androidx.compose.material3:material3:1.2.1")
+
+    //Cloudinary
+    implementation("com.cloudinary:cloudinary-android:2.5.0")
 }

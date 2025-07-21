@@ -1,7 +1,6 @@
-package com.gig.zendo
+package com.gig.zendo.ui.presentation.instruction
 
 import androidx.annotation.DrawableRes
-import androidx.compose.ui.graphics.vector.ImageVector
 
 data class InstructionItem(
     val id: Int,

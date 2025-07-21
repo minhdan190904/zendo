@@ -6,5 +6,8 @@ sealed class Screens(val route: String) {
     data object GoogleLoginScreen : Screens(route = "GoogleLoginScreen")
     data object HouseScreen : Screens(route = "HouseScreen")
     data object CreateHouseScreen : Screens(route = "CreateHouseScreen")
+    data object RoomScreen : Screens(route = "RoomScreen")
+    data object InstructionScreen : Screens(route = "InstructionScreen")
+    data object CreateRoomScreen : Screens(route = "CreateRoomScreen")
     data object SampleScreen : Screens(route = "SampleScreen")
 }
