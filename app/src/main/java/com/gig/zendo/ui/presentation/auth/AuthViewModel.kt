@@ -5,8 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gig.zendo.GoogleSignInHelper
-import com.gig.zendo.data.repository.AuthRepositoryImpl
+import com.gig.zendo.utils.GoogleSignInHelper
 import com.gig.zendo.domain.model.User
 import com.gig.zendo.domain.repository.AuthRepository
 import com.gig.zendo.utils.UiState

@@ -1,8 +1,9 @@
-package com.gig.zendo
+package com.gig.zendo.utils
 
 import android.content.Context
 import androidx.credentials.*
 import androidx.credentials.exceptions.GetCredentialException
+import com.gig.zendo.R
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
