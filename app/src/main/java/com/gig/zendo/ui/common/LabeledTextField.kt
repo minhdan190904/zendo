@@ -9,6 +9,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -86,7 +87,10 @@ fun LabeledTextField(
                             onValueChange(newValue)
                         }
                         InputType.NUMBER, InputType.MONEY -> {
-                            if (newValue.all { it.isDigit() }) {
+                            if(newValue.isEmpty()){
+                                onValueChange(0.toString())
+                            }
+                            else if (newValue.all { it.isDigit()}) {
                                 onValueChange(newValue)
                             }
                         }
@@ -119,7 +123,20 @@ fun LabeledTextField(
                 InputType.MONEY -> MoneyVisualTransformation()
                 else -> VisualTransformation.None
             },
-            isError = errorMessage != null
+            isError = errorMessage != null,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
+                errorContainerColor = Color.Transparent,
+                focusedIndicatorColor = Color.LightGray,
+                unfocusedIndicatorColor = Color.LightGray,
+                disabledIndicatorColor = Color.LightGray,
+                errorIndicatorColor = Color.Red,
+                disabledPlaceholderColor = Color.LightGray,
+                focusedPlaceholderColor = Color.LightGray,
+                unfocusedPlaceholderColor = Color.LightGray,
+            )
         )
         errorMessage?.let {
             Text(

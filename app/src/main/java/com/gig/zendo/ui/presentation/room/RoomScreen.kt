@@ -52,7 +52,7 @@ fun RoomScreen(
         ) { navController.navigate(Screens.CreateRoomScreen.route + "/${houseId}") },
         HomeAction(R.drawable.ic_lightbub, "Ghi điện nước") { /* onRecord() */ },
         HomeAction(R.drawable.ic_money, "Thu tiền") { /* onCollect() */ },
-        HomeAction(R.drawable.ic_setting, "Cài đặt") { /* onSettings() */ },
+        HomeAction(R.drawable.ic_setting, "Cài đặt") { navController.navigate(Screens.ServiceScreen.route + "/${houseId}") },
         HomeAction(
             R.drawable.ic_guide,
             "Hướng dẫn"

@@ -1,6 +1,7 @@
 package com.gig.zendo.data.repository
 
 import com.gig.zendo.domain.model.House
+import com.gig.zendo.domain.model.Service
 import com.gig.zendo.domain.repository.HouseRepository
 import com.gig.zendo.utils.UiState
 import com.google.firebase.firestore.FirebaseFirestore
@@ -63,4 +64,47 @@ class HouseRepositoryImpl @Inject constructor(
             UiState.Failure(e.message ?: "Failed to update house")
         }
     }
+
+    override suspend fun getHouseById(houseId: String): UiState<House> {
+        return try {
+            val document = firestore.collection(House.COLLECTION_NAME).document(houseId).get().await()
+            if (document.exists()) {
+                val house = document.toObject<House>()
+                if (house != null) {
+                    UiState.Success(house)
+                } else {
+                    UiState.Failure("House not found")
+                }
+            } else {
+                UiState.Failure("House not found")
+            }
+        } catch (e: Exception) {
+            UiState.Failure(e.message ?: "Failed to fetch house by ID")
+        }
+    }
+
+    override suspend fun updateHouseServices(
+        houseId: String,
+        rentService: Service?,
+        electricService: Service?,
+        waterService: Service?,
+        billingDay: Int?
+    ): UiState<Unit> {
+        return try {
+            val updateMap = mapOf(
+                House.FIELD_RENT_SERVICE to rentService,
+                House.FIELD_ELECTRIC_SERVICE to electricService,
+                House.FIELD_WATER_SERVICE to waterService,
+                House.FIELD_BILLING_DAY to billingDay
+            )
+            firestore.collection(House.COLLECTION_NAME)
+                .document(houseId)
+                .update(updateMap)
+                .await()
+            UiState.Success(Unit)
+        } catch (e: Exception) {
+            UiState.Failure(e.message ?: "Failed to update services")
+        }
+    }
+
 }

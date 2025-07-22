@@ -39,7 +39,7 @@ fun HouseScreen(
     snackbarHostState: SnackbarHostState
 ) {
 
-    val houseState by viewModel.houseState.collectAsStateWithLifecycle()
+    val housesState by viewModel.housesState.collectAsStateWithLifecycle()
     val deleteHouseState by viewModel.deleteHouseState.collectAsStateWithLifecycle()
     val showDeleteDialog by viewModel.showDeleteDialog.collectAsStateWithLifecycle()
     val showLogoutDialog by viewModelAuth.showLogoutDialog.collectAsStateWithLifecycle()
@@ -139,13 +139,13 @@ fun HouseScreen(
                             .verticalScroll(rememberScrollState())
                             .padding(horizontal = 16.dp, vertical = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = if (houseState is UiState.Success)
+                        verticalArrangement = if (housesState is UiState.Success)
                             Arrangement.Top
                         else
                             Arrangement.Center
                     ) {
 
-                        when (houseState) {
+                        when (housesState) {
                             is UiState.Empty -> {
                                 IconButton(onClick = { navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}" ) }) {
                                     FunctionIcon(iconRes = R.drawable.ic_add, contentDescription = "Tạo nhà trọ mới")
@@ -176,7 +176,7 @@ fun HouseScreen(
 
                             is UiState.Failure -> {
                                 Text(
-                                    text = "Lỗi tải dữ liệu: ${(houseState as UiState.Failure).error}",
+                                    text = "Lỗi tải dữ liệu: ${(housesState as UiState.Failure).error}",
                                     color = Color.Red
                                 )
                             }
@@ -187,7 +187,7 @@ fun HouseScreen(
                                     FunctionIcon(iconRes = R.drawable.ic_add, contentDescription = "Tạo nhà trọ mới")
                                 }
 
-                                for (house in (houseState as UiState.Success<List<House>>).data) {
+                                for (house in (housesState as UiState.Success<List<House>>).data) {
                                     PropertyHouseCard(
                                         title = house.name,
                                         address = house.address,

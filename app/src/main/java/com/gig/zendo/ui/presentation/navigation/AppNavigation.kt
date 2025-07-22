@@ -21,6 +21,7 @@ import com.gig.zendo.ui.presentation.home.CreateHouseScreen
 import com.gig.zendo.ui.presentation.instruction.InstructionScreen
 import com.gig.zendo.ui.presentation.room.CreateRoomScreen
 import com.gig.zendo.ui.presentation.room.RoomScreen
+import com.gig.zendo.ui.presentation.service.ServiceScreen
 
 @Composable
 fun AppNavigation() {
@@ -140,6 +141,21 @@ fun AppNavigation() {
             ){ backStackEntry ->
                 val houseId = backStackEntry.arguments?.getString("houseId") ?: ""
                 CreateRoomScreen(
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
+                    houseId = houseId
+                )
+            }
+
+            composable(
+                route = Screens.ServiceScreen.route + "/{houseId}",
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ){ backStackEntry ->
+                val houseId = backStackEntry.arguments?.getString("houseId") ?: ""
+                ServiceScreen(
                     navController = navController,
                     snackbarHostState = snackbarHostState,
                     houseId = houseId
