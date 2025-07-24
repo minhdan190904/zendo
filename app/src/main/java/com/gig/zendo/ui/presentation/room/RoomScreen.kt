@@ -1,5 +1,6 @@
 package com.gig.zendo.ui.presentation.room
 
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -12,14 +13,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.gig.zendo.R
@@ -28,6 +30,9 @@ import com.gig.zendo.ui.presentation.navigation.Screens
 import com.gig.zendo.ui.theme.DarkGreen
 import com.gig.zendo.utils.UiState
 import com.gig.zendo.domain.model.Room
+import com.gig.zendo.domain.model.Tenant
+import com.gig.zendo.ui.common.ConfirmDialog
+import com.gig.zendo.ui.presentation.tenant.getToday
 
 
 data class HomeAction(
@@ -40,10 +45,10 @@ data class HomeAction(
 @Composable
 fun RoomScreen(
     navController: NavController,
-    viewModel: RoomViewModel = hiltViewModel(),
+    viewModel: RoomViewModel,
     snackbarHostState: SnackbarHostState,
-    houseId: String? = null,
-    houseName: String? = null
+    houseId: String,
+    houseName: String
 ) {
     val actions = listOf(
         HomeAction(
@@ -52,22 +57,41 @@ fun RoomScreen(
         ) { navController.navigate(Screens.CreateRoomScreen.route + "/${houseId}") },
         HomeAction(R.drawable.ic_lightbub, "Ghi điện nước") { /* onRecord() */ },
         HomeAction(R.drawable.ic_money, "Thu tiền") { /* onCollect() */ },
-        HomeAction(R.drawable.ic_setting, "Cài đặt") { navController.navigate(Screens.ServiceScreen.route + "/${houseId}") },
+        HomeAction(
+            R.drawable.ic_setting,
+            "Cài đặt"
+        ) { navController.navigate(Screens.ServiceScreen.route + "/${houseId}") },
         HomeAction(
             R.drawable.ic_guide,
             "Hướng dẫn"
-        ) { navController.navigate(Screens.InstructionScreen.route) },
+        ) { navController.navigate(Screens.InstructionScreen.route) }
     )
 
-    val roomState by viewModel.roomState.collectAsStateWithLifecycle()
+    val roomsState by viewModel.roomsState.collectAsStateWithLifecycle()
+    var tenantIdState by remember {
+        mutableStateOf<String?>(null)
+    }
 
     LaunchedEffect(Unit) {
-        viewModel.fetchRooms(houseId ?: "")
+        viewModel.fetchRoomsWithTenants(houseId)
+    }
+
+    tenantIdState?.let { tenantId ->
+        ConfirmDialog(
+            title = "Trả phòng",
+            message = "Bạn có muốn trả phòng này không?",
+            onConfirm = {
+                Log.i("RoomScreen", "Checking out tenant with ID: $tenantId")
+                viewModel.checkOutTenant(tenantId, getToday())
+            },
+            onDismiss = { tenantIdState = null },
+        )
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(houseName ?: "Nhà trọ") },
+            TopAppBar(
+                title = { Text(houseName) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -92,37 +116,56 @@ fun RoomScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize(),
-                contentAlignment = if (roomState is UiState.Success) Alignment.TopCenter else Alignment.Center
+                contentAlignment = if (roomsState is UiState.Success) Alignment.TopCenter else Alignment.Center
             ) {
-                if (roomState is UiState.Loading) {
+                if (roomsState is UiState.Loading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(48.dp),
                         color = DarkGreen
                     )
-                } else if (roomState is UiState.Failure) {
+                } else if (roomsState is UiState.Failure) {
                     Text(
                         text = "Lỗi tải dữ liệu",
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center
                     )
-                } else if (roomState is UiState.Empty) {
+                } else if (roomsState is UiState.Empty) {
                     EmptyStateMessage()
                 } else {
-                    val rooms = (roomState as UiState.Success<List<Room>>).data
+                    val rooms = (roomsState as UiState.Success<List<Pair<Room, List<Tenant>>>>).data
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp)
                     ) {
-                        items(rooms){ room ->
+                        items(rooms) { room ->
+
+                            val tenant = room.second.firstOrNull { it.active == true }
+
                             PropertyRoomCard(
-                                room = room,
+                                room = room.first,
+                                tenant = tenant,
+                                onCreateInvoice = {
+                                    navController.navigate(Screens.CreateInvoiceScreen.route + "/${room.first.id}")
+                                },
+                                onAddTenant = {
+                                    navController.navigate(Screens.CreateTenantScreen.route + "/${room.first.id}")
+                                },
+                                onCheckHistory = {
+                                    navController.navigate(Screens.TenantHistoryScreen.route + "/${room.first.id}")
+                                },
+                                onCheckOut = {
+                                    tenantIdState = tenant?.id
+                                },
+                                onCheckDetail ={
+                                    navController.navigate(Screens.TenantDetailScreen.route + "/${room.first.id}")
+                                }
                             )
+                        }
                     }
                 }
             }
         }
     }
-}
 }
 
 @Composable

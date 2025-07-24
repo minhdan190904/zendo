@@ -17,10 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
-import com.gig.zendo.utils.MenuAction
 import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.MyPopupMenu
 import com.gig.zendo.ui.common.StatOfProperty
+import com.gig.zendo.utils.HouseMenuAction
 
 @Composable
 fun PropertyHouseCard(
@@ -58,12 +58,17 @@ fun PropertyHouseCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                MyPopupMenu(actions = listOf(MenuAction.EditHouse, MenuAction.DeleteHouse, MenuAction.ExportExcel)) {
+                MyPopupMenu(actions = listOf(HouseMenuAction.Edit, HouseMenuAction.Delete, HouseMenuAction.ExportExcel)) {
                     when (it) {
-                        MenuAction.EditHouse -> onEditClick()
-                        MenuAction.DeleteHouse -> onDeleteClick()
-                        MenuAction.ExportExcel -> onExportClick()
-                        else -> {}
+                        HouseMenuAction.Edit -> onEditClick()
+                        HouseMenuAction.Delete -> onDeleteClick()
+                        HouseMenuAction.ExportExcel -> onExportClick()
+                        HouseMenuAction.AddExpense -> {
+                            // Handle add expense action if needed
+                        }
+                        HouseMenuAction.ExpenseDetail -> {
+                            // Handle expense detail action if needed
+                        }
                     }
                 }
             }

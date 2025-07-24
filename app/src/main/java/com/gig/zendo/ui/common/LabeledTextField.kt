@@ -67,7 +67,10 @@ fun LabeledTextField(
     useInternalLabel: Boolean = false,
     labelStyle: TextStyle = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp),
     labelColor: Color = Color.Black,
-    errorMessage: String? = null
+    errorMessage: String? = null,
+    heightSize: Int = 56,
+    readOnly: Boolean = false,
+    trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     Column(modifier = modifier) {
         if (!useInternalLabel) {
@@ -88,7 +91,7 @@ fun LabeledTextField(
                         }
                         InputType.NUMBER, InputType.MONEY -> {
                             if(newValue.isEmpty()){
-                                onValueChange(0.toString())
+                                onValueChange("")
                             }
                             else if (newValue.all { it.isDigit()}) {
                                 onValueChange(newValue)
@@ -105,7 +108,7 @@ fun LabeledTextField(
                     }
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().height(heightSize.dp),
             placeholder = if (placeholder.isNotEmpty()) { { Text(placeholder) } } else null,
             singleLine = singleLine,
             enabled = enabled,
@@ -136,7 +139,9 @@ fun LabeledTextField(
                 disabledPlaceholderColor = Color.LightGray,
                 focusedPlaceholderColor = Color.LightGray,
                 unfocusedPlaceholderColor = Color.LightGray,
-            )
+            ),
+            readOnly = readOnly,
+            trailingIcon = trailingIcon,
         )
         errorMessage?.let {
             Text(

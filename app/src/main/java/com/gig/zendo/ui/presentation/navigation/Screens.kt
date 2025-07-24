@@ -10,4 +10,8 @@ sealed class Screens(val route: String) {
     data object InstructionScreen : Screens(route = "InstructionScreen")
     data object CreateRoomScreen : Screens(route = "CreateRoomScreen")
     data object ServiceScreen : Screens(route = "ServiceScreen")
+    data object CreateTenantScreen : Screens(route = "CreateTenantScreen")
+    data object CreateInvoiceScreen : Screens(route = "CreateInvoiceScreen")
+    data object TenantHistoryScreen : Screens(route = "TenantHistoryScreen")
+    data object TenantDetailScreen : Screens(route = "TenantDetailScreen")
 }

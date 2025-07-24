@@ -4,10 +4,12 @@ import com.gig.zendo.data.repository.AuthRepositoryImpl
 import com.gig.zendo.data.repository.HouseRepositoryImpl
 import com.gig.zendo.data.repository.RoomRepositoryImpl
 import com.gig.zendo.data.repository.ServiceRepositoryImpl
+import com.gig.zendo.data.repository.TenantRepositoryImpl
 import com.gig.zendo.domain.repository.AuthRepository
 import com.gig.zendo.domain.repository.HouseRepository
 import com.gig.zendo.domain.repository.RoomRepository
 import com.gig.zendo.domain.repository.ServiceRepository
+import com.gig.zendo.domain.repository.TenantRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -48,5 +50,13 @@ object RepositoryModule {
         firebaseFirestore: FirebaseFirestore
     ): ServiceRepository {
         return ServiceRepositoryImpl(firebaseFirestore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTenantRepository(
+        firebaseFirestore: FirebaseFirestore
+    ): TenantRepository {
+        return TenantRepositoryImpl(firebaseFirestore)
     }
 }

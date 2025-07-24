@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,14 +20,20 @@ import com.gig.zendo.ui.presentation.auth.login.LoginScreen
 import com.gig.zendo.ui.presentation.auth.register.RegisterScreen
 import com.gig.zendo.ui.presentation.home.CreateHouseScreen
 import com.gig.zendo.ui.presentation.instruction.InstructionScreen
+import com.gig.zendo.ui.presentation.invoice.CreateInvoiceScreen
 import com.gig.zendo.ui.presentation.room.CreateRoomScreen
 import com.gig.zendo.ui.presentation.room.RoomScreen
+import com.gig.zendo.ui.presentation.room.RoomViewModel
 import com.gig.zendo.ui.presentation.service.ServiceScreen
+import com.gig.zendo.ui.presentation.tenant.CreateTenantScreen
+import com.gig.zendo.ui.presentation.tenant.TenantDetailScreen
+import com.gig.zendo.ui.presentation.tenant.TenantHistoryScreen
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
+    val roomViewModel: RoomViewModel = hiltViewModel()
 
     Scaffold(
         snackbarHost = {
@@ -128,7 +135,8 @@ fun AppNavigation() {
                     navController = navController,
                     snackbarHostState = snackbarHostState,
                     houseId = houseId,
-                    houseName = houseName
+                    houseName = houseName,
+                    viewModel = roomViewModel
                 )
             }
 
@@ -170,6 +178,64 @@ fun AppNavigation() {
                 popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
             ) {
                 InstructionScreen(navController = navController)
+            }
+
+            composable(
+                route = Screens.CreateTenantScreen.route + "/{roomId}",
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ){ backStackEntry ->
+                val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
+                CreateTenantScreen(
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
+                    roomId = roomId
+                )
+            }
+
+            composable(
+                route = Screens.CreateInvoiceScreen.route + "/{tenantId}",
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ) { backStackEntry ->
+                val tenantId = backStackEntry.arguments?.getString("tenantId") ?: ""
+                 CreateInvoiceScreen(navController, snackbarHostState, tenantId)
+            }
+
+            composable(
+                route = Screens.TenantHistoryScreen.route + "/{roomId}",
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ) { backStackEntry ->
+                val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
+                TenantHistoryScreen(
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
+                    roomId = roomId,
+                    viewModel = roomViewModel
+                )
+            }
+
+            composable(
+                route = Screens.TenantDetailScreen.route + "/{roomId}",
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ) { backStackEntry ->
+                val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
+                TenantDetailScreen(
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
+                    roomId = roomId,
+                    viewModel = roomViewModel
+                )
             }
         }
     }

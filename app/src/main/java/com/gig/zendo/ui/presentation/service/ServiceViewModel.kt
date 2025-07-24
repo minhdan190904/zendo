@@ -19,8 +19,8 @@ class ServiceViewModel @Inject constructor(
     private val _createServiceState = MutableStateFlow<UiState<Any>>(UiState.Empty)
     val createServiceState: StateFlow<UiState<Any>> = _createServiceState
 
-    private val _serviceState = MutableStateFlow<UiState<List<Service>>>(UiState.Loading)
-    val serviceState: StateFlow<UiState<List<Service>>> = _serviceState
+    private val _servicesState = MutableStateFlow<UiState<List<Service>>>(UiState.Loading)
+    val servicesState: StateFlow<UiState<List<Service>>> = _servicesState
 
     private val _deleteServiceState = MutableStateFlow<UiState<Any>>(UiState.Empty)
     val deleteServiceState: StateFlow<UiState<Any>> = _deleteServiceState
@@ -33,9 +33,9 @@ class ServiceViewModel @Inject constructor(
     }
 
     fun fetchServices(houseId: String) {
-        _serviceState.value = UiState.Loading
+        _servicesState.value = UiState.Loading
         viewModelScope.launch {
-            _serviceState.value = serviceRepository.getServices(houseId)
+            _servicesState.value = serviceRepository.getServices(houseId)
         }
     }
 }

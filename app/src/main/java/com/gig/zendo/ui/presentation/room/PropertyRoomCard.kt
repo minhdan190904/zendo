@@ -15,16 +15,37 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.gig.zendo.domain.model.Room
 import com.gig.zendo.domain.model.Tenant
-import com.gig.zendo.utils.MenuAction
 import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.MyPopupMenu
 import com.gig.zendo.ui.common.StatOfProperty
+import com.gig.zendo.utils.RoomMenuAction
 
 @Composable
 fun PropertyRoomCard(
     tenant: Tenant? = null,
-    room: Room
+    room: Room,
+    onCreateInvoice: () -> Unit = {},
+    onAddTenant: () -> Unit = {},
+    onCheckHistory: () -> Unit = {},
+    onCheckOut: () -> Unit = {},
+    onCheckDetail: () -> Unit = {}
 ) {
+
+    val actionIfRoomNotEmpty = listOf(
+        RoomMenuAction.Edit,
+        RoomMenuAction.Delete,
+        RoomMenuAction.Invoice,
+        RoomMenuAction.History,
+        RoomMenuAction.CheckOut,
+        RoomMenuAction.TenantDetail
+    )
+
+    val actionIfRoomEmpty = listOf(
+        RoomMenuAction.Edit,
+        RoomMenuAction.Delete,
+        RoomMenuAction.History
+    )
+
     Card(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(8.dp),
@@ -46,15 +67,28 @@ fun PropertyRoomCard(
                 )
 
                 MyPopupMenu(
-                    actions = listOf(
-                        MenuAction.EditRoom,
-                        MenuAction.DeleteRoom,
-                        MenuAction.Invoice,
-                        MenuAction.History,
-                        MenuAction.CheckOut,
-                        MenuAction.TenantDetail,
-                    )
+                    actions = if (tenant != null) actionIfRoomNotEmpty else actionIfRoomEmpty,
                 ) {
+                    when (it) {
+                        RoomMenuAction.Edit -> {
+                            // Handle edit room action
+                        }
+                        RoomMenuAction.Delete -> {
+                            // Handle delete room action
+                        }
+                        RoomMenuAction.Invoice -> {
+                            onCreateInvoice()
+                        }
+                        RoomMenuAction.History -> {
+                            onCheckHistory()
+                        }
+                        RoomMenuAction.CheckOut -> {
+                            onCheckOut()
+                        }
+                        RoomMenuAction.TenantDetail -> {
+                            onCheckDetail()
+                        }
+                    }
                 }
             }
 
@@ -105,27 +139,15 @@ fun PropertyRoomCard(
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
             ) {
-                CustomElevatedButton(onClick = {}, text = if(tenant != null) "Tạo hóa đơn" else "Thêm khách")
+                CustomElevatedButton(onClick = {
+                    if(tenant != null) {
+                        onCreateInvoice()
+                    } else {
+                        onAddTenant()
+                    }
+                }, text = if(tenant != null) "Tạo hóa đơn" else "Thêm khách")
             }
         }
 
     }
-}
-
-@Preview
-@Composable
-fun PropertyRoomCardPreview() {
-    val tenant = Tenant(
-        id = "1",
-        name = "Nguyen Van A",
-        phone = "0123456789",
-        startDate = "2023-01-01"
-    )
-    val room = Room(
-        id = "1",
-        name = "Phòng 101",
-        houseId = "1"
-    )
-
-    PropertyRoomCard(tenant = null, room = room)
 }

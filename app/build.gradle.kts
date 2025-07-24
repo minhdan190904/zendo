@@ -113,4 +113,11 @@ dependencies {
 
     //Cloudinary
     implementation("com.cloudinary:cloudinary-android:2.5.0")
+
+    //Coil
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+    //activity-compose
+    implementation("androidx.activity:activity-compose:1.7.2")
+
 }
