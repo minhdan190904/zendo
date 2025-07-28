@@ -3,24 +3,18 @@ package com.gig.zendo.ui.presentation.service
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,7 +51,6 @@ import com.gig.zendo.ui.common.InputType
 import com.gig.zendo.ui.common.LabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.ui.presentation.home.HouseViewModel
-import com.gig.zendo.ui.presentation.room.PropertyRoomCard
 
 import com.gig.zendo.utils.UiState
 
@@ -66,11 +59,11 @@ import com.gig.zendo.utils.UiState
 fun ServiceScreen(
     navController: NavController,
     viewModelService: ServiceViewModel = hiltViewModel(),
-    viewModelHouse: HouseViewModel = hiltViewModel(),
+    viewModelHouse: HouseViewModel,
     snackbarHostState: SnackbarHostState,
     houseId: String
 ) {
-    val houseState by viewModelHouse.houseState.collectAsStateWithLifecycle()
+    val housesState by viewModelHouse.housesState.collectAsStateWithLifecycle()
     val updateHouseServicesState by viewModelHouse.updateHouseServicesState.collectAsStateWithLifecycle()
     val billingDay by viewModelHouse.billingDay
     val electricCharge by viewModelHouse.electricCharge
@@ -84,26 +77,33 @@ fun ServiceScreen(
     val servicesState by viewModelService.servicesState.collectAsStateWithLifecycle()
 
     var showCreateExtraServiceDialog by remember { mutableStateOf(false) }
+    var houseState by remember { mutableStateOf<House?>(null) }
 
 
-    LaunchedEffect(Unit) {
-        viewModelHouse.getHouseById(houseId)
-    }
+//    LaunchedEffect(Unit) {
+//        viewModelHouse.getHouseById(houseId)
+//    }
 
     LaunchedEffect(Unit) {
         viewModelService.fetchServices(houseId)
     }
 
-    LaunchedEffect(houseState) {
-        if (houseState is UiState.Success) {
-            val house = (houseState as UiState.Success<House>).data
-            viewModelHouse.updateBillingDay(house.billingDay ?: -1)
-            viewModelHouse.updateElectricCharge(house.electricService!!.chargeValue.toString())
-            viewModelHouse.updateWaterCharge(house.waterService!!.chargeValue.toString())
-            viewModelHouse.updateRentCharge(house.rentService!!.chargeValue.toString())
-            viewModelHouse.updateElectricChargeMethod(house.electricService.chargeMethod)
-            viewModelHouse.updateWaterChargeMethod(house.waterService.chargeMethod)
-            viewModelHouse.updateRentChargeMethod(house.rentService.chargeMethod)
+    LaunchedEffect(housesState) {
+        if (housesState is UiState.Success) {
+            val houses = (housesState as UiState.Success<List<House>>).data
+            houseState = houses.firstOrNull { it.id == houseId }
+            val house = houseState
+            house?.let {
+                viewModelHouse.updateBillingDay(house.billingDay ?: -1)
+                viewModelHouse.updateElectricCharge(house.electricService!!.chargeValue.toString())
+                viewModelHouse.updateWaterCharge(house.waterService!!.chargeValue.toString())
+                viewModelHouse.updateRentCharge(house.rentService!!.chargeValue.toString())
+                viewModelHouse.updateElectricChargeMethod(house.electricService.chargeMethod)
+                viewModelHouse.updateWaterChargeMethod(house.waterService.chargeMethod)
+                viewModelHouse.updateRentChargeMethod(house.rentService.chargeMethod)
+            } ?: run {
+                snackbarHostState.showSnackbar("Không tìm thấy nhà trọ với ID: $houseId")
+            }
         }
     }
 
@@ -164,7 +164,7 @@ fun ServiceScreen(
                                 .padding(horizontal = 16.dp, vertical = 24.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            when (houseState) {
+                            when (housesState) {
                                 is UiState.Loading -> {
                                     CustomLoadingProgress()
                                 }

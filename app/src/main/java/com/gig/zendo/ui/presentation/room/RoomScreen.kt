@@ -56,7 +56,7 @@ fun RoomScreen(
             "Thêm phòng"
         ) { navController.navigate(Screens.CreateRoomScreen.route + "/${houseId}") },
         HomeAction(R.drawable.ic_lightbub, "Ghi điện nước") { /* onRecord() */ },
-        HomeAction(R.drawable.ic_money, "Thu tiền") { /* onCollect() */ },
+        HomeAction(R.drawable.ic_money, "Thu tiền") {  },
         HomeAction(
             R.drawable.ic_setting,
             "Cài đặt"
@@ -72,9 +72,20 @@ fun RoomScreen(
         mutableStateOf<String?>(null)
     }
 
+    val shouldRefresh = navController.currentBackStackEntry
+            ?.savedStateHandle
+        ?.get<Boolean>("shouldRefreshRooms") == true || navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>("shouldRefreshRooms") == true
+
     LaunchedEffect(Unit) {
-        viewModel.fetchRoomsWithTenants(houseId)
+        if (shouldRefresh || roomsState !is UiState.Success) {
+            viewModel.fetchRoomsWithTenants(houseId)
+            navController.currentBackStackEntry
+                ?.savedStateHandle
+                ?.set("shouldRefreshRooms", false)
+            navController.previousBackStackEntry?.savedStateHandle?.set("shouldRefreshRooms", false)
+        }
     }
+
 
     tenantIdState?.let { tenantId ->
         ConfirmDialog(
@@ -145,10 +156,10 @@ fun RoomScreen(
                                 room = room.first,
                                 tenant = tenant,
                                 onCreateInvoice = {
-                                    navController.navigate(Screens.CreateInvoiceScreen.route + "/${room.first.id}")
+                                    navController.navigate(Screens.CreateInvoiceScreen.route + "/${room.first.id}/${houseId}")
                                 },
                                 onAddTenant = {
-                                    navController.navigate(Screens.CreateTenantScreen.route + "/${room.first.id}")
+                                    navController.navigate(Screens.CreateTenantScreen.route + "/${room.first.id}/${houseId}")
                                 },
                                 onCheckHistory = {
                                     navController.navigate(Screens.TenantHistoryScreen.route + "/${room.first.id}")

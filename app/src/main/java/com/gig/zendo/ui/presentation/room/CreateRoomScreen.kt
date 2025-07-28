@@ -145,6 +145,9 @@ fun CreateRoomScreen(
     LaunchedEffect(createRoomState) {
         when (val state = createRoomState) {
             is UiState.Success<*> -> {
+                navController.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.set("shouldRefreshRooms", true)
                 navController.popBackStack()
                 snackbarHostState.showSnackbar("✓ Tạo phòng trọ thành công!")
             }

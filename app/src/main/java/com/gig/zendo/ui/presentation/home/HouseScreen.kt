@@ -33,7 +33,7 @@ import com.gig.zendo.utils.UiState
 
 @Composable
 fun HouseScreen(
-    viewModel: HouseViewModel = hiltViewModel(),
+    viewModel: HouseViewModel,
     viewModelAuth: AuthViewModel = hiltViewModel(),
     navController: NavController,
     snackbarHostState: SnackbarHostState
@@ -57,10 +57,12 @@ fun HouseScreen(
                 snackbarHostState.showSnackbar("Xóa nhà trọ thành công")
                 viewModel.clearDeleteState()
             }
+
             is UiState.Failure -> {
                 snackbarHostState.showSnackbar("Lỗi xóa nhà trọ: ${(deleteHouseState as UiState.Failure).error} ")
                 viewModel.clearDeleteState()
             }
+
             else -> {}
         }
     }
@@ -77,6 +79,7 @@ fun HouseScreen(
                 }
                 snackbarHostState.showSnackbar("Đăng xuất thành công")
             }
+
             else -> {
                 // No action needed for loading or empty state
             }
@@ -91,7 +94,7 @@ fun HouseScreen(
                 .background(Color(0xFFFFC0B3))
         )
 
-            Column(
+        Column(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Image(
@@ -147,8 +150,11 @@ fun HouseScreen(
 
                         when (housesState) {
                             is UiState.Empty -> {
-                                IconButton(onClick = { navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}" ) }) {
-                                    FunctionIcon(iconRes = R.drawable.ic_add, contentDescription = "Tạo nhà trọ mới")
+                                IconButton(onClick = { navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}") }) {
+                                    FunctionIcon(
+                                        iconRes = R.drawable.ic_add,
+                                        contentDescription = "Tạo nhà trọ mới"
+                                    )
                                 }
 
 
@@ -183,8 +189,11 @@ fun HouseScreen(
 
                             is UiState.Success -> {
 
-                                IconButton(onClick = { navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}" ) }) {
-                                    FunctionIcon(iconRes = R.drawable.ic_add, contentDescription = "Tạo nhà trọ mới")
+                                IconButton(onClick = { navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}") }) {
+                                    FunctionIcon(
+                                        iconRes = R.drawable.ic_add,
+                                        contentDescription = "Tạo nhà trọ mới"
+                                    )
                                 }
 
                                 for (house in (housesState as UiState.Success<List<House>>).data) {
@@ -199,6 +208,10 @@ fun HouseScreen(
                                         billingMonth = "7",
                                         billingDay = 1,
                                         onDetailClick = {
+                                            navController.currentBackStackEntry
+                                                ?.savedStateHandle
+                                                ?.set("shouldRefreshRooms", true)
+
                                             navController.navigate(Screens.RoomScreen.route + "/${house.id}" + "/${house.name}")
                                         },
                                         onDeleteClick = {
@@ -219,17 +232,17 @@ fun HouseScreen(
     }
 
     showDeleteDialog?.let { houseId ->
-            ConfirmDialog(
-                title = "Xóa Nhà",
-                message = "Bạn có chắc chắn muốn xóa nhà trọ này?",
-                onConfirm = {
-                    viewModel.deleteHouse(houseId)
-                },
-                onDismiss = { viewModel.dismissDeleteDialog() }
-            )
-        }
+        ConfirmDialog(
+            title = "Xóa Nhà",
+            message = "Bạn có chắc chắn muốn xóa nhà trọ này?",
+            onConfirm = {
+                viewModel.deleteHouse(houseId)
+            },
+            onDismiss = { viewModel.dismissDeleteDialog() }
+        )
+    }
 
-    if(showLogoutDialog) {
+    if (showLogoutDialog) {
         ConfirmDialog(
             title = "Đăng xuất",
             message = "Bạn có chắc chắn muốn đăng xuất?",
@@ -244,7 +257,7 @@ fun HouseScreen(
         ProfilePopupMenu(
             onUpgradeProClick = {},
             onSupportClick = {},
-            onLogoutClick = {viewModelAuth.showLogoutDialog() },
+            onLogoutClick = { viewModelAuth.showLogoutDialog() },
             currentUser = it,
         )
     }

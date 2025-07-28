@@ -3,17 +3,14 @@ package com.gig.zendo.ui.presentation.tenant
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +37,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -58,14 +56,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.gig.zendo.R
+import com.gig.zendo.domain.model.House
 import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.ui.common.CustomDateTimePicker
+import com.gig.zendo.ui.common.CustomDisplayImageDialog
 import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.CustomImagePicker
 import com.gig.zendo.ui.common.CustomImagePickerDialog
 import com.gig.zendo.ui.common.InputType
 import com.gig.zendo.ui.common.LabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
+import com.gig.zendo.ui.presentation.home.HouseViewModel
 import com.gig.zendo.utils.CloudinaryUploader
 import com.gig.zendo.utils.UiState
 import kotlinx.coroutines.launch
@@ -81,7 +82,9 @@ fun CreateTenantScreen(
     navController: NavController,
     snackbarHostState: SnackbarHostState,
     viewModel: TenantViewModel = hiltViewModel(),
+    viewModelHouse: HouseViewModel,
     roomId: String,
+    houseId: String,
 ) {
     val context = LocalContext.current
 
@@ -100,11 +103,27 @@ fun CreateTenantScreen(
     var waterPrice by remember { mutableStateOf("") }
     var rentPrice by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
-    var positionImage by remember { mutableStateOf(0) }
+    var positionImage by remember { mutableIntStateOf(0) }
     var showImagePickerDialog by remember { mutableStateOf(false) }
 
     val createTenantState by viewModel.createTenantState.collectAsStateWithLifecycle()
     val upImageState by viewModel.upImageState.collectAsStateWithLifecycle()
+
+    val housesState by viewModelHouse.housesState.collectAsStateWithLifecycle()
+    var houseState by remember { mutableStateOf<House?>(null) }
+
+    LaunchedEffect(housesState) {
+        if (housesState is UiState.Success) {
+            val houses = (housesState as UiState.Success<List<House>>).data
+            houseState = houses.firstOrNull { it.id == houseId }
+            val house = houseState
+            house?.let {
+                electricityPrice = it.electricService?.chargeValue.toString()
+                waterPrice = it.waterService?.chargeValue.toString()
+                rentPrice = it.rentService?.chargeValue.toString()
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -373,37 +392,9 @@ fun CreateTenantScreen(
     }
 
     if (isImagePickerOpen) {
-        Dialog(onDismissRequest = {
+        CustomDisplayImageDialog(selectedImageUrl = selectedImageUrl) {
             isImagePickerOpen = false
             selectedImageUrl = ""
-        }) {
-            Box(
-                modifier = Modifier
-                    .height(200.dp)
-                    .fillMaxWidth()
-                    .background(
-                        if (selectedImageUrl.isNotEmpty()) Color.Transparent else Color(
-                            0xFFE0E0E0
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                if (selectedImageUrl.isNotEmpty()) {
-                    Image(
-                        painter = rememberAsyncImagePainter(selectedImageUrl),
-                        contentDescription = "Selected Image",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Icon(
-                        painter = rememberAsyncImagePainter(R.drawable.ic_image),
-                        contentDescription = "Placeholder",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-            }
         }
     }
 
@@ -440,6 +431,9 @@ fun CreateTenantScreen(
     LaunchedEffect(createTenantState) {
         when (val state = createTenantState) {
             is UiState.Success<*> -> {
+                navController.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.set("shouldRefreshRooms", true)
                 navController.popBackStack()
                 snackbarHostState.showSnackbar("✓ Tạo khách hàng mới thành công!")
             }
@@ -478,7 +472,7 @@ fun CreateTenantScreen(
 
 }
 
-private fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri {
+fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri {
     val file = File(context.cacheDir, "camera_image_${System.currentTimeMillis()}.jpg")
     val fos = FileOutputStream(file)
     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)
