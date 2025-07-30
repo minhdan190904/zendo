@@ -31,8 +31,8 @@ class HouseViewModel @Inject constructor(
     private val _showDeleteDialog = MutableStateFlow<String?>(null)
     val showDeleteDialog: StateFlow<String?> = _showDeleteDialog
 
-    private val _updateHouseServicesState = MutableStateFlow<UiState<Any>>(UiState.Empty)
-    val updateHouseServicesState: StateFlow<UiState<Any>> = _updateHouseServicesState
+    private val _updateHouseServicesState = MutableStateFlow<UiState<House>>(UiState.Empty)
+    val updateHouseServicesState: StateFlow<UiState<House>> = _updateHouseServicesState
 
     private val _houseState = MutableStateFlow<UiState<House>>(UiState.Loading)
     val houseState: StateFlow<UiState<House>> = _houseState

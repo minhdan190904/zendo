@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -39,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,7 +57,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.gig.zendo.domain.model.ChargeMethod
+import com.gig.zendo.domain.model.House
+import com.gig.zendo.domain.model.Invoice
 import com.gig.zendo.domain.model.Service
+import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.ui.common.CustomDateTimePicker
 import com.gig.zendo.ui.common.CustomDisplayImageDialog
 import com.gig.zendo.ui.common.CustomElevatedButton
@@ -66,11 +72,15 @@ import com.gig.zendo.ui.common.InputType
 import com.gig.zendo.ui.common.LabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.ui.presentation.home.HouseViewModel
+import com.gig.zendo.ui.presentation.room.RoomViewModel
 import com.gig.zendo.ui.presentation.service.ServiceViewModel
+import com.gig.zendo.ui.presentation.tenant.TenantViewModel
 import com.gig.zendo.ui.presentation.tenant.getToday
 import com.gig.zendo.ui.presentation.tenant.saveBitmapToCache
 import com.gig.zendo.ui.theme.DarkGreen
 import com.gig.zendo.utils.UiState
+import com.gig.zendo.utils.toMoney
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,6 +90,7 @@ fun CreateInvoiceScreen(
     tenantId: String,
     houseId: String,
     viewModelHouse: HouseViewModel,
+    viewModelRoom: RoomViewModel,
     viewModel: InvoiceViewModel = hiltViewModel(),
     viewModelService: ServiceViewModel = hiltViewModel()
 ) {
@@ -136,10 +147,6 @@ fun CreateInvoiceScreen(
         mutableStateOf("")
     }
 
-    var rentCharge by remember {
-        mutableStateOf("0")
-    }
-
     var note by remember {
         mutableStateOf("")
     }
@@ -152,6 +159,34 @@ fun CreateInvoiceScreen(
 
     var listServiceExtraUsedState by remember {
         mutableStateOf(listOf<Service>())
+    }
+
+    val housesState by viewModelHouse.housesState.collectAsStateWithLifecycle()
+    val houseState by viewModelHouse.updateHouseServicesState.collectAsStateWithLifecycle()
+    val roomsAndTenant = viewModelRoom.currentRoomAndTenant.value
+    val currentRoom = roomsAndTenant?.first
+    val currentTenant = roomsAndTenant?.second
+
+    val createInvoiceState by viewModel.createInvoiceState.collectAsStateWithLifecycle()
+
+    var rentCharge by remember {
+        mutableStateOf(currentTenant?.rentPrice?.toString() ?: "0")
+    }
+
+    var total by remember {
+        mutableLongStateOf(0L)
+    }
+
+    val house = if (houseState is UiState.Success) {
+        (houseState as UiState.Success<House>).data
+    } else {
+        when (housesState) {
+            is UiState.Success -> {
+                (housesState as UiState.Success<List<House>>).data.firstOrNull { it.id == houseId }
+            }
+
+            else -> null
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -231,151 +266,164 @@ fun CreateInvoiceScreen(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                Text(
-                                    text = "Thông tin số điện cũ và mới",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp),
-                                    color = Color.Black,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Start
-                                )
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    LabeledTextField(
-                                        label = "Số điện cũ",
-                                        value = numberElectricityPrevious,
-                                        onValueChange = { numberElectricityPrevious = it },
-                                        modifier = Modifier.weight(1f),
-                                        singleLine = true,
-                                        useInternalLabel = false,
-                                        placeholder = "Ví dụ: 400",
-                                        inputType = InputType.NUMBER,
+                                if (house!!.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                    Text(
+                                        text = "Thông tin số điện cũ và mới",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp),
+                                        color = Color.Black,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Start
                                     )
 
-                                    LabeledTextField(
-                                        label = "Số điện mới",
-                                        value = numberElectricityCurrent,
-                                        onValueChange = { numberElectricityCurrent = it },
-                                        modifier = Modifier.weight(1f),
-                                        singleLine = true,
-                                        useInternalLabel = false,
-                                        placeholder = "Ví dụ: 500",
-                                        inputType = InputType.NUMBER,
-                                    )
-                                }
+                                    Spacer(modifier = Modifier.height(16.dp))
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(24.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        LabeledTextField(
+                                            label = "Số điện cũ",
+                                            value = numberElectricityPrevious,
+                                            onValueChange = { numberElectricityPrevious = it },
+                                            modifier = Modifier.weight(1f),
+                                            singleLine = true,
+                                            useInternalLabel = false,
+                                            placeholder = "Ví dụ: 400",
+                                            inputType = InputType.NUMBER,
+                                        )
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                ) {
+                                        LabeledTextField(
+                                            label = "Số điện mới",
+                                            value = numberElectricityCurrent,
+                                            onValueChange = { numberElectricityCurrent = it },
+                                            modifier = Modifier.weight(1f),
+                                            singleLine = true,
+                                            useInternalLabel = false,
+                                            placeholder = "Ví dụ: 500",
+                                            inputType = InputType.NUMBER,
+                                        )
+                                    }
 
-                                    //positionImage = 0
-                                    CustomImagePicker(
-                                        label = "Hình điện cũ",
-                                        imageUri = numberElectricityPreviousImageUrl,
-                                        onPickImageClick = {
-                                            positionImage = 0
-                                            showImagePickerDialog = true
-                                        },
-                                        onImageClick = {
-                                            isImagePickerOpen = true
-                                            selectedImageUrl = numberElectricityPreviousImageUrl
-                                        }
-                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
 
-                                    //positionImage = 1
-                                    CustomImagePicker(
-                                        label = "Hình điện mới",
-                                        imageUri = numberElectricityCurrentImageUrl,
-                                        onPickImageClick = {
-                                            positionImage = 1
-                                            showImagePickerDialog = true
-                                        },
-                                        onImageClick = {
-                                            isImagePickerOpen = true
-                                            selectedImageUrl = numberElectricityCurrentImageUrl
-                                        }
-                                    )
-                                }
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                    ) {
 
-                                Spacer(modifier = Modifier.height(16.dp))
+                                        //positionImage = 0
+                                        CustomImagePicker(
+                                            label = "Hình điện cũ",
+                                            imageUri = numberElectricityPreviousImageUrl,
+                                            onPickImageClick = {
+                                                positionImage = 0
+                                                showImagePickerDialog = true
+                                            },
+                                            onImageClick = {
+                                                isImagePickerOpen = true
+                                                selectedImageUrl = numberElectricityPreviousImageUrl
+                                            }
+                                        )
 
-                                Text(
-                                    text = "Thông tin số nước cũ và mới",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp),
-                                    color = Color.Black,
-                                    textAlign = TextAlign.Start,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                        //positionImage = 1
+                                        CustomImagePicker(
+                                            label = "Hình điện mới",
+                                            imageUri = numberElectricityCurrentImageUrl,
+                                            onPickImageClick = {
+                                                positionImage = 1
+                                                showImagePickerDialog = true
+                                            },
+                                            onImageClick = {
+                                                isImagePickerOpen = true
+                                                selectedImageUrl = numberElectricityCurrentImageUrl
+                                            }
+                                        )
+                                    }
 
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    LabeledTextField(
-                                        label = "Số nước cũ",
-                                        value = numberWaterPrevious,
-                                        onValueChange = { numberWaterPrevious = it },
-                                        modifier = Modifier.weight(1f),
-                                        singleLine = true,
-                                        useInternalLabel = false,
-                                        placeholder = "Ví dụ: 400",
-                                        inputType = InputType.NUMBER,
-                                    )
-
-                                    LabeledTextField(
-                                        label = "Số nước mới",
-                                        value = numberWaterCurrent,
-                                        onValueChange = { numberWaterCurrent = it },
-                                        modifier = Modifier.weight(1f),
-                                        singleLine = true,
-                                        useInternalLabel = false,
-                                        placeholder = "Ví dụ: 500",
-                                        inputType = InputType.NUMBER,
+                                } else {
+                                    CustomInformation(
+                                        label = "Điện tính theo số người: ${currentTenant?.numberOfOccupants ?: 0} người"
                                     )
                                 }
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                ) {
-
-                                    //positionImage = 2
-                                    CustomImagePicker(
-                                        label = "Hình nước cũ",
-                                        imageUri = numberWaterPreviousImageUrl,
-                                        onPickImageClick = {
-                                            positionImage = 2
-                                            showImagePickerDialog = true
-                                        },
-                                        onImageClick = {
-                                            isImagePickerOpen = true
-                                            selectedImageUrl = numberWaterPreviousImageUrl
-                                        }
+                                if (house.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                    Text(
+                                        text = "Thông tin số nước cũ và mới",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp),
+                                        color = Color.Black,
+                                        textAlign = TextAlign.Start,
+                                        modifier = Modifier.fillMaxWidth()
                                     )
 
-                                    //positionImage = 3
-                                    CustomImagePicker(
-                                        label = "Hình nước mới",
-                                        imageUri = numberWaterCurrentImageUrl,
-                                        onPickImageClick = {
-                                            positionImage = 3
-                                            showImagePickerDialog = true
-                                        },
-                                        onImageClick = {
-                                            isImagePickerOpen = true
-                                            selectedImageUrl = numberWaterCurrentImageUrl
-                                        }
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(24.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        LabeledTextField(
+                                            label = "Số nước cũ",
+                                            value = numberWaterPrevious,
+                                            onValueChange = { numberWaterPrevious = it },
+                                            modifier = Modifier.weight(1f),
+                                            singleLine = true,
+                                            useInternalLabel = false,
+                                            placeholder = "Ví dụ: 400",
+                                            inputType = InputType.NUMBER,
+                                        )
+
+                                        LabeledTextField(
+                                            label = "Số nước mới",
+                                            value = numberWaterCurrent,
+                                            onValueChange = { numberWaterCurrent = it },
+                                            modifier = Modifier.weight(1f),
+                                            singleLine = true,
+                                            useInternalLabel = false,
+                                            placeholder = "Ví dụ: 500",
+                                            inputType = InputType.NUMBER,
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                    ) {
+
+                                        //positionImage = 2
+                                        CustomImagePicker(
+                                            label = "Hình nước cũ",
+                                            imageUri = numberWaterPreviousImageUrl,
+                                            onPickImageClick = {
+                                                positionImage = 2
+                                                showImagePickerDialog = true
+                                            },
+                                            onImageClick = {
+                                                isImagePickerOpen = true
+                                                selectedImageUrl = numberWaterPreviousImageUrl
+                                            }
+                                        )
+
+                                        //positionImage = 3
+                                        CustomImagePicker(
+                                            label = "Hình nước mới",
+                                            imageUri = numberWaterCurrentImageUrl,
+                                            onPickImageClick = {
+                                                positionImage = 3
+                                                showImagePickerDialog = true
+                                            },
+                                            onImageClick = {
+                                                isImagePickerOpen = true
+                                                selectedImageUrl = numberWaterCurrentImageUrl
+                                            }
+                                        )
+                                    }
+                                } else {
+                                    CustomInformation(
+                                        label = "Nước tính theo số người: ${currentTenant?.numberOfOccupants ?: 0} người"
                                     )
                                 }
 
@@ -391,7 +439,7 @@ fun CreateInvoiceScreen(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                when(servicesState){
+                                when (servicesState) {
                                     is UiState.Loading -> {
                                         CustomLoadingProgress()
                                     }
@@ -405,15 +453,19 @@ fun CreateInvoiceScreen(
                                     }
 
                                     is UiState.Success -> {
-                                        val services = (servicesState as UiState.Success<List<Service>>).data
+                                        val services =
+                                            (servicesState as UiState.Success<List<Service>>).data
 
-                                        val checkedMap = remember { mutableStateMapOf<String, Boolean>() }
-                                        val amountMap = remember { mutableStateMapOf<String, String>() }
+                                        val checkedMap =
+                                            remember { mutableStateMapOf<String, Boolean>() }
+                                        val amountMap =
+                                            remember { mutableStateMapOf<String, String>() }
 
                                         Column {
                                             services.forEach { service ->
                                                 val isChecked = checkedMap[service.id] ?: false
-                                                val amount = amountMap[service.id] ?: service.chargeValue.toString()
+                                                val amount = amountMap[service.id]
+                                                    ?: service.chargeValue.toString()
 
                                                 CustomCheckBoxExtraService(
                                                     label = service.name,
@@ -423,14 +475,17 @@ fun CreateInvoiceScreen(
 
                                                         if (it) {
                                                             val charge = amount.toLongOrNull() ?: 0L
-                                                            listServiceExtraUsed.add(service.copy(chargeValue = charge))
+                                                            listServiceExtraUsed.add(
+                                                                service.copy(
+                                                                    chargeValue = charge
+                                                                )
+                                                            )
                                                         } else {
                                                             listServiceExtraUsed.removeAll { it.id == service.id }
                                                         }
 
-                                                        listServiceExtraUsedState = listServiceExtraUsed.toList()
-
-                                                        Log.i("CreateInvoiceScreen", "Total: ${listServiceExtraUsed.sumOf { it.chargeValue }}")
+                                                        listServiceExtraUsedState =
+                                                            listServiceExtraUsed.toList()
                                                     },
                                                     amountOfMoney = amount,
                                                     onAmountChange = {
@@ -438,12 +493,13 @@ fun CreateInvoiceScreen(
                                                         if (checkedMap[service.id] == true) {
                                                             val charge = it.toLongOrNull() ?: 0L
                                                             listServiceExtraUsed.replaceAll { s ->
-                                                                if (s.id == service.id) s.copy(chargeValue = charge) else s
+                                                                if (s.id == service.id) s.copy(
+                                                                    chargeValue = charge
+                                                                ) else s
                                                             }
 
-                                                            listServiceExtraUsedState = listServiceExtraUsed.toList()
-
-                                                            Log.i("CreateInvoiceScreen", "Total: ${listServiceExtraUsed.sumOf { it.chargeValue }}")
+                                                            listServiceExtraUsedState =
+                                                                listServiceExtraUsed.toList()
                                                         }
                                                     }
                                                 )
@@ -458,7 +514,11 @@ fun CreateInvoiceScreen(
                                 Spacer(modifier = Modifier.height(16.dp))
 
                                 LabeledTextField(
-                                    label = "Tiền phòng",
+                                    label = if (house.rentService.chargeMethod == ChargeMethod.BY_PERSON) {
+                                        "Tiền phòng (theo số người)"
+                                    } else {
+                                        "Tiền phòng"
+                                    },
                                     value = rentCharge,
                                     onValueChange = { rentCharge = it },
                                     modifier = Modifier.fillMaxWidth(),
@@ -478,35 +538,99 @@ fun CreateInvoiceScreen(
                                     singleLine = true,
                                     useInternalLabel = false,
                                     placeholder = "Ví du: Tiền điện tháng này tăng",
-                                    inputType = InputType.MONEY,
+                                    inputType = InputType.TEXT,
                                 )
 
                                 val headerWeight = listOf(1.5f, 1f, 1f, 1f)
                                 val rows = listOf(
-                                    Triple("Tiền điện", 0, 4),
-                                    Triple("Tiền nước", 0, 34),
-                                    Triple("Tiền phòng", 1, 345_435),
+                                    Triple(
+                                        "Tiền điện",
+                                        if (house.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                            val current =
+                                                numberElectricityCurrent.toLongOrNull() ?: 0L
+                                            val previous =
+                                                numberElectricityPrevious.toLongOrNull() ?: 0L
+                                            if (current >= previous) {
+                                                current - previous
+                                            } else {
+                                                0L
+                                            }
+                                        } else {
+                                            currentTenant?.numberOfOccupants?.toLong() ?: 0L
+                                        },
+                                        house.electricService.chargeValue
+                                    ),
+                                    Triple(
+                                        "Tiền nước",
+                                        if (house.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                            val current = numberWaterCurrent.toLongOrNull() ?: 0L
+                                            val previous = numberWaterPrevious.toLongOrNull() ?: 0L
+                                            if (current >= previous) {
+                                                current - previous
+                                            } else {
+                                                0L
+                                            }
+                                        } else {
+                                            currentTenant?.numberOfOccupants?.toLong() ?: 0L
+                                        }, house.waterService.chargeValue
+                                    ),
+                                    Triple(
+                                        "Tiền phòng",
+                                        if (house.rentService.chargeMethod == ChargeMethod.BY_PERSON) {
+                                            currentTenant?.numberOfOccupants?.toLong() ?: 0L
+                                        } else {
+                                            1L
+                                        }, rentCharge.toLongOrNull() ?: 0L
+                                    ),
                                 )
-
-                                val total = rows.sumOf { it.second * it.third }
 
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Row {
-                                        Text(" ", modifier = Modifier.weight(headerWeight[0]), fontSize = 14.sp)
-                                        Text("Số", modifier = Modifier.weight(headerWeight[1]), fontSize = 14.sp)
-                                        Text("Giá", modifier = Modifier.weight(headerWeight[2]), fontSize = 14.sp)
-                                        Text("Tiền", modifier = Modifier.weight(headerWeight[3]), textAlign = TextAlign.End, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                        Text(
+                                            " ",
+                                            modifier = Modifier.weight(headerWeight[0]),
+                                            fontSize = 14.sp
+                                        )
+                                        Text(
+                                            "Số",
+                                            modifier = Modifier.weight(headerWeight[1]),
+                                            fontSize = 14.sp
+                                        )
+                                        Text(
+                                            "Giá",
+                                            modifier = Modifier.weight(headerWeight[2]),
+                                            fontSize = 14.sp
+                                        )
+                                        Text(
+                                            "Tiền",
+                                            modifier = Modifier.weight(headerWeight[3]),
+                                            textAlign = TextAlign.End,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp
+                                        )
                                     }
 
                                     Spacer(modifier = Modifier.height(8.dp))
 
                                     rows.forEach { (label, count, price) ->
                                         Row {
-                                            Text(label, modifier = Modifier.weight(headerWeight[0]), fontSize = 14.sp)
-                                            Text("$count", modifier = Modifier.weight(headerWeight[1]), fontSize = 14.sp)
-                                            Text("%,d".format(price), modifier = Modifier.weight(headerWeight[2]), fontSize = 14.sp)
                                             Text(
-                                                "%,d".format(count * price),
+                                                label,
+                                                modifier = Modifier.weight(headerWeight[0]),
+                                                fontSize = 14.sp
+                                            )
+                                            Text(
+                                                "$count",
+                                                modifier = Modifier.weight(headerWeight[1]),
+                                                fontSize = 14.sp
+                                            )
+                                            Text(
+                                                toMoney(price),
+                                                modifier = Modifier.weight(headerWeight[2]),
+                                                fontSize = 14.sp
+                                            )
+                                            Text(
+                                                toMoney(count * price),
                                                 modifier = Modifier.weight(headerWeight[3]),
                                                 textAlign = TextAlign.End,
                                                 fontWeight = FontWeight.Bold,
@@ -519,11 +643,23 @@ fun CreateInvoiceScreen(
 
                                     listServiceExtraUsedState.forEach { service ->
                                         Row {
-                                            Text(service.name, modifier = Modifier.weight(headerWeight[0]), fontSize = 14.sp)
-                                            Text("1", modifier = Modifier.weight(headerWeight[1]), fontSize = 14.sp)
-                                            Text("%,d".format(service.chargeValue), modifier = Modifier.weight(headerWeight[2]), fontSize = 14.sp)
                                             Text(
-                                                "%,d".format(service.chargeValue),
+                                                service.name,
+                                                modifier = Modifier.weight(headerWeight[0]),
+                                                fontSize = 14.sp
+                                            )
+                                            Text(
+                                                "1",
+                                                modifier = Modifier.weight(headerWeight[1]),
+                                                fontSize = 14.sp
+                                            )
+                                            Text(
+                                                toMoney(service.chargeValue),
+                                                modifier = Modifier.weight(headerWeight[2]),
+                                                fontSize = 14.sp
+                                            )
+                                            Text(
+                                                toMoney(service.chargeValue),
                                                 modifier = Modifier.weight(headerWeight[3]),
                                                 textAlign = TextAlign.End,
                                                 fontWeight = FontWeight.Bold,
@@ -534,12 +670,19 @@ fun CreateInvoiceScreen(
                                         Spacer(modifier = Modifier.height(16.dp))
                                     }
 
+                                    total = rows.sumOf { it.second * it.third } +
+                                            listServiceExtraUsedState.sumOf { it.chargeValue }
+
                                     // Total Row
                                     Row {
-                                        Text("Tổng tiền", modifier = Modifier.weight(headerWeight[0]), fontWeight = FontWeight.Bold)
+                                        Text(
+                                            "Tổng tiền",
+                                            modifier = Modifier.weight(headerWeight[0]),
+                                            fontWeight = FontWeight.Bold
+                                        )
                                         Spacer(modifier = Modifier.weight(headerWeight[1] + headerWeight[2]))
                                         Text(
-                                            "%,d".format(total),
+                                            toMoney(total),
                                             modifier = Modifier.weight(headerWeight[3]),
                                             textAlign = TextAlign.End,
                                             fontWeight = FontWeight.Bold,
@@ -548,7 +691,35 @@ fun CreateInvoiceScreen(
                                     }
 
                                 }
-                                CustomElevatedButton(onClick = { }, text = "Tạo hóa đơn")
+                                CustomElevatedButton(onClick = {
+                                    val invoice = Invoice(
+                                        tenant = currentTenant ?: Tenant(),
+                                        date = dateCreateInvoice,
+                                        oldNumberElectric = numberElectricityPrevious.toLongOrNull() ?: 0L,
+                                        newNumberElectric = numberElectricityCurrent.toLongOrNull() ?: 0L,
+                                        oldNumberWater = numberWaterPrevious.toLongOrNull() ?: 0L,
+                                        newNumberWater = numberWaterCurrent.toLongOrNull() ?: 0L,
+                                        rentService = Service(
+                                            id = house.rentService.id,
+                                            name = house.rentService.name,
+                                            chargeValue = rentCharge.toLongOrNull() ?: 0L,
+                                            chargeMethod = house.rentService.chargeMethod
+                                        ),
+                                        electricService = house.electricService,
+                                        waterService = house.waterService,
+                                        oldElectricImageUrl = numberElectricityPreviousImageUrl,
+                                        newElectricImageUrl = numberElectricityCurrentImageUrl,
+                                        oldWaterImageUrl = numberWaterPreviousImageUrl,
+                                        newWaterImageUrl = numberWaterCurrentImageUrl,
+                                        otherServices = listServiceExtraUsedState,
+                                        note = note,
+                                        totalAmount = total,
+                                        roomId = currentRoom?.id ?: "",
+                                    )
+
+                                    viewModel.addInvoice(invoice)
+
+                                }, text = "Tạo hóa đơn")
                             }
                         }
                     }
@@ -619,68 +790,50 @@ fun CreateInvoiceScreen(
         }
     }
 
+    LaunchedEffect(createInvoiceState) {
+        when (val state = createInvoiceState) {
+            is UiState.Success -> {
+                navController.popBackStack()
+                snackbarHostState.showSnackbar("✓ Tạo hóa đơn thành công!")
+            }
+
+            is UiState.Failure -> snackbarHostState.showSnackbar(
+                ("✗ " +
+                        state.error)
+            )
+
+            is UiState.Loading, UiState.Empty -> {
+                // Do nothing while loading or empty state
+            }
+        }
+
+    }
+
 }
 
 @Composable
-fun InvoiceTable() {
-    val headerWeight = listOf(2f, 1f, 1f, 1f) // Tiền, Số, Giá, Tiền
-    val rows = listOf(
-        Triple("Tiền điện", 0, 4),
-        Triple("Tiền nước", 0, 34),
-        Triple("Tiền phòng", 1, 345_435),
-    )
-
-    val total = rows.sumOf { it.second * it.third }
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        // Header Row
-        Row {
-            Text(" ", modifier = Modifier.weight(headerWeight[0]))
-            Text("Số", modifier = Modifier.weight(headerWeight[1]))
-            Text("Giá", modifier = Modifier.weight(headerWeight[2]))
-            Text("Tiền", modifier = Modifier.weight(headerWeight[3]), textAlign = TextAlign.End)
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Data Rows
-        rows.forEach { (label, count, price) ->
-            Row {
-                Text(label, modifier = Modifier.weight(headerWeight[0]))
-                Text("$count", modifier = Modifier.weight(headerWeight[1]))
-                Text("%,d".format(price), modifier = Modifier.weight(headerWeight[2]))
-                Text(
-                    "%,d".format(count * price),
-                    modifier = Modifier.weight(headerWeight[3]),
-                    textAlign = TextAlign.End,
-                    fontWeight = if (label == "Tiền phòng") FontWeight.Bold else FontWeight.Normal
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-        }
-
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-        // Total Row
-        Row {
-            Text("Tổng tiền", modifier = Modifier.weight(headerWeight[0]), fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.weight(headerWeight[1] + headerWeight[2]))
-            Text(
-                "%,d".format(total),
-                modifier = Modifier.weight(headerWeight[3]),
-                textAlign = TextAlign.End,
-                fontWeight = FontWeight.Bold
+fun CustomInformation(
+    label: String,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .background(Color.LightGray, shape = RoundedCornerShape(8.dp))
+            .padding(16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Info, contentDescription = "Thông tin",
+                tint = Color.Gray,
+                modifier = Modifier.padding(end = 8.dp)
             )
+            Text(text = label, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
-
-@Preview
-@Composable
-fun InvoiceTablePreview() {
-    InvoiceTable()
-}
-
 
 @Composable
 fun CustomCheckBoxExtraService(
@@ -689,11 +842,12 @@ fun CustomCheckBoxExtraService(
     onCheckedChange: (Boolean) -> Unit,
     amountOfMoney: String,
     onAmountChange: (String) -> Unit
-){
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Checkbox(checked = checked, onCheckedChange = onCheckedChange,
+        Checkbox(
+            checked = checked, onCheckedChange = onCheckedChange,
             colors = CheckboxDefaults.colors(
                 checkedColor = DarkGreen,
                 uncheckedColor = Color.Gray,

@@ -2,11 +2,13 @@ package com.gig.zendo.di
 
 import com.gig.zendo.data.repository.AuthRepositoryImpl
 import com.gig.zendo.data.repository.HouseRepositoryImpl
+import com.gig.zendo.data.repository.InvoiceRepositoryImpl
 import com.gig.zendo.data.repository.RoomRepositoryImpl
 import com.gig.zendo.data.repository.ServiceRepositoryImpl
 import com.gig.zendo.data.repository.TenantRepositoryImpl
 import com.gig.zendo.domain.repository.AuthRepository
 import com.gig.zendo.domain.repository.HouseRepository
+import com.gig.zendo.domain.repository.InvoiceRepository
 import com.gig.zendo.domain.repository.RoomRepository
 import com.gig.zendo.domain.repository.ServiceRepository
 import com.gig.zendo.domain.repository.TenantRepository
@@ -58,5 +60,13 @@ object RepositoryModule {
         firebaseFirestore: FirebaseFirestore
     ): TenantRepository {
         return TenantRepositoryImpl(firebaseFirestore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideInvoiceRepository(
+        firebaseFirestore: FirebaseFirestore
+    ): InvoiceRepository {
+        return InvoiceRepositoryImpl(firebaseFirestore)
     }
 }

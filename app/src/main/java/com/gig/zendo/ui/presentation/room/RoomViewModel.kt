@@ -30,6 +30,7 @@ class RoomViewModel @Inject constructor(
     private val _checkOutTenantState = MutableStateFlow<UiState<Any>>(UiState.Empty)
     val checkOutTenantState: StateFlow<UiState<Any>> = _checkOutTenantState
 
+
     var roomName = mutableStateOf("")
         private set
 
@@ -61,5 +62,13 @@ class RoomViewModel @Inject constructor(
 
     fun updateRoomName(name: String) {
         roomName.value = name
+    }
+
+    var currentRoomAndTenant = mutableStateOf<Pair<Room, Tenant>?>(null)
+        private set
+
+
+    fun updateRoomAndTenantCurrent(p: Pair<Room, Tenant>) {
+        currentRoomAndTenant.value = p
     }
 }

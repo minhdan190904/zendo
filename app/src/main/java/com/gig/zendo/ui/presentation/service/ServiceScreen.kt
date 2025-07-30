@@ -64,6 +64,7 @@ fun ServiceScreen(
     houseId: String
 ) {
     val housesState by viewModelHouse.housesState.collectAsStateWithLifecycle()
+    val houseStateUpdateHouse by viewModelHouse.updateHouseServicesState.collectAsStateWithLifecycle()
     val updateHouseServicesState by viewModelHouse.updateHouseServicesState.collectAsStateWithLifecycle()
     val billingDay by viewModelHouse.billingDay
     val electricCharge by viewModelHouse.electricCharge
@@ -79,20 +80,17 @@ fun ServiceScreen(
     var showCreateExtraServiceDialog by remember { mutableStateOf(false) }
     var houseState by remember { mutableStateOf<House?>(null) }
 
-
-//    LaunchedEffect(Unit) {
-//        viewModelHouse.getHouseById(houseId)
-//    }
-
     LaunchedEffect(Unit) {
         viewModelService.fetchServices(houseId)
     }
 
     LaunchedEffect(housesState) {
         if (housesState is UiState.Success) {
-            val houses = (housesState as UiState.Success<List<House>>).data
-            houseState = houses.firstOrNull { it.id == houseId }
-            val house = houseState
+            val house = if(houseStateUpdateHouse is UiState.Success) {
+                (houseStateUpdateHouse as UiState.Success<House>).data
+            } else {
+                (housesState as UiState.Success<List<House>>).data.firstOrNull { it.id == houseId }
+            }
             house?.let {
                 viewModelHouse.updateBillingDay(house.billingDay ?: -1)
                 viewModelHouse.updateElectricCharge(house.electricService!!.chargeValue.toString())

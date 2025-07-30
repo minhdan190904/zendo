@@ -1,5 +1,6 @@
 package com.gig.zendo.ui.presentation.room
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -18,7 +19,9 @@ import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.MyPopupMenu
 import com.gig.zendo.ui.common.StatOfProperty
+import com.gig.zendo.ui.presentation.tenant.getAnnotatedString
 import com.gig.zendo.utils.RoomMenuAction
+import com.gig.zendo.utils.toMoney
 
 @Composable
 fun PropertyRoomCard(
@@ -28,7 +31,8 @@ fun PropertyRoomCard(
     onAddTenant: () -> Unit = {},
     onCheckHistory: () -> Unit = {},
     onCheckOut: () -> Unit = {},
-    onCheckDetail: () -> Unit = {}
+    onCheckDetail: () -> Unit = {},
+    onCheckAllInvoices: () -> Unit = {},
 ) {
 
     val actionIfRoomNotEmpty = listOf(
@@ -77,7 +81,7 @@ fun PropertyRoomCard(
                             // Handle delete room action
                         }
                         RoomMenuAction.Invoice -> {
-                            onCreateInvoice()
+                            onCheckAllInvoices()
                         }
                         RoomMenuAction.History -> {
                             onCheckHistory()
@@ -95,36 +99,43 @@ fun PropertyRoomCard(
             Spacer(Modifier.height(12.dp))
 
             if (tenant != null) {
+                val pairOfWeight = Pair(1f, 1f)
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.weight(1f)) {
                         // Room stats
                         StatOfProperty(
                             title = "Người thuê:",
                             value = tenant.name,
-                            widthOfProperty = 0.75f
+                            pairOfWeight = pairOfWeight
                         )
                         StatOfProperty(
                             title = "Số điện thoại:",
                             value = tenant.phone,
-                            widthOfProperty = 0.75f
+                            pairOfWeight = pairOfWeight
                         )
                         //ngay thue
                         StatOfProperty(
                             title = "Ngày thuê:",
                             value = tenant.startDate,
-                            widthOfProperty = 0.75f
+                            pairOfWeight = pairOfWeight
                         )
                         // so hoa don chua thu
-                        StatOfProperty(
-                            title = "Số hóa đơn chưa thu:",
-                            value = "0",
-                            widthOfProperty = 0.75f
-                        )
+
+
+                        if(room.numberOfNotPaidInvoice > 0) {
+                            StatOfProperty(
+                                title = "Số hóa đơn chưa thu:",
+                                value = room.numberOfNotPaidInvoice.toString(),
+                                pairOfWeight = pairOfWeight,
+                                color = Color(0xFFEF5350)
+                            )
+                        }
+
                         // so tien con no
                         StatOfProperty(
                             title = "Số tiền còn nợ:",
-                            value = "0",
-                            widthOfProperty = 0.75f
+                            value = toMoney(room.outstandingAmount) + " ₫",
+                            pairOfWeight = pairOfWeight
                         )
                     }
                 }

@@ -18,6 +18,7 @@ data class Tenant(
     val endDate: String = "",
     val deposit: Long = 0L,
     val active: Boolean = true,
+    val createdAt: Long = System.currentTimeMillis()
 ) {
     companion object {
         const val COLLECTION_NAME = "tenants"

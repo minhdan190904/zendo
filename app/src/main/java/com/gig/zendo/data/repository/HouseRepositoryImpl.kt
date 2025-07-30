@@ -89,21 +89,28 @@ class HouseRepositoryImpl @Inject constructor(
         electricService: Service?,
         waterService: Service?,
         billingDay: Int?
-    ): UiState<Unit> {
+    ): UiState<House> {
         return try {
-            val updateMap = mapOf(
-                House.FIELD_RENT_SERVICE to rentService,
-                House.FIELD_ELECTRIC_SERVICE to electricService,
-                House.FIELD_WATER_SERVICE to waterService,
-                House.FIELD_BILLING_DAY to billingDay
+            val houseRef = firestore.collection(House.COLLECTION_NAME).document(houseId)
+            val houseSnapshot = houseRef.get().await()
+
+            if (!houseSnapshot.exists()) {
+                return UiState.Failure("House not found")
+            }
+
+            val house = houseSnapshot.toObject<House>() ?: return UiState.Failure("House data is null")
+
+            val updatedHouse = house.copy(
+                rentService = rentService ?: house.rentService,
+                electricService = electricService ?: house.electricService,
+                waterService = waterService ?: house.waterService,
+                billingDay = billingDay ?: house.billingDay
             )
-            firestore.collection(House.COLLECTION_NAME)
-                .document(houseId)
-                .update(updateMap)
-                .await()
-            UiState.Success(Unit)
+
+            houseRef.set(updatedHouse).await()
+            UiState.Success(updatedHouse)
         } catch (e: Exception) {
-            UiState.Failure(e.message ?: "Failed to update services")
+            UiState.Failure(e.message ?: "Failed to update house services")
         }
     }
 

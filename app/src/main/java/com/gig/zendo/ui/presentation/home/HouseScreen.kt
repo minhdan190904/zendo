@@ -30,6 +30,8 @@ import com.gig.zendo.ui.presentation.home.ProfilePopupMenu
 import com.gig.zendo.ui.presentation.navigation.Screens
 import com.gig.zendo.ui.theme.DarkGreen
 import com.gig.zendo.utils.UiState
+import java.time.YearMonth
+import java.util.Calendar
 
 @Composable
 fun HouseScreen(
@@ -205,8 +207,8 @@ fun HouseScreen(
                                         overdueCount = 0,
                                         overdueAmount = 0,
                                         revenueThisMonth = 0,
-                                        billingMonth = "7",
-                                        billingDay = 1,
+                                        billingMonth = getCurrentMonth(),
+                                        billingDay = getBillingDay(house.billingDay ?: -1),
                                         onDetailClick = {
                                             navController.currentBackStackEntry
                                                 ?.savedStateHandle
@@ -261,4 +263,16 @@ fun HouseScreen(
             currentUser = it,
         )
     }
+}
+
+fun getBillingDay(day: Int): Int {
+    if(day == -1) {
+        val calendar = Calendar.getInstance()
+        return calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+    }
+    return day
+}
+
+fun getCurrentMonth(): Int {
+    return Calendar.getInstance().get(Calendar.MONTH) + 1
 }

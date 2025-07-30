@@ -5,27 +5,29 @@ data class House(
     val name: String = "",
     val address: String = "",
     val uid: String = "",
-    val rentService: Service? = Service(
+    val rentService: Service = Service(
         id = "",
         name = "Rent",
         chargeValue = 0L,
         chargeMethod = ChargeMethod.FIXED
     ),
-    val electricService: Service? = Service(
+    val electricService: Service = Service(
         id = "",
         name = "Electricity",
         chargeValue = 0L,
         chargeMethod = ChargeMethod.BY_CONSUMPTION
     ),
 
-    val waterService: Service? = Service(
+    val waterService: Service = Service(
         id = "",
         name = "Water",
         chargeValue = 0L,
         chargeMethod = ChargeMethod.BY_CONSUMPTION
     ),
 
-    val billingDay: Int? = -1
+    val billingDay: Int? = -1,
+
+    val createdAt: Long = System.currentTimeMillis()
 ){
     companion object {
         const val COLLECTION_NAME = "houses"

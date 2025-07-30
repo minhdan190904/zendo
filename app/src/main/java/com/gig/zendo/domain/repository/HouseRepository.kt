@@ -16,6 +16,6 @@ interface HouseRepository {
         electricService: Service?,
         waterService: Service?,
         billingDay: Int?
-    ): UiState<Unit>
+    ): UiState<House>
 
 }

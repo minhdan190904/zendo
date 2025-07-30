@@ -1,5 +1,7 @@
 package com.gig.zendo.data.repository
 
+import com.gig.zendo.domain.model.Invoice
+import com.gig.zendo.domain.model.InvoiceStatus
 import com.gig.zendo.domain.model.Room
 import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.domain.repository.RoomRepository
@@ -85,6 +87,10 @@ class RoomRepositoryImpl @Inject constructor(
         }
     }
 
+    //add for rooms is invoice information
+    //    val numberOfNotPaidInvoice: Int = 0,
+    //    val outstandingAmount: Long = 0L,
+    //query invoices and update room information
     override suspend fun getRoomsWithTenants(houseId: String): UiState<List<Pair<Room, List<Tenant>>>> {
         return try {
             val snapshot = firestore.collection(Room.COLLECTION_NAME)
@@ -95,13 +101,31 @@ class RoomRepositoryImpl @Inject constructor(
             val roomsWithTenants = snapshot.documents.mapNotNull { document ->
                 try {
                     val room = document.toObject<Room>() ?: return@mapNotNull null
+
+                    val invoiceSnapshot = firestore.collection(Invoice.COLLECTION_NAME)
+                        .whereEqualTo(Invoice.FIELD_ROOM_ID, room.id)
+                        .whereEqualTo(Invoice.FIELD_INVOICE_STATUS, InvoiceStatus.NOT_PAID)
+                        .get()
+                        .await()
+
+                    val notPaidInvoices = invoiceSnapshot.documents.mapNotNull { it.toObject<Invoice>() }
+
+                    val numberOfNotPaidInvoice = notPaidInvoices.size
+
+                    val outstandingAmount = notPaidInvoices.sumOf { it.totalAmount }
+
+                    val updatedRoom = room.copy(
+                        numberOfNotPaidInvoice = numberOfNotPaidInvoice,
+                        outstandingAmount = outstandingAmount
+                    )
+
                     val tenantSnapshot = firestore.collection(Tenant.COLLECTION_NAME)
                         .whereEqualTo(Tenant.FIELD_ROOM_ID, room.id)
                         .get()
                         .await()
 
                     val tenants = tenantSnapshot.documents.mapNotNull { it.toObject<Tenant>() }
-                    Pair(room, tenants)
+                    Pair(updatedRoom, tenants)
                 } catch (e: Exception) {
                     println("Failed to map document ${document.id}: ${e.message}")
                     null

@@ -5,7 +5,8 @@ data class Service(
     val name: String = "",
     val chargeValue: Long = 0L,
     val houseId: String = "",
-    val chargeMethod: ChargeMethod = ChargeMethod.BY_CONSUMPTION
+    val chargeMethod: ChargeMethod = ChargeMethod.BY_CONSUMPTION,
+    val createdAt: Long = System.currentTimeMillis()
 ){
     companion object {
         const val COLLECTION_NAME = "services"

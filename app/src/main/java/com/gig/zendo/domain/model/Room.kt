@@ -4,6 +4,9 @@ data class Room(
     val id: String = "",
     val name: String = "",
     val houseId: String = "",
+    val numberOfNotPaidInvoice: Int = 0,
+    val outstandingAmount: Long = 0L,
+    val createdAt: Long = System.currentTimeMillis()
 ) {
     companion object {
         const val COLLECTION_NAME = "rooms"

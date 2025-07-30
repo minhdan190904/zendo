@@ -29,9 +29,9 @@ fun PropertyHouseCard(
     roomCount: Int,
     availableCount: Int,
     overdueCount: Int,
-    overdueAmount: Int,
+    overdueAmount: Long,
     revenueThisMonth: Int,
-    billingMonth: String,
+    billingMonth: Int,
     billingDay: Int,
     onDetailClick: () -> Unit,
     onDeleteClick: () -> Unit,
@@ -98,6 +98,8 @@ fun PropertyHouseCard(
                     StatOfProperty(title = "Số phòng thiếu tiền:", value = overdueCount.toString())
                     StatOfProperty(title = "Số tiền còn thiếu:", value = "${overdueAmount}₫")
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 // Calendar badge
                 Column {

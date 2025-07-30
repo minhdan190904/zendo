@@ -150,12 +150,13 @@ fun RoomScreen(
                     ) {
                         items(rooms) { room ->
 
-                            val tenant = room.second.firstOrNull { it.active == true }
+                            val tenant = room.second.firstOrNull { it.active }
 
                             PropertyRoomCard(
                                 room = room.first,
                                 tenant = tenant,
                                 onCreateInvoice = {
+                                    viewModel.updateRoomAndTenantCurrent(Pair(room.first, tenant ?: Tenant()))
                                     navController.navigate(Screens.CreateInvoiceScreen.route + "/${room.first.id}/${houseId}")
                                 },
                                 onAddTenant = {
@@ -169,6 +170,9 @@ fun RoomScreen(
                                 },
                                 onCheckDetail ={
                                     navController.navigate(Screens.TenantDetailScreen.route + "/${room.first.id}")
+                                },
+                                onCheckAllInvoices = {
+                                    navController.navigate(Screens.InvoiceHistoryScreen.route + "/${room.first.id}")
                                 }
                             )
                         }
