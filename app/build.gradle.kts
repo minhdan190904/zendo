@@ -120,4 +120,7 @@ dependencies {
     //activity-compose
     implementation("androidx.activity:activity-compose:1.7.2")
 
+    //gson
+    implementation("com.google.code.gson:gson:2.10.1")
+
 }

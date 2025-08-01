@@ -55,7 +55,7 @@ fun TenantHistoryTable(
                 TableCell(tenant.startDate)
                 TableCell(tenant.endDate.ifEmpty { "Đang thuê" })
 
-                Text(text = getAnnotatedString("Chi tiết"),
+                Text(text = getAnnotatedString("Chi tiết", DarkGreen),
                     modifier = Modifier
                         .padding(horizontal = 8.dp)
                         .clickable { onDetailClick(tenant) },
@@ -67,12 +67,12 @@ fun TenantHistoryTable(
     }
 }
 
-fun getAnnotatedString(content: String): AnnotatedString {
+fun getAnnotatedString(content: String, color: Color): AnnotatedString {
     return buildAnnotatedString {
         append(content)
         addStyle(
             style = SpanStyle(
-                color = DarkGreen,
+                color = color,
                 textDecoration = TextDecoration.Underline,
                 fontWeight = FontWeight.Bold
             ),

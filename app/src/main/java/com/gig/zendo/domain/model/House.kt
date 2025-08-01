@@ -27,7 +27,14 @@ data class House(
 
     val billingDay: Int? = -1,
 
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+
+    //extra info of invoice house
+    val numberOfRoom : Int = 0,
+    val numberOfEmptyRoom: Int = 0,
+    val numberOfNotPaidRoom: Int = 0,
+    val unpaidAmount: Long = 0L,
+    val monthlyRevenue: Long = 0L,
 ){
     companion object {
         const val COLLECTION_NAME = "houses"

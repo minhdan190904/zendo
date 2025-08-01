@@ -6,10 +6,12 @@ data class Room(
     val houseId: String = "",
     val numberOfNotPaidInvoice: Int = 0,
     val outstandingAmount: Long = 0L,
+    val empty : Boolean = true,
     val createdAt: Long = System.currentTimeMillis()
 ) {
     companion object {
         const val COLLECTION_NAME = "rooms"
         const val FIELD_HOUSE_ID = "houseId"
+        const val FIELD_IS_EMPTY = "empty"
     }
 }

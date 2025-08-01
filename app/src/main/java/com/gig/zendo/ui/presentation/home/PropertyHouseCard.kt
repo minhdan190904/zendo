@@ -17,22 +17,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
+import com.gig.zendo.domain.model.House
 import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.MyPopupMenu
 import com.gig.zendo.ui.common.StatOfProperty
 import com.gig.zendo.utils.HouseMenuAction
+import com.gig.zendo.utils.toMoney
+import getBillingDay
+import getCurrentMonth
 
 @Composable
 fun PropertyHouseCard(
-    title: String,
-    address: String,
-    roomCount: Int,
-    availableCount: Int,
-    overdueCount: Int,
-    overdueAmount: Long,
-    revenueThisMonth: Int,
-    billingMonth: Int,
-    billingDay: Int,
+    house: House = House(),
     onDetailClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onEditClick: () -> Unit,
@@ -53,7 +49,7 @@ fun PropertyHouseCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = title,
+                    text = house.name,
                     style = MaterialTheme.typography.titleMedium.copy(color = Color(0xFFFF7043)),
                     modifier = Modifier.weight(1f)
                 )
@@ -84,7 +80,7 @@ fun PropertyHouseCard(
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(Modifier.width(4.dp))
-                Text(address, style = MaterialTheme.typography.bodyMedium, color = Color.Black)
+                Text(house.address, style = MaterialTheme.typography.bodyMedium, color = Color.Black)
             }
 
             Spacer(Modifier.height(12.dp))
@@ -93,17 +89,19 @@ fun PropertyHouseCard(
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
                     // Room stats
-                    StatOfProperty(title = "Tổng phòng:", value = roomCount.toString())
-                    StatOfProperty(title = "Số phòng trống:", value = availableCount.toString())
-                    StatOfProperty(title = "Số phòng thiếu tiền:", value = overdueCount.toString())
-                    StatOfProperty(title = "Số tiền còn thiếu:", value = "${overdueAmount}₫")
+                    //pair with house stats
+                    val pairOfWeight = Pair(1.5f, 1f)
+                    StatOfProperty(title = "Tổng phòng:", value = house.numberOfRoom.toString(), pairOfWeight = pairOfWeight)
+                    StatOfProperty(title = "Số phòng trống:", value = house.numberOfEmptyRoom.toString(), pairOfWeight = pairOfWeight)
+                    StatOfProperty(title = "Số phòng thiếu tiền:", value = house.numberOfNotPaidRoom.toString(), pairOfWeight = pairOfWeight)
+                    StatOfProperty(title = "Số tiền còn thiếu:", value = house.unpaidAmount.toMoney(), pairOfWeight = pairOfWeight)
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // Calendar badge
                 Column {
-                    Text("Ngày thu:", fontSize = 14.sp, color = Color.Black);
+                    Text("Ngày thu:", fontSize = 14.sp, color = Color.Black)
                     Spacer(modifier = Modifier.height(4.dp))
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -112,14 +110,14 @@ fun PropertyHouseCard(
                             .padding(8.dp)
                             .width(IntrinsicSize.Max)
                     ) {
-                        Text("Tháng $billingMonth", fontSize = 12.sp, color = Color.Black)
+                        Text("Tháng " + getCurrentMonth(), fontSize = 12.sp, color = Color.Black)
                         HorizontalDivider(
                             thickness = 2.dp,
                             color = Color.Black,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("$billingDay", fontSize = 20.sp, color = Color(0xFFFF7043))
+                        Text(getBillingDay(house.billingDay ?: -1).toString(), fontSize = 20.sp, color = Color(0xFFFF7043))
                     }
                 }
             }
@@ -140,7 +138,7 @@ fun PropertyHouseCard(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("Doanh thu tháng:", fontSize = 14.sp, color = Color.Black)
-                    Text("${revenueThisMonth}₫", style = MaterialTheme.typography.titleSmall, color = Color(0xFFFF7043))
+                    Text(house.monthlyRevenue.toMoney(), style = MaterialTheme.typography.titleSmall, color = Color(0xFFFF7043))
                 }
 
                 CustomElevatedButton(onClick = onDetailClick, text = "Chi tiết")

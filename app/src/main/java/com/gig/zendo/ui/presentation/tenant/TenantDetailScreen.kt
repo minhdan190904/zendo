@@ -36,15 +36,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.gig.zendo.domain.model.ChargeMethod
 import com.gig.zendo.ui.presentation.room.RoomViewModel
 import com.gig.zendo.utils.UiState
+import com.gig.zendo.utils.toMoney
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -135,40 +135,40 @@ fun TenantDetailScreen(
                                     val tenant = tenants?.firstOrNull { it.active == true }
                                     if (tenant != null) {
 
-                                        StatOfTenantTextHeader(label = "Thông tin khách thuê")
+                                        StatOfDetailTextHeader(label = "Thông tin khách thuê")
 
-                                        StatOfTenantText(
+                                        StatOfDetailText(
                                             label = "Họ tên",
                                             value = tenant.name
                                         )
-                                        StatOfTenantText(
+                                        StatOfDetailText(
                                             label = "Số điện thoại",
                                             value = tenant.phone
                                         )
-                                        StatOfTenantText(
+                                        StatOfDetailText(
                                             label = "Số người ở",
                                             value = tenant.numberOfOccupants.toString()
                                         )
-                                        StatOfTenantText(
+                                        StatOfDetailText(
                                             label = "Quê quán/Địa chỉ",
                                             value = tenant.address
                                         )
-                                        StatOfTenantText(
+                                        StatOfDetailText(
                                             label = "CMND/CCCD",
                                             value = tenant.identityNumber
                                         )
-                                        StatOfTenantText(
+                                        StatOfDetailText(
                                             label = "Ngày thuê",
                                             value = tenant.startDate
                                         )
 
                                         if (tenant.identityCardFrontUrl.isNotEmpty()) {
-                                            StatOfTenantImage(
+                                            StatOfDetailImage(
                                                 label = "CMND/CCCD mặt trước",
                                                 value = tenant.identityCardFrontUrl,
                                             )
                                         } else {
-                                            StatOfTenantText(
+                                            StatOfDetailText(
                                                 label = "CMND/CCCD mặt trước",
                                                 value = tenant.identityCardFrontUrl,
                                                 valueIsImageUrl = true
@@ -176,47 +176,62 @@ fun TenantDetailScreen(
                                         }
 
                                         if (tenant.identityCardBackUrl.isNotEmpty()) {
-                                            StatOfTenantImage(
+                                            StatOfDetailImage(
                                                 label = "CMND/CCCD mặt sau",
                                                 value = tenant.identityCardBackUrl,
                                             )
                                         } else {
-                                            StatOfTenantText(
+                                            StatOfDetailText(
                                                 label = "CMND/CCCD mặt sau",
                                                 value = tenant.identityCardBackUrl,
                                                 valueIsImageUrl = true
                                             )
                                         }
 
-                                        StatOfTenantTextHeader(label = "Thông tin giá thuê")
+                                        StatOfDetailTextHeader(label = "Thông tin giá thuê")
 
-                                        StatOfTenantText(
+                                        StatOfDetailText(
                                             label = "Tiền cọc",
-                                            value = "${tenant.deposit} đ"
+                                            value = tenant.deposit.toMoney()
                                         )
 
-                                        StatOfTenantText(
-                                            label = "Giá điện (đ/kWh)",
-                                            value = "${tenant.electricPrice} đ"
+                                        StatOfDetailText(
+                                            label = "Giá điện " +
+                                                if (tenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                                    "(đ/kWh)"
+                                                } else {
+                                                    "(đ/người)"
+                                                },
+                                            value = tenant.electricService.chargeValue.toMoney()
                                         )
 
-                                        StatOfTenantText(
-                                            label = "Giá nước (đ/m3)",
-                                            value = "${tenant.waterPrice} đ"
+                                        StatOfDetailText(
+                                            label = "Giá nước " +
+                                                if (tenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                                    "(đ/khối)"
+                                                } else {
+                                                    "(đ/người)"
+                                                },
+                                            value = tenant.waterService.chargeValue.toMoney()
                                         )
 
-                                        StatOfTenantText(
-                                            label = "Giá thuê (đ/tháng)",
-                                            value = "${tenant.rentPrice} đ"
+                                        StatOfDetailText(
+                                            label = "Giá thuê " +
+                                                if (tenant.rentService.chargeMethod == ChargeMethod.FIXED) {
+                                                    "(đ/tháng)"
+                                                } else {
+                                                    "(đ/người/tháng)"
+                                                },
+                                            value = tenant.rentService.chargeValue.toMoney()
                                         )
 
-                                        StatOfTenantTextHeader(
+                                        StatOfDetailTextHeader(
                                             label = "Trạng thái",
                                             value = if (tenant.active) "Đang thuê" else "Đã trả phòng",
                                             colorOfValue = if (tenant.active) Color.Green else Color.Red
                                         )
 
-                                        StatOfTenantTextHeader(
+                                        StatOfDetailTextHeader(
                                             label = "Ghi chú",
                                             value = tenant.note
                                         )
@@ -239,7 +254,7 @@ fun TenantDetailScreen(
 }
 
 @Composable
-fun StatOfTenantTextHeader(
+fun StatOfDetailTextHeader(
     label: String,
     value: String = "",
     colorOfValue: Color = Color.Black,
@@ -267,17 +282,18 @@ fun StatOfTenantTextHeader(
 }
 
 @Composable
-fun StatOfTenantText(
+fun StatOfDetailText(
     label: String,
     value: String,
     valueIsImageUrl: Boolean = false,
+    color: Color = Color.Black,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = label,
@@ -288,7 +304,7 @@ fun StatOfTenantText(
         Text(
             text = if (!valueIsImageUrl) value else "Chưa có ảnh",
             style = MaterialTheme.typography.labelSmall.copy(fontSize = 14.sp),
-            color = if (valueIsImageUrl) Color.Red else Color.Black,
+            color = if (valueIsImageUrl) Color.Red else color,
         )
     }
 
@@ -301,7 +317,7 @@ fun StatOfTenantText(
 }
 
 @Composable
-fun StatOfTenantImage(
+fun StatOfDetailImage(
     label: String,
     value: String,
 ) {

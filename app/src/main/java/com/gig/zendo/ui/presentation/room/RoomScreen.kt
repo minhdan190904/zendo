@@ -32,7 +32,7 @@ import com.gig.zendo.utils.UiState
 import com.gig.zendo.domain.model.Room
 import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.ui.common.ConfirmDialog
-import com.gig.zendo.ui.presentation.tenant.getToday
+import com.gig.zendo.utils.getToday
 
 
 data class HomeAction(
@@ -56,7 +56,10 @@ fun RoomScreen(
             "Thêm phòng"
         ) { navController.navigate(Screens.CreateRoomScreen.route + "/${houseId}") },
         HomeAction(R.drawable.ic_lightbub, "Ghi điện nước") { /* onRecord() */ },
-        HomeAction(R.drawable.ic_money, "Thu tiền") {  },
+        HomeAction(
+            R.drawable.ic_money,
+            "Thu tiền"
+        ) { navController.navigate(Screens.AcceptInvoiceScreen.route + "/${houseId}") },
         HomeAction(
             R.drawable.ic_setting,
             "Cài đặt"
@@ -73,8 +76,10 @@ fun RoomScreen(
     }
 
     val shouldRefresh = navController.currentBackStackEntry
-            ?.savedStateHandle
-        ?.get<Boolean>("shouldRefreshRooms") == true || navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>("shouldRefreshRooms") == true
+        ?.savedStateHandle
+        ?.get<Boolean>("shouldRefreshRooms") == true || navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>(
+        "shouldRefreshRooms"
+    ) == true
 
     LaunchedEffect(Unit) {
         if (shouldRefresh || roomsState !is UiState.Success) {
@@ -92,7 +97,6 @@ fun RoomScreen(
             title = "Trả phòng",
             message = "Bạn có muốn trả phòng này không?",
             onConfirm = {
-                Log.i("RoomScreen", "Checking out tenant with ID: $tenantId")
                 viewModel.checkOutTenant(tenantId, getToday())
             },
             onDismiss = { tenantIdState = null },
@@ -156,8 +160,13 @@ fun RoomScreen(
                                 room = room.first,
                                 tenant = tenant,
                                 onCreateInvoice = {
-                                    viewModel.updateRoomAndTenantCurrent(Pair(room.first, tenant ?: Tenant()))
-                                    navController.navigate(Screens.CreateInvoiceScreen.route + "/${room.first.id}/${houseId}")
+                                    viewModel.updateRoomAndTenantCurrent(
+                                        Pair(
+                                            room.first,
+                                            tenant ?: Tenant()
+                                        )
+                                    )
+                                    navController.navigate(Screens.CreateInvoiceScreen.route + "/${houseId}")
                                 },
                                 onAddTenant = {
                                     navController.navigate(Screens.CreateTenantScreen.route + "/${room.first.id}/${houseId}")
@@ -168,7 +177,7 @@ fun RoomScreen(
                                 onCheckOut = {
                                     tenantIdState = tenant?.id
                                 },
-                                onCheckDetail ={
+                                onCheckDetail = {
                                     navController.navigate(Screens.TenantDetailScreen.route + "/${room.first.id}")
                                 },
                                 onCheckAllInvoices = {

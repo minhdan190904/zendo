@@ -5,9 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
@@ -20,19 +18,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.gig.zendo.R
-import com.gig.zendo.domain.model.Invoice
 import com.gig.zendo.domain.model.InvoiceStatus
 import com.gig.zendo.ui.common.CustomLoadingProgress
-import com.gig.zendo.ui.presentation.tenant.TenantHistoryTable
+import com.gig.zendo.ui.presentation.navigation.Screens
 import com.gig.zendo.ui.theme.DarkGreen
 import com.gig.zendo.utils.UiState
 import com.gig.zendo.utils.toMoney
@@ -175,10 +170,10 @@ fun InvoiceHistoryScreen(
     viewModel: InvoiceViewModel
 ) {
 
-    val invoicesState by viewModel.invoices.collectAsStateWithLifecycle()
+    val invoicesState by viewModel.invoicesStateInRoom.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        viewModel.getInvoices(roomId)
+        viewModel.getInvoicesInRoom(roomId)
     }
 
     Scaffold(
@@ -227,10 +222,10 @@ fun InvoiceHistoryScreen(
                                 val invoice = invoices[index]
                                 PaymentItem(
                                     date = invoice.date,
-                                    amount = toMoney(invoice.totalAmount) + " đ",
+                                    amount = invoice.totalAmount.toMoney(),
                                     statusInvoice = invoice.status,
                                     onDetailClick = {
-                                        // Handle detail click
+                                        navController.navigate(Screens.InvoiceDetailScreen.route + "/${invoice.id}")
                                     },
                                     onDeleteClick = {
                                         // Handle delete click

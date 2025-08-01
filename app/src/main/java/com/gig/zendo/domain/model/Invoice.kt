@@ -6,7 +6,11 @@ data class Invoice(
 
     val date: String = "",
 
+    val houseId: String = "",
+
     val roomId: String = "",
+
+    val roomName: String = "",
 
     // Chỉ số điện nước
     val oldNumberElectric: Long = 0L,
@@ -55,8 +59,10 @@ data class Invoice(
 ){
     companion object {
         const val COLLECTION_NAME = "invoices"
+        const val FIELD_ID = "id"
         const val FIELD_ROOM_ID = "roomId"
         const val FIELD_INVOICE_STATUS = "status"
+        const val FIELD_HOUSE_ID = "houseId"
     }
 }
 

@@ -11,13 +11,29 @@ data class Tenant(
     val roomId: String = "",
     val numberOfOccupants: Int = 1,
     val note: String = "",
-    val rentPrice: Long = 0L,
-    val electricPrice: Long = 0L,
-    val waterPrice: Long = 0L,
     val startDate: String = "",
     val endDate: String = "",
     val deposit: Long = 0L,
     val active: Boolean = true,
+    val rentService: Service = Service(
+        id = "",
+        name = "Rent",
+        chargeValue = 0L,
+        chargeMethod = ChargeMethod.FIXED
+    ),
+    val electricService: Service = Service(
+        id = "",
+        name = "Electricity",
+        chargeValue = 0L,
+        chargeMethod = ChargeMethod.BY_CONSUMPTION
+    ),
+
+    val waterService: Service = Service(
+        id = "",
+        name = "Water",
+        chargeValue = 0L,
+        chargeMethod = ChargeMethod.BY_CONSUMPTION
+    ),
     val createdAt: Long = System.currentTimeMillis()
 ) {
     companion object {

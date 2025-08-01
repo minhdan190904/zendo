@@ -134,7 +134,7 @@ fun PropertyRoomCard(
                         // so tien con no
                         StatOfProperty(
                             title = "Số tiền còn nợ:",
-                            value = toMoney(room.outstandingAmount) + " ₫",
+                            value = room.outstandingAmount.toMoney(),
                             pairOfWeight = pairOfWeight
                         )
                     }

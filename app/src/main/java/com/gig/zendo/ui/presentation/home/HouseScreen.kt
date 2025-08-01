@@ -200,15 +200,7 @@ fun HouseScreen(
 
                                 for (house in (housesState as UiState.Success<List<House>>).data) {
                                     PropertyHouseCard(
-                                        title = house.name,
-                                        address = house.address,
-                                        roomCount = 0,
-                                        availableCount = 0,
-                                        overdueCount = 0,
-                                        overdueAmount = 0,
-                                        revenueThisMonth = 0,
-                                        billingMonth = getCurrentMonth(),
-                                        billingDay = getBillingDay(house.billingDay ?: -1),
+                                        house = house,
                                         onDetailClick = {
                                             navController.currentBackStackEntry
                                                 ?.savedStateHandle

@@ -1,12 +1,18 @@
 package com.gig.zendo.data.repository
 
 import com.gig.zendo.domain.model.House
+import com.gig.zendo.domain.model.Invoice
+import com.gig.zendo.domain.model.InvoiceStatus
+import com.gig.zendo.domain.model.Room
 import com.gig.zendo.domain.model.Service
 import com.gig.zendo.domain.repository.HouseRepository
 import com.gig.zendo.utils.UiState
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 class HouseRepositoryImpl @Inject constructor(
@@ -25,23 +31,55 @@ class HouseRepositoryImpl @Inject constructor(
 
     override suspend fun getHouses(uid: String): UiState<List<House>> {
         return try {
-            val snapshot = firestore.collection(House.COLLECTION_NAME)
-                .whereEqualTo("uid", uid)
+            val houseSnapshot = firestore.collection(House.COLLECTION_NAME)
+                .whereEqualTo(House.FIELD_UID, uid)
                 .get()
                 .await()
 
-            val houses = snapshot.documents.mapNotNull { document ->
-                try {
-                    document.toObject<House>()
-                } catch (e: Exception) {
-                    println("Failed to map document ${document.id}: ${e.message}")
-                    null
-                }
+            val roomSnapshot = firestore.collection(Room.COLLECTION_NAME)
+                .get()
+                .await()
+
+            val invoiceSnapshot = firestore.collection(Invoice.COLLECTION_NAME)
+                .get()
+                .await()
+
+            val houses = houseSnapshot.documents.mapNotNull { it.toObject<House>() }
+            val rooms = roomSnapshot.documents.mapNotNull { it.toObject<Room>() }
+            val invoices = invoiceSnapshot.documents.mapNotNull { it.toObject<Invoice>() }
+
+            val houseList = houses.map { house ->
+                val houseRooms = rooms.filter { it.houseId == house.id }
+                val houseInvoices = invoices.filter { it.houseId == house.id }
+
+                val numberOfRoom = houseRooms.size
+                val numberOfEmptyRoom = houseRooms.count { it.empty }
+                val notPaidInvoices = houseInvoices.filter { it.status == InvoiceStatus.NOT_PAID }
+
+                val roomIdsWithNotPaidInvoices = notPaidInvoices.map { it.roomId }.distinct()
+                val numberOfNotPaidRoom = houseRooms.count { roomIdsWithNotPaidInvoices.contains(it.id) }
+
+                val unpaidAmount = notPaidInvoices.sumOf { it.totalAmount }
+
+                val currentMonthYear = SimpleDateFormat("MM/yyyy", Locale.getDefault()).format(Date())
+
+                val monthlyRevenue = houseInvoices
+                    .filter { it.date.endsWith(currentMonthYear) && it.status == InvoiceStatus.PAID }
+                    .sumOf { it.totalAmount }
+
+                house.copy(
+                    numberOfRoom = numberOfRoom,
+                    numberOfEmptyRoom = numberOfEmptyRoom,
+                    numberOfNotPaidRoom = numberOfNotPaidRoom,
+                    unpaidAmount = unpaidAmount,
+                    monthlyRevenue = monthlyRevenue
+                )
             }
 
-            if (houses.isEmpty()) UiState.Empty else UiState.Success(houses)
+            if (houseList.isEmpty()) UiState.Empty else UiState.Success(houseList)
+
         } catch (e: Exception) {
-            UiState.Failure(e.message ?: "Failed to fetch houses")
+            UiState.Failure(e.message ?: "Failed to fetch houses with stats")
         }
     }
 

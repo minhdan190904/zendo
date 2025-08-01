@@ -3,6 +3,7 @@ package com.gig.zendo.ui.common
 import android.app.DatePickerDialog
 import android.view.ContextThemeWrapper
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -53,10 +54,14 @@ fun CustomDateTimePicker(
         )
     }
 
+    //add no background shadow when click or hold box
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) {
                 datePickerDialog.show()
             }
     ) {

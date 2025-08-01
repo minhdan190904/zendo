@@ -5,9 +5,8 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gig.zendo.domain.model.Invoice
-import com.gig.zendo.domain.model.Tenant
+import com.gig.zendo.domain.model.InvoiceStatus
 import com.gig.zendo.domain.repository.InvoiceRepository
-import com.gig.zendo.domain.repository.TenantRepository
 import com.gig.zendo.utils.CloudinaryUploader
 import com.gig.zendo.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,8 +26,17 @@ class InvoiceViewModel @Inject constructor(
     private val _createInvoiceState = MutableStateFlow<UiState<Unit>>(UiState.Empty)
     val createInvoiceState: StateFlow<UiState<Unit>> = _createInvoiceState
 
-    private val invoicesState = MutableStateFlow<UiState<List<Invoice>>>(UiState.Empty)
-    val invoices: StateFlow<UiState<List<Invoice>>> = invoicesState
+    private val _invoicesStateInRoom = MutableStateFlow<UiState<List<Invoice>>>(UiState.Empty)
+    val invoicesStateInRoom: StateFlow<UiState<List<Invoice>>> = _invoicesStateInRoom
+
+    private val _invoicesStateInHouse = MutableStateFlow<UiState<List<Invoice>>>(UiState.Empty)
+    val invoicesStateInHouse: StateFlow<UiState<List<Invoice>>> = _invoicesStateInHouse
+
+    private val _updateStatusPaidState = MutableStateFlow<UiState<Unit>>(UiState.Empty)
+    val updateStatusPaidState: StateFlow<UiState<Unit>> = _updateStatusPaidState
+
+    private val _updateStatusInvoiceState = MutableStateFlow<UiState<Unit>>(UiState.Empty)
+    val updateStatusInvoiceState: StateFlow<UiState<Unit>> = _updateStatusInvoiceState
 
     fun uploadImage(context: Context, uri: Uri) {
         _upImageState.value = UiState.Loading
@@ -44,10 +52,35 @@ class InvoiceViewModel @Inject constructor(
         }
     }
 
-    fun getInvoices(roomId: String) {
-        invoicesState.value = UiState.Loading
+    fun getInvoicesInRoom(roomId: String) {
+        _invoicesStateInRoom.value = UiState.Loading
         viewModelScope.launch {
-            invoicesState.value = invoiceRepository.getInvoices(roomId)
+            _invoicesStateInRoom.value = invoiceRepository.getInvoicesInRoom(roomId)
         }
+    }
+
+    fun getInvoicesInHouse(houseId: String) {
+        _invoicesStateInHouse.value = UiState.Loading
+        viewModelScope.launch {
+            _invoicesStateInHouse.value = invoiceRepository.getInvoicesInHouse(houseId)
+        }
+    }
+
+    fun updateStatusPaidForInvoices(listIdInvoice: List<String>) {
+        _updateStatusPaidState.value = UiState.Loading
+        viewModelScope.launch {
+            _updateStatusPaidState.value = invoiceRepository.updateStatusPaidForInvoices(listIdInvoice)
+        }
+    }
+
+    fun updateStatusInvoice(invoiceId: String, status: InvoiceStatus) {
+        _updateStatusInvoiceState.value = UiState.Loading
+        viewModelScope.launch {
+            _updateStatusInvoiceState.value = invoiceRepository.updateStatusInvoice(invoiceId, status)
+        }
+    }
+
+    fun resetStateUpdateStatus() {
+        _updateStatusInvoiceState.value = UiState.Empty
     }
 }

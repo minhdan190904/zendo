@@ -1,6 +1,5 @@
 package com.gig.zendo.ui.presentation.invoice
 
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -74,12 +73,12 @@ import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.ui.presentation.home.HouseViewModel
 import com.gig.zendo.ui.presentation.room.RoomViewModel
 import com.gig.zendo.ui.presentation.service.ServiceViewModel
-import com.gig.zendo.ui.presentation.tenant.TenantViewModel
-import com.gig.zendo.ui.presentation.tenant.getToday
 import com.gig.zendo.ui.presentation.tenant.saveBitmapToCache
 import com.gig.zendo.ui.theme.DarkGreen
 import com.gig.zendo.utils.UiState
+import com.gig.zendo.utils.getToday
 import com.gig.zendo.utils.toMoney
+import com.gig.zendo.utils.toMoneyWithoutUnit
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,9 +86,7 @@ import java.util.Locale
 fun CreateInvoiceScreen(
     navController: NavController,
     snackbarHostState: SnackbarHostState,
-    tenantId: String,
     houseId: String,
-    viewModelHouse: HouseViewModel,
     viewModelRoom: RoomViewModel,
     viewModel: InvoiceViewModel = hiltViewModel(),
     viewModelService: ServiceViewModel = hiltViewModel()
@@ -161,32 +158,17 @@ fun CreateInvoiceScreen(
         mutableStateOf(listOf<Service>())
     }
 
-    val housesState by viewModelHouse.housesState.collectAsStateWithLifecycle()
-    val houseState by viewModelHouse.updateHouseServicesState.collectAsStateWithLifecycle()
     val roomsAndTenant = viewModelRoom.currentRoomAndTenant.value
-    val currentRoom = roomsAndTenant?.first
-    val currentTenant = roomsAndTenant?.second
+    val currentRoom = roomsAndTenant?.first ?: run {
+        Toast.makeText(context, "Không tìm thấy phòng hiện tại", Toast.LENGTH_SHORT).show()
+        return
+    }
+    val currentTenant = roomsAndTenant.second
 
     val createInvoiceState by viewModel.createInvoiceState.collectAsStateWithLifecycle()
 
-    var rentCharge by remember {
-        mutableStateOf(currentTenant?.rentPrice?.toString() ?: "0")
-    }
-
     var total by remember {
         mutableLongStateOf(0L)
-    }
-
-    val house = if (houseState is UiState.Success) {
-        (houseState as UiState.Success<House>).data
-    } else {
-        when (housesState) {
-            is UiState.Success -> {
-                (housesState as UiState.Success<List<House>>).data.firstOrNull { it.id == houseId }
-            }
-
-            else -> null
-        }
     }
 
     LaunchedEffect(Unit) {
@@ -266,7 +248,7 @@ fun CreateInvoiceScreen(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                if (house!!.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                if (currentTenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
                                     Text(
                                         text = "Thông tin số điện cũ và mới",
                                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp),
@@ -342,13 +324,13 @@ fun CreateInvoiceScreen(
 
                                 } else {
                                     CustomInformation(
-                                        label = "Điện tính theo số người: ${currentTenant?.numberOfOccupants ?: 0} người"
+                                        label = "Điện tính theo số người: ${currentTenant.numberOfOccupants} người"
                                     )
                                 }
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                if (house.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                if (currentTenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
                                     Text(
                                         text = "Thông tin số nước cũ và mới",
                                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp),
@@ -423,7 +405,7 @@ fun CreateInvoiceScreen(
                                     }
                                 } else {
                                     CustomInformation(
-                                        label = "Nước tính theo số người: ${currentTenant?.numberOfOccupants ?: 0} người"
+                                        label = "Nước tính theo số người: ${currentTenant.numberOfOccupants} người"
                                     )
                                 }
 
@@ -514,23 +496,6 @@ fun CreateInvoiceScreen(
                                 Spacer(modifier = Modifier.height(16.dp))
 
                                 LabeledTextField(
-                                    label = if (house.rentService.chargeMethod == ChargeMethod.BY_PERSON) {
-                                        "Tiền phòng (theo số người)"
-                                    } else {
-                                        "Tiền phòng"
-                                    },
-                                    value = rentCharge,
-                                    onValueChange = { rentCharge = it },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    singleLine = true,
-                                    useInternalLabel = false,
-                                    placeholder = "Ví dụ: 1,500.000",
-                                    inputType = InputType.MONEY,
-                                )
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                LabeledTextField(
                                     label = "Ghi chú",
                                     value = note,
                                     onValueChange = { note = it },
@@ -541,11 +506,11 @@ fun CreateInvoiceScreen(
                                     inputType = InputType.TEXT,
                                 )
 
-                                val headerWeight = listOf(1.5f, 1f, 1f, 1f)
+                                val headerWeight = listOf(1.5f, 0.8f, 1f, 1f)
                                 val rows = listOf(
                                     Triple(
                                         "Tiền điện",
-                                        if (house.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                        if (currentTenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
                                             val current =
                                                 numberElectricityCurrent.toLongOrNull() ?: 0L
                                             val previous =
@@ -556,13 +521,13 @@ fun CreateInvoiceScreen(
                                                 0L
                                             }
                                         } else {
-                                            currentTenant?.numberOfOccupants?.toLong() ?: 0L
+                                            currentTenant.numberOfOccupants.toLong()
                                         },
-                                        house.electricService.chargeValue
+                                        currentTenant.electricService.chargeValue
                                     ),
                                     Triple(
                                         "Tiền nước",
-                                        if (house.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                        if (currentTenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
                                             val current = numberWaterCurrent.toLongOrNull() ?: 0L
                                             val previous = numberWaterPrevious.toLongOrNull() ?: 0L
                                             if (current >= previous) {
@@ -571,16 +536,16 @@ fun CreateInvoiceScreen(
                                                 0L
                                             }
                                         } else {
-                                            currentTenant?.numberOfOccupants?.toLong() ?: 0L
-                                        }, house.waterService.chargeValue
+                                            currentTenant.numberOfOccupants.toLong()
+                                        }, currentTenant.waterService.chargeValue
                                     ),
                                     Triple(
                                         "Tiền phòng",
-                                        if (house.rentService.chargeMethod == ChargeMethod.BY_PERSON) {
-                                            currentTenant?.numberOfOccupants?.toLong() ?: 0L
+                                        if (currentTenant.rentService.chargeMethod == ChargeMethod.BY_PERSON) {
+                                            currentTenant.numberOfOccupants.toLong()
                                         } else {
                                             1L
-                                        }, rentCharge.toLongOrNull() ?: 0L
+                                        }, currentTenant.rentService.chargeValue
                                     ),
                                 )
 
@@ -625,12 +590,12 @@ fun CreateInvoiceScreen(
                                                 fontSize = 14.sp
                                             )
                                             Text(
-                                                toMoney(price),
+                                                price.toMoneyWithoutUnit(),
                                                 modifier = Modifier.weight(headerWeight[2]),
                                                 fontSize = 14.sp
                                             )
                                             Text(
-                                                toMoney(count * price),
+                                                (count * price).toMoneyWithoutUnit(),
                                                 modifier = Modifier.weight(headerWeight[3]),
                                                 textAlign = TextAlign.End,
                                                 fontWeight = FontWeight.Bold,
@@ -654,12 +619,12 @@ fun CreateInvoiceScreen(
                                                 fontSize = 14.sp
                                             )
                                             Text(
-                                                toMoney(service.chargeValue),
+                                                service.chargeValue.toMoneyWithoutUnit(),
                                                 modifier = Modifier.weight(headerWeight[2]),
                                                 fontSize = 14.sp
                                             )
                                             Text(
-                                                toMoney(service.chargeValue),
+                                                service.chargeValue.toMoneyWithoutUnit(),
                                                 modifier = Modifier.weight(headerWeight[3]),
                                                 textAlign = TextAlign.End,
                                                 fontWeight = FontWeight.Bold,
@@ -682,7 +647,7 @@ fun CreateInvoiceScreen(
                                         )
                                         Spacer(modifier = Modifier.weight(headerWeight[1] + headerWeight[2]))
                                         Text(
-                                            toMoney(total),
+                                            total.toMoney(),
                                             modifier = Modifier.weight(headerWeight[3]),
                                             textAlign = TextAlign.End,
                                             fontWeight = FontWeight.Bold,
@@ -693,20 +658,17 @@ fun CreateInvoiceScreen(
                                 }
                                 CustomElevatedButton(onClick = {
                                     val invoice = Invoice(
-                                        tenant = currentTenant ?: Tenant(),
+                                        tenant = currentTenant,
                                         date = dateCreateInvoice,
-                                        oldNumberElectric = numberElectricityPrevious.toLongOrNull() ?: 0L,
-                                        newNumberElectric = numberElectricityCurrent.toLongOrNull() ?: 0L,
+                                        oldNumberElectric = numberElectricityPrevious.toLongOrNull()
+                                            ?: 0L,
+                                        newNumberElectric = numberElectricityCurrent.toLongOrNull()
+                                            ?: 0L,
                                         oldNumberWater = numberWaterPrevious.toLongOrNull() ?: 0L,
                                         newNumberWater = numberWaterCurrent.toLongOrNull() ?: 0L,
-                                        rentService = Service(
-                                            id = house.rentService.id,
-                                            name = house.rentService.name,
-                                            chargeValue = rentCharge.toLongOrNull() ?: 0L,
-                                            chargeMethod = house.rentService.chargeMethod
-                                        ),
-                                        electricService = house.electricService,
-                                        waterService = house.waterService,
+                                        rentService = currentTenant.rentService,
+                                        electricService = currentTenant.electricService,
+                                        waterService = currentTenant.waterService,
                                         oldElectricImageUrl = numberElectricityPreviousImageUrl,
                                         newElectricImageUrl = numberElectricityCurrentImageUrl,
                                         oldWaterImageUrl = numberWaterPreviousImageUrl,
@@ -714,7 +676,9 @@ fun CreateInvoiceScreen(
                                         otherServices = listServiceExtraUsedState,
                                         note = note,
                                         totalAmount = total,
-                                        roomId = currentRoom?.id ?: "",
+                                        roomId = currentRoom.id,
+                                        roomName = currentRoom.name,
+                                        houseId = houseId,
                                     )
 
                                     viewModel.addInvoice(invoice)
@@ -765,7 +729,7 @@ fun CreateInvoiceScreen(
 
     val upImageState by viewModel.upImageState.collectAsStateWithLifecycle()
 
-    LoadingScreen(isLoading = upImageState is UiState.Loading)
+    LoadingScreen(isLoading = upImageState is UiState.Loading || createInvoiceState is UiState.Loading)
 
     LaunchedEffect(upImageState) {
         when (val state = upImageState) {
@@ -793,6 +757,9 @@ fun CreateInvoiceScreen(
     LaunchedEffect(createInvoiceState) {
         when (val state = createInvoiceState) {
             is UiState.Success -> {
+                navController.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.set("shouldRefreshRooms", true)
                 navController.popBackStack()
                 snackbarHostState.showSnackbar("✓ Tạo hóa đơn thành công!")
             }

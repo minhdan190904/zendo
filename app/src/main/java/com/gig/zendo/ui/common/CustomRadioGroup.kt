@@ -11,6 +11,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,6 +25,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gig.zendo.ui.theme.DarkGreen
 
 @Composable
 fun <T> CustomRadioGroup(
@@ -62,6 +64,9 @@ fun <T> CustomRadioGroup(
                 RadioButton(
                     selected = (option == selectedOption),
                     onClick = null,
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = DarkGreen,
+                    ),
                 )
                 Text(
                     text = labelMapper(option),

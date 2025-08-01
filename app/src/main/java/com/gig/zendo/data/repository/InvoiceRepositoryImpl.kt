@@ -1,6 +1,7 @@
 package com.gig.zendo.data.repository
 
 import com.gig.zendo.domain.model.Invoice
+import com.gig.zendo.domain.model.InvoiceStatus
 import com.gig.zendo.domain.repository.InvoiceRepository
 import com.gig.zendo.utils.UiState
 import com.google.firebase.firestore.FirebaseFirestore
@@ -20,7 +21,7 @@ class InvoiceRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getInvoices(roomId: String): UiState<List<Invoice>> {
+    override suspend fun getInvoicesInRoom(roomId: String): UiState<List<Invoice>> {
         return try {
             val invoices = firebaseFirestore.collection(Invoice.COLLECTION_NAME)
                 .whereEqualTo(Invoice.FIELD_ROOM_ID, roomId)
@@ -31,6 +32,45 @@ class InvoiceRepositoryImpl @Inject constructor(
             else UiState.Success(invoices)
         } catch (e: Exception) {
             UiState.Failure(e.message ?: "Failed to fetch invoices")
+        }
+    }
+
+    override suspend fun getInvoicesInHouse(houseId: String): UiState<List<Invoice>> {
+        return try {
+            val invoices = firebaseFirestore.collection(Invoice.COLLECTION_NAME)
+                .whereEqualTo(Invoice.FIELD_HOUSE_ID, houseId)
+                .get()
+                .await()
+                .toObjects(Invoice::class.java)
+            if (invoices.isEmpty()) UiState.Empty
+            else UiState.Success(invoices)
+        } catch (e: Exception) {
+            UiState.Failure(e.message ?: "Failed to fetch invoices")
+        }
+    }
+
+    //return all invoices
+    override suspend fun updateStatusPaidForInvoices(listIdInvoice: List<String>): UiState<Unit> {
+        return try {
+            val batch = firebaseFirestore.batch()
+            listIdInvoice.forEach { invoiceId ->
+                val invoiceRef = firebaseFirestore.collection(Invoice.COLLECTION_NAME).document(invoiceId)
+                batch.update(invoiceRef, Invoice.FIELD_INVOICE_STATUS, InvoiceStatus.PAID.name)
+            }
+            batch.commit().await()
+            UiState.Success(Unit)
+        } catch (e: Exception) {
+            UiState.Failure(e.message ?: "Failed to update status for invoices")
+        }
+    }
+
+    override suspend fun updateStatusInvoice(invoiceId: String, status: InvoiceStatus): UiState<Unit> {
+        return try {
+            val invoiceRef = firebaseFirestore.collection(Invoice.COLLECTION_NAME).document(invoiceId)
+            invoiceRef.update(Invoice.FIELD_INVOICE_STATUS, status.name).await()
+            UiState.Success(Unit)
+        } catch (e: Exception) {
+            UiState.Failure(e.message ?: "Failed to update invoice status")
         }
     }
 

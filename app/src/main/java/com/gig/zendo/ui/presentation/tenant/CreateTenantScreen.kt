@@ -6,7 +6,6 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -40,41 +38,35 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import coil.compose.rememberAsyncImagePainter
-import com.gig.zendo.R
+import com.gig.zendo.domain.model.ChargeMethod
 import com.gig.zendo.domain.model.House
+import com.gig.zendo.domain.model.Service
 import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.ui.common.CustomDateTimePicker
 import com.gig.zendo.ui.common.CustomDisplayImageDialog
 import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.CustomImagePicker
 import com.gig.zendo.ui.common.CustomImagePickerDialog
+import com.gig.zendo.ui.common.CustomRadioGroup
 import com.gig.zendo.ui.common.InputType
 import com.gig.zendo.ui.common.LabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.ui.presentation.home.HouseViewModel
-import com.gig.zendo.utils.CloudinaryUploader
+import com.gig.zendo.ui.presentation.service.labelMapperForChargeMethod
 import com.gig.zendo.utils.UiState
-import kotlinx.coroutines.launch
+import com.gig.zendo.utils.getToday
 import java.io.File
 import java.io.FileOutputStream
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,10 +91,7 @@ fun CreateTenantScreen(
     var isImagePickerOpen by remember { mutableStateOf(false) }
     var deposit by remember { mutableStateOf("") }
     var startDateRent by remember { mutableStateOf(getToday()) }
-    var electricityPrice by remember { mutableStateOf("") }
-    var waterPrice by remember { mutableStateOf("") }
-    var rentPrice by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
+    val note by remember { mutableStateOf("") }
     var positionImage by remember { mutableIntStateOf(0) }
     var showImagePickerDialog by remember { mutableStateOf(false) }
 
@@ -110,19 +99,30 @@ fun CreateTenantScreen(
     val upImageState by viewModel.upImageState.collectAsStateWithLifecycle()
 
     val housesState by viewModelHouse.housesState.collectAsStateWithLifecycle()
-    var houseState by remember { mutableStateOf<House?>(null) }
+    val houseState by viewModelHouse.updateHouseServicesState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(housesState) {
-        if (housesState is UiState.Success) {
-            val houses = (housesState as UiState.Success<List<House>>).data
-            houseState = houses.firstOrNull { it.id == houseId }
-            val house = houseState
-            house?.let {
-                electricityPrice = it.electricService?.chargeValue.toString()
-                waterPrice = it.waterService?.chargeValue.toString()
-                rentPrice = it.rentService?.chargeValue.toString()
-            }
+    var electricityCharge by remember { mutableStateOf("") }
+    var waterCharge by remember { mutableStateOf("") }
+    var rentCharge by remember { mutableStateOf("") }
+    var electricChargeMethod by remember { mutableStateOf(ChargeMethod.BY_CONSUMPTION) }
+    var waterChargeMethod by remember { mutableStateOf(ChargeMethod.BY_CONSUMPTION) }
+    var rentChargeMethod by remember { mutableStateOf(ChargeMethod.FIXED) }
+
+    val house = if (housesState is UiState.Success) {
+        if(houseState is UiState.Success) {
+            (houseState as UiState.Success<House>).data
+        } else {
+            (housesState as UiState.Success<List<House>>).data.firstOrNull{ it.id == houseId }
         }
+    } else null
+
+    house?.let {
+        electricityCharge = it.electricService.chargeValue.toString()
+        waterCharge = it.waterService.chargeValue.toString()
+        rentCharge = it.rentService.chargeValue.toString()
+        electricChargeMethod = it.electricService.chargeMethod
+        waterChargeMethod = it.waterService.chargeMethod
+        rentChargeMethod = it.rentService.chargeMethod
     }
 
     Scaffold(
@@ -309,9 +309,9 @@ fun CreateTenantScreen(
                                 Spacer(modifier = Modifier.height(12.dp))
 
                                 LabeledTextField(
-                                    label = "Giá điện (đ/kWh)",
-                                    value = electricityPrice,
-                                    onValueChange = { electricityPrice = it },
+                                    label = "⚡ Giá điện " + if(electricChargeMethod == ChargeMethod.BY_CONSUMPTION) "(đ/kWh)" else "(đ/người)",
+                                    value = electricityCharge,
+                                    onValueChange = { electricityCharge = it },
                                     modifier = Modifier.fillMaxWidth(),
                                     singleLine = true,
                                     useInternalLabel = false,
@@ -319,25 +319,55 @@ fun CreateTenantScreen(
                                     inputType = InputType.MONEY
                                 )
 
-                                Spacer(modifier = Modifier.height(12.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
 
-                                LabeledTextField(
-                                    label = "Giá nước (đ/khối)",
-                                    value = waterPrice,
-                                    onValueChange = { waterPrice = it },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    singleLine = true,
-                                    useInternalLabel = false,
-                                    placeholder = "Ví dụ: 11,000",
-                                    inputType = InputType.MONEY
+                                CustomRadioGroup(
+                                    options = listOf(
+                                        ChargeMethod.BY_CONSUMPTION,
+                                        ChargeMethod.BY_PERSON
+                                    ),
+                                    selectedOption = electricChargeMethod,
+                                    onOptionSelected = {
+                                        electricChargeMethod = it
+                                    },
+                                    labelMapper = { labelMapperForChargeMethod(it) },
+                                    label = "Phương thức tính tiền điện",
                                 )
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
                                 LabeledTextField(
-                                    label = "Giá thuê (đ/tháng)",
-                                    value = rentPrice,
-                                    onValueChange = { rentPrice = it },
+                                    label = "💧 Giá nước " + if(waterChargeMethod == ChargeMethod.BY_CONSUMPTION) "(đ/khối)" else "(đ/người)",
+                                    value = waterCharge,
+                                    onValueChange = { waterCharge = it },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    useInternalLabel = false,
+                                    placeholder = "Ví dụ: 20,000",
+                                    inputType = InputType.MONEY
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                CustomRadioGroup(
+                                    options = listOf(
+                                        ChargeMethod.BY_CONSUMPTION,
+                                        ChargeMethod.BY_PERSON
+                                    ),
+                                    selectedOption = waterChargeMethod,
+                                    onOptionSelected = {
+                                        waterChargeMethod = it
+                                    },
+                                    labelMapper = { labelMapperForChargeMethod(it) },
+                                    label = "Phương thức tính tiền nước",
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                LabeledTextField(
+                                    label = "🏠 Giá thuê " + if(rentChargeMethod == ChargeMethod.FIXED) "(đ/tháng)" else "(đ/người/tháng)",
+                                    value = rentCharge,
+                                    onValueChange = { rentCharge = it },
                                     modifier = Modifier.fillMaxWidth(),
                                     singleLine = true,
                                     useInternalLabel = false,
@@ -345,18 +375,19 @@ fun CreateTenantScreen(
                                     inputType = InputType.MONEY
                                 )
 
-                                Spacer(modifier = Modifier.height(12.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
 
-                                LabeledTextField(
-                                    label = "Ghi chú",
-                                    value = note,
-                                    onValueChange = { note = it },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    singleLine = false,
-                                    useInternalLabel = false,
-                                    placeholder = "Ví dụ: Phòng bị ẩm mốc, cần sửa chữa",
-                                    inputType = InputType.TEXT,
-                                    heightSize = 140
+                                CustomRadioGroup(
+                                    options = listOf(
+                                        ChargeMethod.FIXED,
+                                        ChargeMethod.BY_PERSON
+                                    ),
+                                    selectedOption = rentChargeMethod,
+                                    onOptionSelected = {
+                                        rentChargeMethod = it
+                                    },
+                                    labelMapper = { labelMapperForChargeMethod(it) },
+                                    label = "Phương thức tính tiền thuê nhà",
                                 )
 
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -373,11 +404,26 @@ fun CreateTenantScreen(
                                             roomId = roomId,
                                             numberOfOccupants = numberOfPeople.toIntOrNull() ?: 1,
                                             note = note,
-                                            rentPrice = rentPrice.toLongOrNull() ?: 0L,
-                                            electricPrice = electricityPrice.toLongOrNull() ?: 0L,
-                                            waterPrice = waterPrice.toLongOrNull() ?: 0L,
                                             startDate = startDateRent,
-                                            deposit = deposit.toLongOrNull() ?: 0L
+                                            deposit = deposit.toLongOrNull() ?: 0L,
+                                            waterService = Service(
+                                                id = house?.waterService?.id ?: "",
+                                                name = house?.waterService?.name ?: "Water",
+                                                chargeValue = waterCharge.toLongOrNull() ?: 0L,
+                                                chargeMethod = waterChargeMethod
+                                            ),
+                                            electricService = Service(
+                                                id = house?.electricService?.id ?: "",
+                                                name = house?.electricService?.name ?: "Electricity",
+                                                chargeValue = electricityCharge.toLongOrNull() ?: 0L,
+                                                chargeMethod = electricChargeMethod
+                                            ),
+                                            rentService = Service(
+                                                id = house?.rentService?.id ?: "",
+                                                name = house?.rentService?.name ?: "Rent",
+                                                chargeValue = rentCharge.toLongOrNull() ?: 0L,
+                                                chargeMethod = rentChargeMethod
+                                            ),
                                         )
                                     )
                                 }, text = "Lưu lại")
@@ -479,8 +525,4 @@ fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri {
     fos.flush()
     fos.close()
     return Uri.fromFile(file)
-}
-
-fun getToday(): String {
-    return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
 }

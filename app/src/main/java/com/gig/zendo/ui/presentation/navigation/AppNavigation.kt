@@ -21,7 +21,9 @@ import com.gig.zendo.ui.presentation.auth.register.RegisterScreen
 import com.gig.zendo.ui.presentation.home.CreateHouseScreen
 import com.gig.zendo.ui.presentation.home.HouseViewModel
 import com.gig.zendo.ui.presentation.instruction.InstructionScreen
+import com.gig.zendo.ui.presentation.invoice.AcceptInvoiceScreen
 import com.gig.zendo.ui.presentation.invoice.CreateInvoiceScreen
+import com.gig.zendo.ui.presentation.invoice.InvoiceDetailScreen
 import com.gig.zendo.ui.presentation.invoice.InvoiceHistoryScreen
 import com.gig.zendo.ui.presentation.invoice.InvoiceViewModel
 import com.gig.zendo.ui.presentation.room.CreateRoomScreen
@@ -208,15 +210,16 @@ fun AppNavigation() {
             }
 
             composable(
-                route = Screens.CreateInvoiceScreen.route + "/{tenantId}/{houseId}",
+                route = Screens.CreateInvoiceScreen.route + "/{houseId}",
                 enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
                 exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
                 popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
                 popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
             ) { backStackEntry ->
-                val tenantId = backStackEntry.arguments?.getString("tenantId") ?: ""
+
                 val houseId = backStackEntry.arguments?.getString("houseId") ?: ""
-                 CreateInvoiceScreen(navController, snackbarHostState, tenantId, houseId, houseViewModel, roomViewModel)
+
+                 CreateInvoiceScreen(navController, snackbarHostState, houseId, roomViewModel)
             }
 
             composable(
@@ -263,6 +266,39 @@ fun AppNavigation() {
                     navController = navController,
                     snackbarHostState = snackbarHostState,
                     roomId = roomId,
+                    viewModel = invoiceViewModel
+                )
+            }
+
+            composable(
+                route = Screens.AcceptInvoiceScreen.route + "/{houseId}",
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ) { backStackEntry ->
+                val houseId = backStackEntry.arguments?.getString("houseId") ?: ""
+                AcceptInvoiceScreen(
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
+                    houseId = houseId,
+                    viewModelRoom = roomViewModel,
+                    viewModelInvoice = invoiceViewModel
+                )
+            }
+
+            composable(
+                route = Screens.InvoiceDetailScreen.route + "/{invoiceId}",
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ) { backStackEntry ->
+                val invoiceId = backStackEntry.arguments?.getString("invoiceId") ?: ""
+                InvoiceDetailScreen(
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
+                    invoiceId = invoiceId,
                     viewModel = invoiceViewModel
                 )
             }
