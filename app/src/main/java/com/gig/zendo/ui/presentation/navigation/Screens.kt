@@ -17,4 +17,6 @@ sealed class Screens(val route: String) {
     data object InvoiceHistoryScreen : Screens(route = "InvoiceHistoryScreen")
     data object AcceptInvoiceScreen : Screens(route = "AcceptInvoiceScreen")
     data object InvoiceDetailScreen : Screens(route = "InvoiceDetailScreen")
+    data object ServiceRecordScreen : Screens(route = "ServiceRecordScreen")
+    data object CreateExpenseRecordScreen : Screens(route = "CreateExpenseRecordScreen")
 }

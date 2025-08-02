@@ -19,3 +19,8 @@ fun getToday(): String {
 fun String.toDate(): Date {
     return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(this) ?: Date()
 }
+
+//get first day of this month
+fun getFirstDayOfThisMonth(): String {
+    return SimpleDateFormat("01/MM/yyyy", Locale.getDefault()).format(Date())
+}

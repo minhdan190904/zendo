@@ -24,7 +24,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -50,17 +49,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.gig.zendo.domain.model.ChargeMethod
-import com.gig.zendo.domain.model.House
 import com.gig.zendo.domain.model.Invoice
 import com.gig.zendo.domain.model.Service
-import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.ui.common.CustomDateTimePicker
 import com.gig.zendo.ui.common.CustomDisplayImageDialog
 import com.gig.zendo.ui.common.CustomElevatedButton
@@ -68,9 +64,9 @@ import com.gig.zendo.ui.common.CustomImagePicker
 import com.gig.zendo.ui.common.CustomImagePickerDialog
 import com.gig.zendo.ui.common.CustomLoadingProgress
 import com.gig.zendo.ui.common.InputType
-import com.gig.zendo.ui.common.LabeledTextField
+import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
-import com.gig.zendo.ui.presentation.home.HouseViewModel
+import com.gig.zendo.ui.presentation.navigation.Screens
 import com.gig.zendo.ui.presentation.room.RoomViewModel
 import com.gig.zendo.ui.presentation.service.ServiceViewModel
 import com.gig.zendo.ui.presentation.tenant.saveBitmapToCache
@@ -79,7 +75,6 @@ import com.gig.zendo.utils.UiState
 import com.gig.zendo.utils.getToday
 import com.gig.zendo.utils.toMoney
 import com.gig.zendo.utils.toMoneyWithoutUnit
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,7 +83,7 @@ fun CreateInvoiceScreen(
     snackbarHostState: SnackbarHostState,
     houseId: String,
     viewModelRoom: RoomViewModel,
-    viewModel: InvoiceViewModel = hiltViewModel(),
+    viewModel: InvoiceViewModel,
     viewModelService: ServiceViewModel = hiltViewModel()
 ) {
 
@@ -180,7 +175,9 @@ fun CreateInvoiceScreen(
             TopAppBar(
                 title = { Text("Hóa đơn") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        navController.popBackStack()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.ArrowBack,
                             contentDescription = "Quay lại",
@@ -263,7 +260,7 @@ fun CreateInvoiceScreen(
                                         horizontalArrangement = Arrangement.spacedBy(24.dp),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        LabeledTextField(
+                                        CustomLabeledTextField(
                                             label = "Số điện cũ",
                                             value = numberElectricityPrevious,
                                             onValueChange = { numberElectricityPrevious = it },
@@ -274,7 +271,7 @@ fun CreateInvoiceScreen(
                                             inputType = InputType.NUMBER,
                                         )
 
-                                        LabeledTextField(
+                                        CustomLabeledTextField(
                                             label = "Số điện mới",
                                             value = numberElectricityCurrent,
                                             onValueChange = { numberElectricityCurrent = it },
@@ -345,7 +342,7 @@ fun CreateInvoiceScreen(
                                         horizontalArrangement = Arrangement.spacedBy(24.dp),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        LabeledTextField(
+                                        CustomLabeledTextField(
                                             label = "Số nước cũ",
                                             value = numberWaterPrevious,
                                             onValueChange = { numberWaterPrevious = it },
@@ -356,7 +353,7 @@ fun CreateInvoiceScreen(
                                             inputType = InputType.NUMBER,
                                         )
 
-                                        LabeledTextField(
+                                        CustomLabeledTextField(
                                             label = "Số nước mới",
                                             value = numberWaterCurrent,
                                             onValueChange = { numberWaterCurrent = it },
@@ -495,7 +492,7 @@ fun CreateInvoiceScreen(
 
                                 Spacer(modifier = Modifier.height(16.dp))
 
-                                LabeledTextField(
+                                CustomLabeledTextField(
                                     label = "Ghi chú",
                                     value = note,
                                     onValueChange = { note = it },
@@ -760,7 +757,8 @@ fun CreateInvoiceScreen(
                 navController.previousBackStackEntry
                     ?.savedStateHandle
                     ?.set("shouldRefreshRooms", true)
-                navController.popBackStack()
+                val invoiceCurrent = state.data
+                navController.navigate(Screens.InvoiceDetailScreen.route + "/${invoiceCurrent.id}")
                 snackbarHostState.showSnackbar("✓ Tạo hóa đơn thành công!")
             }
 
@@ -820,7 +818,7 @@ fun CustomCheckBoxExtraService(
                 uncheckedColor = Color.Gray,
             )
         )
-        LabeledTextField(
+        CustomLabeledTextField(
             label = label,
             value = amountOfMoney,
             onValueChange = { onAmountChange(it) },

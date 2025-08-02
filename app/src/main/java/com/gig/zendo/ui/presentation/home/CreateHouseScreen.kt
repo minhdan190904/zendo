@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.gig.zendo.ui.common.LabeledTextField
+import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.utils.UiState
 
@@ -103,7 +103,7 @@ fun CreateHouseScreen(
                             .background(Color.White)
                             .padding(horizontal = 16.dp, vertical = 24.dp)
                     ) {
-                        LabeledTextField(
+                        CustomLabeledTextField(
                             label = "Tên nhà",
                             value = houseName,
                             onValueChange = { viewModel.updateHouseName(it) },
@@ -115,7 +115,7 @@ fun CreateHouseScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        LabeledTextField(
+                        CustomLabeledTextField(
                             label = "Địa chỉ",
                             value = houseAddress,
                             onValueChange = { viewModel.updateHouseAddress(it) },

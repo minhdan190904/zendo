@@ -33,18 +33,6 @@ fun CustomDisplayImageDialog(
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color.White),
         ) {
-            IconButton(
-                onClick = onDismiss,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close"
-                )
-            }
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -66,6 +54,18 @@ fun CustomDisplayImageDialog(
                         modifier = Modifier.size(48.dp)
                     )
                 }
+            }
+
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close"
+                )
             }
         }
     }

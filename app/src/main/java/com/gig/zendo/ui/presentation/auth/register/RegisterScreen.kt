@@ -1,13 +1,11 @@
 package com.gig.zendo.ui.presentation.auth.register
 
-import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,11 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,10 +22,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.gig.zendo.R
 import com.gig.zendo.ui.common.InputType
-import com.gig.zendo.ui.common.LabeledTextField
+import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.ui.presentation.auth.AuthViewModel
-import com.gig.zendo.ui.presentation.navigation.Screens
 import com.gig.zendo.utils.UiState
 
 @Composable
@@ -95,7 +89,7 @@ fun RegisterScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                LabeledTextField(
+                CustomLabeledTextField(
                     label = "Email đăng ký",
                     value = email,
                     onValueChange = { viewModel.updateEmailRegister(it) },
@@ -108,7 +102,7 @@ fun RegisterScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                LabeledTextField(
+                CustomLabeledTextField(
                     label = "Mật khẩu",
                     value = password,
                     onValueChange = { viewModel.updatePasswordRegister(it) },
@@ -120,7 +114,7 @@ fun RegisterScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                LabeledTextField(
+                CustomLabeledTextField(
                     label = "Mật khẩu xác nhận",
                     value = confirmPassword,
                     onValueChange = { viewModel.updateConfirmPasswordRegister(it) },

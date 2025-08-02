@@ -1,11 +1,14 @@
 package com.gig.zendo.ui.presentation.room
 
+import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gig.zendo.domain.model.Room
 import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.domain.repository.RoomRepository
+import com.gig.zendo.utils.CloudinaryUploader
 import com.gig.zendo.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +33,8 @@ class RoomViewModel @Inject constructor(
     private val _checkOutTenantState = MutableStateFlow<UiState<Any>>(UiState.Empty)
     val checkOutTenantState: StateFlow<UiState<Any>> = _checkOutTenantState
 
+    private val _upImageState = MutableStateFlow<UiState<String>>(UiState.Empty)
+    val upImageState: StateFlow<UiState<String>> = _upImageState
 
     var roomName = mutableStateOf("")
         private set
@@ -57,6 +62,13 @@ class RoomViewModel @Inject constructor(
         _checkOutTenantState.value = UiState.Loading
         viewModelScope.launch {
             _checkOutTenantState.value = roomRepository.checkOutTenant(tenantId, endDate)
+        }
+    }
+
+    fun uploadImage(context: Context, uri: Uri) {
+        _upImageState.value = UiState.Loading
+        viewModelScope.launch {
+            _upImageState.value = CloudinaryUploader.uploadImageFromUri(context, uri)
         }
     }
 

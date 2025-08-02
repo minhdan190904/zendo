@@ -59,7 +59,7 @@ import com.gig.zendo.ui.common.CustomImagePicker
 import com.gig.zendo.ui.common.CustomImagePickerDialog
 import com.gig.zendo.ui.common.CustomRadioGroup
 import com.gig.zendo.ui.common.InputType
-import com.gig.zendo.ui.common.LabeledTextField
+import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.ui.presentation.home.HouseViewModel
 import com.gig.zendo.ui.presentation.service.labelMapperForChargeMethod
@@ -188,7 +188,7 @@ fun CreateTenantScreen(
                                     .background(Color.White),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                LabeledTextField(
+                                CustomLabeledTextField(
                                     label = "Khách thuê",
                                     value = nameTenant,
                                     onValueChange = { nameTenant = it },
@@ -201,7 +201,7 @@ fun CreateTenantScreen(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                LabeledTextField(
+                                CustomLabeledTextField(
                                     label = "Số điện thoại",
                                     value = phoneNumber,
                                     onValueChange = { phoneNumber = it },
@@ -214,7 +214,7 @@ fun CreateTenantScreen(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                LabeledTextField(
+                                CustomLabeledTextField(
                                     label = "Số người ở",
                                     value = numberOfPeople,
                                     onValueChange = { numberOfPeople = it },
@@ -227,7 +227,7 @@ fun CreateTenantScreen(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                LabeledTextField(
+                                CustomLabeledTextField(
                                     label = "Quê quán/Địa chỉ",
                                     value = address,
                                     onValueChange = { address = it },
@@ -240,7 +240,7 @@ fun CreateTenantScreen(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                LabeledTextField(
+                                CustomLabeledTextField(
                                     label = "CMND/CCCD",
                                     value = idCard,
                                     onValueChange = { idCard = it },
@@ -287,7 +287,7 @@ fun CreateTenantScreen(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                LabeledTextField(
+                                CustomLabeledTextField(
                                     label = "Tiền cọc",
                                     value = deposit,
                                     onValueChange = { deposit = it },
@@ -308,7 +308,7 @@ fun CreateTenantScreen(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                LabeledTextField(
+                                CustomLabeledTextField(
                                     label = "⚡ Giá điện " + if(electricChargeMethod == ChargeMethod.BY_CONSUMPTION) "(đ/kWh)" else "(đ/người)",
                                     value = electricityCharge,
                                     onValueChange = { electricityCharge = it },
@@ -336,7 +336,7 @@ fun CreateTenantScreen(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                LabeledTextField(
+                                CustomLabeledTextField(
                                     label = "💧 Giá nước " + if(waterChargeMethod == ChargeMethod.BY_CONSUMPTION) "(đ/khối)" else "(đ/người)",
                                     value = waterCharge,
                                     onValueChange = { waterCharge = it },
@@ -364,7 +364,7 @@ fun CreateTenantScreen(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                LabeledTextField(
+                                CustomLabeledTextField(
                                     label = "🏠 Giá thuê " + if(rentChargeMethod == ChargeMethod.FIXED) "(đ/tháng)" else "(đ/người/tháng)",
                                     value = rentCharge,
                                     onValueChange = { rentCharge = it },

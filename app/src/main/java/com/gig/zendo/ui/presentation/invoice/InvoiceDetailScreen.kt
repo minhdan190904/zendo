@@ -1,5 +1,6 @@
 package com.gig.zendo.ui.presentation.invoice
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.gig.zendo.domain.model.ChargeMethod
+import com.gig.zendo.domain.model.Invoice
 import com.gig.zendo.domain.model.InvoiceStatus
 import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.CustomSwitch
@@ -59,10 +61,11 @@ fun InvoiceDetailScreen(
     navController: NavController,
     snackbarHostState: SnackbarHostState,
     viewModel: InvoiceViewModel,
-    invoiceId: String,
+    invoiceId: String
 ) {
     val invoicesStateInRoom by viewModel.invoicesStateInRoom.collectAsStateWithLifecycle()
     val invoicesStateInHouse by viewModel.invoicesStateInHouse.collectAsStateWithLifecycle()
+    val invoiceCurrentCreated by viewModel.createInvoiceState.collectAsStateWithLifecycle()
 
     val invoiceInRoom = if (invoicesStateInRoom is UiState.Success) {
         (invoicesStateInRoom as UiState.Success).data.firstOrNull { it.id == invoiceId }
@@ -72,7 +75,11 @@ fun InvoiceDetailScreen(
         (invoicesStateInHouse as UiState.Success).data.firstOrNull { it.id == invoiceId }
     } else null
 
-    val invoice = invoiceInHouse ?: invoiceInRoom
+    val invoiceCurrent = if (invoiceCurrentCreated is UiState.Success) {
+        (invoiceCurrentCreated as UiState.Success).data
+    } else null
+
+    val invoice = invoiceInRoom ?: invoiceInHouse ?: invoiceCurrent
 
     var invoiceStatusChecked by remember {
         mutableStateOf(
@@ -109,7 +116,10 @@ fun InvoiceDetailScreen(
             TopAppBar(
                 title = { Text("Chi tiết hóa đơn") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        viewModel.resetStateCreateInvoice()
+                        navController.popBackStack()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.ArrowBack,
                             contentDescription = "Quay lại",

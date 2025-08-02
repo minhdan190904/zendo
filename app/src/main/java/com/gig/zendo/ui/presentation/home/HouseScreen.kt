@@ -213,6 +213,10 @@ fun HouseScreen(
                                         },
                                         onExportClick = { /* no-op */ },
                                         onEditClick = {
+                                        },
+                                        onExpenseDetailClick = {},
+                                        onAddExpenseClick = {
+                                            navController.navigate(Screens.CreateExpenseRecordScreen.route + "/${house.id}")
                                         }
                                     )
                                 }
@@ -258,7 +262,7 @@ fun HouseScreen(
 }
 
 fun getBillingDay(day: Int): Int {
-    if(day == -1) {
+    if (day == -1) {
         val calendar = Calendar.getInstance()
         return calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
     }

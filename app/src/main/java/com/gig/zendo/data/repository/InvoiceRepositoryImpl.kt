@@ -11,11 +11,17 @@ import javax.inject.Inject
 class InvoiceRepositoryImpl @Inject constructor(
     private val firebaseFirestore: FirebaseFirestore
 ): InvoiceRepository {
-    override suspend fun addInvoice(invoice: Invoice): UiState<Unit> {
+    //return invoice current created
+    //create invoice and create id if id is empty
+    override suspend fun addInvoice(invoice: Invoice): UiState<Invoice> {
         return try {
+            if (invoice.roomId.isEmpty() || invoice.houseId.isEmpty()) {
+                return UiState.Failure("Room ID and House ID are required")
+            }
             val invoiceId = invoice.id.ifEmpty { firebaseFirestore.collection(Invoice.COLLECTION_NAME).document().id }
-            firebaseFirestore.collection(Invoice.COLLECTION_NAME).document(invoiceId).set(invoice.copy(id = invoiceId)).await()
-            UiState.Success(Unit)
+            val newInvoice = invoice.copy(id = invoiceId)
+            firebaseFirestore.collection(Invoice.COLLECTION_NAME).document(invoiceId).set(newInvoice).await()
+            UiState.Success(newInvoice)
         } catch (e: Exception) {
             UiState.Failure(e.message ?: "Failed to add invoice")
         }

@@ -35,6 +35,7 @@ import com.gig.zendo.ui.presentation.room.RoomViewModel
 import com.gig.zendo.ui.presentation.tenant.getAnnotatedString
 import com.gig.zendo.ui.theme.DarkGreen
 import com.gig.zendo.utils.UiState
+import com.gig.zendo.utils.getFirstDayOfThisMonth
 import com.gig.zendo.utils.getToday
 import com.gig.zendo.utils.toDate
 import com.gig.zendo.utils.toMoney
@@ -49,7 +50,7 @@ fun AcceptInvoiceScreen(
     viewModelRoom: RoomViewModel,
     viewModelInvoice: InvoiceViewModel,
 ) {
-    var selectedDateStart by remember { mutableStateOf(getToday()) }
+    var selectedDateStart by remember { mutableStateOf(getFirstDayOfThisMonth()) }
     var selectedDateEnd by remember { mutableStateOf(getToday()) }
     var selectedRoomId by remember { mutableStateOf("") }
 
@@ -118,7 +119,6 @@ fun AcceptInvoiceScreen(
 
             val currentInvoiceIds = sortedInvoices.map { it.id }.toSet()
             checkedMapNotPaidInvoiceId.keys.retainAll { it in currentInvoiceIds }
-            Log.i("AcceptInvoiceScreen", "Checked map updated: $checkedMapNotPaidInvoiceId")
         }
     }
 
@@ -191,7 +191,8 @@ fun AcceptInvoiceScreen(
                             selectedOption = selectedRoomId,
                             onOptionSelected = { selectedRoomId = it },
                             labelMapper = {
-                                if (it.isEmpty()) "Tất cả" else rooms.find { room -> room.id == it }?.name ?: it
+                                if (it.isEmpty()) "Tất cả" else rooms.find { room -> room.id == it }?.name
+                                    ?: it
                             }
                         )
                     }

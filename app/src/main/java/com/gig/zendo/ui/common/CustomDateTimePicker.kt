@@ -65,7 +65,7 @@ fun CustomDateTimePicker(
                 datePickerDialog.show()
             }
     ) {
-        LabeledTextField(
+        CustomLabeledTextField(
             label = label,
             value = date,
             readOnly = true,

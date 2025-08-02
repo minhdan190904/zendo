@@ -1,6 +1,5 @@
 package com.gig.zendo.ui.presentation.room
 
-import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -55,7 +54,9 @@ fun RoomScreen(
             R.drawable.ic_add,
             "Thêm phòng"
         ) { navController.navigate(Screens.CreateRoomScreen.route + "/${houseId}") },
-        HomeAction(R.drawable.ic_lightbub, "Ghi điện nước") { /* onRecord() */ },
+        HomeAction(R.drawable.ic_lightbub, "Ghi điện nước") {
+            navController.navigate(Screens.ServiceRecordScreen.route + "/${houseId}")
+        },
         HomeAction(
             R.drawable.ic_money,
             "Thu tiền"

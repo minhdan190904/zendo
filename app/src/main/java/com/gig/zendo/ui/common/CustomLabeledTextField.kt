@@ -55,11 +55,11 @@ class MoneyVisualTransformation : VisualTransformation {
 }
 
 @Composable
-fun LabeledTextField(
+fun CustomLabeledTextField(
+    modifier: Modifier = Modifier,
     label: String,
     value: String,
     onValueChange: ((String) -> Unit)? = null,
-    modifier: Modifier = Modifier,
     placeholder: String = "",
     singleLine: Boolean = true,
     inputType: InputType = InputType.TEXT,

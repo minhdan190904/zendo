@@ -48,7 +48,7 @@ import com.gig.zendo.ui.common.CustomRadioGroup
 import com.gig.zendo.ui.common.ExposedDropdownField
 import com.gig.zendo.ui.common.FunctionIcon
 import com.gig.zendo.ui.common.InputType
-import com.gig.zendo.ui.common.LabeledTextField
+import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.ui.presentation.home.HouseViewModel
 
@@ -194,7 +194,7 @@ fun ServiceScreen(
 
                                         Spacer(modifier = Modifier.height(12.dp))
 
-                                        LabeledTextField(
+                                        CustomLabeledTextField(
                                             label = "⚡ Giá điện (đ/kWh)",
                                             value = electricCharge,
                                             onValueChange = { viewModelHouse.updateElectricCharge(it) },
@@ -222,7 +222,7 @@ fun ServiceScreen(
 
                                         Spacer(modifier = Modifier.height(12.dp))
 
-                                        LabeledTextField(
+                                        CustomLabeledTextField(
                                             label = "💧 Giá nước (đ/khối)",
                                             value = waterCharge,
                                             onValueChange = { viewModelHouse.updateWaterCharge(it) },
@@ -250,7 +250,7 @@ fun ServiceScreen(
 
                                         Spacer(modifier = Modifier.height(12.dp))
 
-                                        LabeledTextField(
+                                        CustomLabeledTextField(
                                             label = "🏠 Giá thuê (đ/tháng)",
                                             value = rentCharge,
                                             onValueChange = { viewModelHouse.updateRentCharge(it) },

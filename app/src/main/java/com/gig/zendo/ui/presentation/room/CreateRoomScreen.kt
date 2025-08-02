@@ -37,9 +37,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.gig.zendo.ui.common.LabeledTextField
+import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
-import com.gig.zendo.ui.presentation.home.HouseViewModel
 import com.gig.zendo.utils.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -109,7 +108,7 @@ fun CreateRoomScreen(
                             .background(Color.White)
                             .padding(horizontal = 16.dp, vertical = 24.dp)
                     ) {
-                        LabeledTextField(
+                        CustomLabeledTextField(
                             label = "Tên phòng",
                             value = roomName,
                             onValueChange = { viewModel.updateRoomName(it) },

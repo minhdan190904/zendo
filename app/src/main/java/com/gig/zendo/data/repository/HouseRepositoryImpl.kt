@@ -5,6 +5,7 @@ import com.gig.zendo.domain.model.Invoice
 import com.gig.zendo.domain.model.InvoiceStatus
 import com.gig.zendo.domain.model.Room
 import com.gig.zendo.domain.model.Service
+import com.gig.zendo.domain.model.ServiceRecord
 import com.gig.zendo.domain.repository.HouseRepository
 import com.gig.zendo.utils.UiState
 import com.google.firebase.firestore.FirebaseFirestore
@@ -151,5 +152,33 @@ class HouseRepositoryImpl @Inject constructor(
             UiState.Failure(e.message ?: "Failed to update house services")
         }
     }
+
+    override suspend fun getServiceRecords(houseId: String): UiState<List<ServiceRecord>> {
+        return try {
+            val serviceRecordSnapshot = firestore.collection(ServiceRecord.COLLECTION_NAME)
+                .whereEqualTo(ServiceRecord.FIELD_HOUSE_ID, houseId)
+                .get()
+                .await()
+
+            val serviceRecords = serviceRecordSnapshot.documents.mapNotNull { it.toObject<ServiceRecord>() }
+
+            if (serviceRecords.isEmpty()) UiState.Empty else UiState.Success(serviceRecords)
+        } catch (e: Exception) {
+            UiState.Failure(e.message ?: "Failed to fetch service records")
+        }
+    }
+
+    override suspend fun createServiceRecord(serviceRecord: ServiceRecord): UiState<Unit> {
+        return try {
+            val serviceRecordId = serviceRecord.id.ifEmpty { firestore.collection(ServiceRecord.COLLECTION_NAME).document().id }
+            firestore.collection(ServiceRecord.COLLECTION_NAME).document(serviceRecordId)
+                .set(serviceRecord.copy(id = serviceRecordId)).await()
+            UiState.Success(Unit)
+        } catch (e: Exception) {
+            UiState.Failure(e.message ?: "Failed to create service record")
+        }
+    }
+
+
 
 }

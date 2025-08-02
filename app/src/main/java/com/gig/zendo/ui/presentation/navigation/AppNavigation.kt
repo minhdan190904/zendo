@@ -1,6 +1,7 @@
 package com.gig.zendo.ui.presentation.navigation
 
 import HouseScreen
+import android.util.Log
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,9 +16,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.gig.zendo.domain.model.Invoice
 import com.gig.zendo.ui.presentation.auth.login.GoogleLoginScreen
 import com.gig.zendo.ui.presentation.auth.login.LoginScreen
 import com.gig.zendo.ui.presentation.auth.register.RegisterScreen
+import com.gig.zendo.ui.presentation.expense.CreateExpenseRecordScreen
 import com.gig.zendo.ui.presentation.home.CreateHouseScreen
 import com.gig.zendo.ui.presentation.home.HouseViewModel
 import com.gig.zendo.ui.presentation.instruction.InstructionScreen
@@ -30,10 +33,10 @@ import com.gig.zendo.ui.presentation.room.CreateRoomScreen
 import com.gig.zendo.ui.presentation.room.RoomScreen
 import com.gig.zendo.ui.presentation.room.RoomViewModel
 import com.gig.zendo.ui.presentation.service.ServiceScreen
+import com.gig.zendo.ui.presentation.service_record.ServiceRecordScreen
 import com.gig.zendo.ui.presentation.tenant.CreateTenantScreen
 import com.gig.zendo.ui.presentation.tenant.TenantDetailScreen
 import com.gig.zendo.ui.presentation.tenant.TenantHistoryScreen
-import com.gig.zendo.ui.presentation.tenant.TenantViewModel
 
 @Composable
 fun AppNavigation() {
@@ -219,7 +222,7 @@ fun AppNavigation() {
 
                 val houseId = backStackEntry.arguments?.getString("houseId") ?: ""
 
-                 CreateInvoiceScreen(navController, snackbarHostState, houseId, roomViewModel)
+                 CreateInvoiceScreen(navController, snackbarHostState, houseId, roomViewModel, invoiceViewModel)
             }
 
             composable(
@@ -299,7 +302,40 @@ fun AppNavigation() {
                     navController = navController,
                     snackbarHostState = snackbarHostState,
                     invoiceId = invoiceId,
-                    viewModel = invoiceViewModel
+                    viewModel = invoiceViewModel,
+                )
+            }
+
+            composable(
+                route = Screens.ServiceRecordScreen.route + "/{houseId}",
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ) { backStackEntry ->
+                val houseId = backStackEntry.arguments?.getString("houseId") ?: ""
+                ServiceRecordScreen(
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
+                    houseId = houseId,
+                    viewModelHouse = houseViewModel,
+                    viewModelRoom = roomViewModel
+                )
+            }
+
+            composable(
+                route = Screens.CreateExpenseRecordScreen.route + "/{houseId}",
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ) { backStackEntry ->
+                val houseId = backStackEntry.arguments?.getString("houseId") ?: ""
+                CreateExpenseRecordScreen(
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
+                    houseId = houseId,
+                    viewModelHouse = houseViewModel
                 )
             }
         }

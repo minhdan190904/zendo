@@ -2,30 +2,22 @@ package com.gig.zendo.ui.presentation.service
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.gig.zendo.domain.model.ChargeMethod
 import com.gig.zendo.domain.model.ChargeMethod.*
 import com.gig.zendo.domain.model.Service
 import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.CustomRadioGroup
 import com.gig.zendo.ui.common.InputType
-import com.gig.zendo.ui.common.LabeledTextField
+import com.gig.zendo.ui.common.CustomLabeledTextField
 
 @Composable
 fun CreateExtraServiceDialog(
@@ -41,7 +33,7 @@ fun CreateExtraServiceDialog(
         title = { Text("Thêm dịch vụ mới") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                LabeledTextField(
+                CustomLabeledTextField(
                     label = "Tên dịch vụ",
                     value = name,
                     singleLine = true,
@@ -51,7 +43,7 @@ fun CreateExtraServiceDialog(
                     inputType = InputType.TEXT
                 )
 
-                LabeledTextField(
+                CustomLabeledTextField(
                     label = "Giá tiền",
                     value = price,
                     singleLine = true,

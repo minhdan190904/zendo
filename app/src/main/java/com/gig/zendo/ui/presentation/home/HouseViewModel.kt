@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.gig.zendo.domain.model.ChargeMethod
 import com.gig.zendo.domain.model.House
 import com.gig.zendo.domain.model.Service
+import com.gig.zendo.domain.model.ServiceRecord
 import com.gig.zendo.domain.repository.HouseRepository
 import com.gig.zendo.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,6 +37,12 @@ class HouseViewModel @Inject constructor(
 
     private val _houseState = MutableStateFlow<UiState<House>>(UiState.Loading)
     val houseState: StateFlow<UiState<House>> = _houseState
+
+    private val _createServiceRecordState = MutableStateFlow<UiState<Any>>(UiState.Empty)
+    val createServiceRecordState: StateFlow<UiState<Any>> = _createServiceRecordState
+
+    private val _serviceRecordsState = MutableStateFlow<UiState<List<ServiceRecord>>>(UiState.Empty)
+    val serviceRecordsState: StateFlow<UiState<List<ServiceRecord>>> = _serviceRecordsState
 
     var houseName = mutableStateOf("")
         private set
@@ -132,6 +139,20 @@ class HouseViewModel @Inject constructor(
         }
     }
 
+    fun createServiceRecord(serviceRecord: ServiceRecord) {
+        _createServiceRecordState.value = UiState.Loading
+        viewModelScope.launch {
+            _createServiceRecordState.value = houseRepository.createServiceRecord(serviceRecord)
+        }
+    }
+
+    fun fetchServiceRecords(houseId: String) {
+        _serviceRecordsState.value = UiState.Loading
+        viewModelScope.launch {
+            _serviceRecordsState.value = houseRepository.getServiceRecords(houseId)
+        }
+    }
+
     fun showDeleteHouseDialog(houseId: String) {
         _showDeleteDialog.value = houseId
     }
@@ -158,6 +179,10 @@ class HouseViewModel @Inject constructor(
 
     fun clearDeleteState() {
         _deleteHouseState.value = UiState.Empty
+    }
+
+    fun clearCreateServiceRecordState() {
+        _createServiceRecordState.value = UiState.Empty
     }
 
     fun updateHouseName(name: String) {

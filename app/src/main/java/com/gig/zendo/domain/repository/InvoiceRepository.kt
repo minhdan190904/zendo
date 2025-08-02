@@ -6,7 +6,7 @@ import com.gig.zendo.utils.UiState
 
 interface InvoiceRepository {
     // Define methods for invoice operations, e.g., create, fetch, update, delete invoices
-     suspend fun addInvoice(invoice: Invoice): UiState<Unit>
+     suspend fun addInvoice(invoice: Invoice): UiState<Invoice>
      suspend fun getInvoicesInRoom(roomId: String): UiState<List<Invoice>>
      suspend fun getInvoicesInHouse(houseId: String): UiState<List<Invoice>>
      suspend fun updateStatusPaidForInvoices(listIdInvoice: List<String>): UiState<Unit>

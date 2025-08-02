@@ -23,8 +23,8 @@ class InvoiceViewModel @Inject constructor(
     private val _upImageState = MutableStateFlow<UiState<String>>(UiState.Empty)
     val upImageState: StateFlow<UiState<String>> = _upImageState
 
-    private val _createInvoiceState = MutableStateFlow<UiState<Unit>>(UiState.Empty)
-    val createInvoiceState: StateFlow<UiState<Unit>> = _createInvoiceState
+    private val _createInvoiceState = MutableStateFlow<UiState<Invoice>>(UiState.Empty)
+    val createInvoiceState: StateFlow<UiState<Invoice>> = _createInvoiceState
 
     private val _invoicesStateInRoom = MutableStateFlow<UiState<List<Invoice>>>(UiState.Empty)
     val invoicesStateInRoom: StateFlow<UiState<List<Invoice>>> = _invoicesStateInRoom
@@ -82,5 +82,9 @@ class InvoiceViewModel @Inject constructor(
 
     fun resetStateUpdateStatus() {
         _updateStatusInvoiceState.value = UiState.Empty
+    }
+
+    fun resetStateCreateInvoice() {
+        _createInvoiceState.value = UiState.Empty
     }
 }

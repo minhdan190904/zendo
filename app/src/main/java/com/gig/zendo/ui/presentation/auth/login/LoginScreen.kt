@@ -21,7 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.gig.zendo.R
 import com.gig.zendo.ui.common.InputType
-import com.gig.zendo.ui.common.LabeledTextField
+import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.ui.presentation.auth.AuthViewModel
 import com.gig.zendo.ui.presentation.navigation.Screens
@@ -119,7 +119,7 @@ fun LoginScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                LabeledTextField(
+                CustomLabeledTextField(
                     label = "Email đăng nhập",
                     value = email,
                     onValueChange = { viewModel.updateEmailLogin(it) },
@@ -132,7 +132,7 @@ fun LoginScreen(
 
                 Spacer(Modifier.height(12.dp))
 
-                LabeledTextField(
+                CustomLabeledTextField(
                     label = "Mật khẩu",
                     value = password,
                     onValueChange = { viewModel.updatePasswordLogin(it) },

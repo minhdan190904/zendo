@@ -33,6 +33,8 @@ fun PropertyHouseCard(
     onDeleteClick: () -> Unit,
     onEditClick: () -> Unit,
     onExportClick: () -> Unit,
+    onAddExpenseClick: () -> Unit,
+    onExpenseDetailClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -43,7 +45,6 @@ fun PropertyHouseCard(
             .padding(8.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header row: title + menu
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -54,17 +55,13 @@ fun PropertyHouseCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                MyPopupMenu(actions = listOf(HouseMenuAction.Edit, HouseMenuAction.Delete, HouseMenuAction.ExportExcel)) {
+                MyPopupMenu(actions = listOf(HouseMenuAction.Edit, HouseMenuAction.Delete, HouseMenuAction.ExportExcel, HouseMenuAction.AddExpense, HouseMenuAction.ExpenseDetail)) {
                     when (it) {
                         HouseMenuAction.Edit -> onEditClick()
                         HouseMenuAction.Delete -> onDeleteClick()
                         HouseMenuAction.ExportExcel -> onExportClick()
-                        HouseMenuAction.AddExpense -> {
-                            // Handle add expense action if needed
-                        }
-                        HouseMenuAction.ExpenseDetail -> {
-                            // Handle expense detail action if needed
-                        }
+                        HouseMenuAction.AddExpense -> onAddExpenseClick()
+                        HouseMenuAction.ExpenseDetail -> onExpenseDetailClick()
                     }
                 }
             }
@@ -85,11 +82,9 @@ fun PropertyHouseCard(
 
             Spacer(Modifier.height(12.dp))
 
-            // Stats + calendar badge
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
-                    // Room stats
-                    //pair with house stats
+
                     val pairOfWeight = Pair(1.5f, 1f)
                     StatOfProperty(title = "Tổng phòng:", value = house.numberOfRoom.toString(), pairOfWeight = pairOfWeight)
                     StatOfProperty(title = "Số phòng trống:", value = house.numberOfEmptyRoom.toString(), pairOfWeight = pairOfWeight)
@@ -99,7 +94,6 @@ fun PropertyHouseCard(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Calendar badge
                 Column {
                     Text("Ngày thu:", fontSize = 14.sp, color = Color.Black)
                     Spacer(modifier = Modifier.height(4.dp))
@@ -128,7 +122,6 @@ fun PropertyHouseCard(
 
             Spacer(Modifier.height(12.dp))
 
-            // Footer: revenue + button
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth(),
