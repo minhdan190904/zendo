@@ -10,4 +10,10 @@ data class ExpenseRecord(
     val electricExpense: Long = 0L,
     val otherExpenses: List<Expense> = emptyList(),
     val createdAt: Long = System.currentTimeMillis()
-)
+){
+    companion object {
+        const val COLLECTION_NAME = "expense_records"
+        const val FIELD_HOUSE_ID = "houseId"
+        const val FIELD_DATE = "date"
+    }
+}

@@ -214,7 +214,9 @@ fun HouseScreen(
                                         onExportClick = { /* no-op */ },
                                         onEditClick = {
                                         },
-                                        onExpenseDetailClick = {},
+                                        onExpenseDetailClick = {
+                                            navController.navigate(Screens.ExpenseRecordScreen.route + "/${house.id}")
+                                        },
                                         onAddExpenseClick = {
                                             navController.navigate(Screens.CreateExpenseRecordScreen.route + "/${house.id}")
                                         }

@@ -1,5 +1,6 @@
 package com.gig.zendo.data.repository
 
+import com.gig.zendo.domain.model.ExpenseRecord
 import com.gig.zendo.domain.model.House
 import com.gig.zendo.domain.model.Invoice
 import com.gig.zendo.domain.model.InvoiceStatus
@@ -179,6 +180,31 @@ class HouseRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun createExpenseRecord(expenseRecord: ExpenseRecord): UiState<Unit> {
+        return try {
+            val expenseRecordId = expenseRecord.id.ifEmpty { firestore.collection(ExpenseRecord.COLLECTION_NAME).document().id }
+            firestore.collection(ExpenseRecord.COLLECTION_NAME).document(expenseRecordId)
+                .set(expenseRecord.copy(id = expenseRecordId)).await()
+            UiState.Success(Unit)
+        } catch (e: Exception) {
+            UiState.Failure(e.message ?: "Failed to create expense record")
+        }
+    }
+
+    override suspend fun getExpenseRecords(houseId: String): UiState<List<ExpenseRecord>> {
+        return try {
+            val expenseRecordSnapshot = firestore.collection(ExpenseRecord.COLLECTION_NAME)
+                .whereEqualTo(ExpenseRecord.FIELD_HOUSE_ID, houseId)
+                .get()
+                .await()
+
+            val expenseRecords = expenseRecordSnapshot.documents.mapNotNull { it.toObject<ExpenseRecord>() }
+
+            if (expenseRecords.isEmpty()) UiState.Empty else UiState.Success(expenseRecords)
+        } catch (e: Exception) {
+            UiState.Failure(e.message ?: "Failed to fetch expense records")
+        }
+    }
 
 
 }

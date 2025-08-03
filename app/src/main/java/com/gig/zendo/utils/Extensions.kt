@@ -24,3 +24,7 @@ fun String.toDate(): Date {
 fun getFirstDayOfThisMonth(): String {
     return SimpleDateFormat("01/MM/yyyy", Locale.getDefault()).format(Date())
 }
+
+fun getCurrentYear(): String {
+    return SimpleDateFormat("yyyy", Locale.getDefault()).format(Date())
+}

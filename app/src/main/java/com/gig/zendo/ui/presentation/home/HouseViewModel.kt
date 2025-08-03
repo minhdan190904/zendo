@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gig.zendo.domain.model.ChargeMethod
+import com.gig.zendo.domain.model.ExpenseRecord
 import com.gig.zendo.domain.model.House
 import com.gig.zendo.domain.model.Service
 import com.gig.zendo.domain.model.ServiceRecord
@@ -43,6 +44,12 @@ class HouseViewModel @Inject constructor(
 
     private val _serviceRecordsState = MutableStateFlow<UiState<List<ServiceRecord>>>(UiState.Empty)
     val serviceRecordsState: StateFlow<UiState<List<ServiceRecord>>> = _serviceRecordsState
+
+    private val _expenseRecordsState = MutableStateFlow<UiState<List<ExpenseRecord>>>(UiState.Empty)
+    val expenseRecordsState: StateFlow<UiState<List<ExpenseRecord>>> = _expenseRecordsState
+
+    private val _createExpenseRecordState = MutableStateFlow<UiState<Any>>(UiState.Empty)
+    val createExpenseRecordState: StateFlow<UiState<Any>> = _createExpenseRecordState
 
     var houseName = mutableStateOf("")
         private set
@@ -161,6 +168,10 @@ class HouseViewModel @Inject constructor(
         _showDeleteDialog.value = null
     }
 
+    fun clearCreateExpenseRecordState() {
+        _createExpenseRecordState.value = UiState.Empty
+    }
+
     fun fetchHouses(uid: String) {
         _housesState.value = UiState.Loading
         viewModelScope.launch {
@@ -174,6 +185,13 @@ class HouseViewModel @Inject constructor(
             _housesState.value = UiState.Loading
             _deleteHouseState.value = UiState.Loading
             _deleteHouseState.value = houseRepository.deleteHouse(houseId)
+        }
+    }
+
+    fun createExpenseRecord(expenseRecord: ExpenseRecord){
+        _createExpenseRecordState.value = UiState.Loading
+        viewModelScope.launch {
+            _createExpenseRecordState.value = houseRepository.createExpenseRecord(expenseRecord)
         }
     }
 

@@ -42,6 +42,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.ui.graphics.Color
@@ -49,15 +50,19 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.gig.zendo.R
 import com.gig.zendo.domain.model.Expense
+import com.gig.zendo.domain.model.ExpenseRecord
 import com.gig.zendo.ui.common.CustomDateTimePicker
 import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.InputType
+import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.ui.presentation.home.HouseViewModel
 import com.gig.zendo.ui.theme.DarkGreen
+import com.gig.zendo.utils.UiState
 import com.gig.zendo.utils.getToday
 import com.gig.zendo.utils.toMoney
 
@@ -75,6 +80,9 @@ fun CreateExpenseRecordScreen(
     var waterExpense by remember { mutableStateOf("") }
     var otherExpenses by remember { mutableStateOf(listOf<Expense>()) }
     var total by remember { mutableLongStateOf(0L) }
+    var description by remember { mutableStateOf("") }
+
+    val createState by viewModelHouse.createExpenseRecordState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -212,7 +220,7 @@ fun CreateExpenseRecordScreen(
                                     modifier = Modifier.weight(1f)
                                 )
                                 Text(
-                                    text = total.toMoney(),
+                                    text = (total + (electricExpense.toLongOrNull() ?: 0L) + (waterExpense.toLongOrNull() ?: 0L)).toMoney(),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold
@@ -227,10 +235,50 @@ fun CreateExpenseRecordScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        CustomElevatedButton(onClick = { /*TODO*/ }, text = "Lưu lại")
+                        CustomLabeledTextField(
+                            label = "Mô tả",
+                            value = description,
+                            onValueChange = { description = it },
+                            singleLine = true,
+                            useInternalLabel = false,
+                            placeholder = "Ví dụ: Tháng này quá nhiều chi phí",
+                            inputType = InputType.TEXT,
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        CustomElevatedButton(onClick = {
+                            val expenseRecord = ExpenseRecord(
+                                houseId = houseId,
+                                date = date,
+                                electricExpense = electricExpense.toLongOrNull() ?: 0L,
+                                waterExpense = waterExpense.toLongOrNull() ?: 0L,
+                                otherExpenses = otherExpenses,
+                                description = description,
+                                totalAmount = (total + (electricExpense.toLongOrNull() ?: 0L) + (waterExpense.toLongOrNull() ?: 0L)),
+                            )
+                            viewModelHouse.createExpenseRecord(expenseRecord)
+                        }, text = "Lưu lại")
                     }
                 }
             }
+        }
+    }
+
+    LoadingScreen(isLoading = createState is UiState.Loading)
+
+    LaunchedEffect(createState) {
+        when (createState) {
+            is UiState.Success -> {
+                viewModelHouse.clearCreateExpenseRecordState()
+                navController.popBackStack()
+                snackbarHostState.showSnackbar("Đã lưu chi phí thành công")
+            }
+            is UiState.Failure -> {
+                snackbarHostState.showSnackbar((createState as UiState.Failure).error ?: "Lỗi khi lưu chi phí")
+                viewModelHouse.clearCreateExpenseRecordState()
+            }
+            else -> {}
         }
     }
 }

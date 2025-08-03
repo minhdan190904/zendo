@@ -1,5 +1,6 @@
 package com.gig.zendo.domain.repository
 
+import com.gig.zendo.domain.model.ExpenseRecord
 import com.gig.zendo.domain.model.House
 import com.gig.zendo.domain.model.Service
 import com.gig.zendo.domain.model.ServiceRecord
@@ -18,6 +19,9 @@ interface HouseRepository {
         waterService: Service?,
         billingDay: Int?
     ): UiState<House>
+
     suspend fun getServiceRecords(houseId: String): UiState<List<ServiceRecord>>
     suspend fun createServiceRecord(serviceRecord: ServiceRecord): UiState<Unit>
+    suspend fun createExpenseRecord(expenseRecord: ExpenseRecord): UiState<Unit>
+    suspend fun getExpenseRecords(houseId: String): UiState<List<ExpenseRecord>>
 }

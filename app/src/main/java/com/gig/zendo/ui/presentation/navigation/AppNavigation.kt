@@ -21,6 +21,7 @@ import com.gig.zendo.ui.presentation.auth.login.GoogleLoginScreen
 import com.gig.zendo.ui.presentation.auth.login.LoginScreen
 import com.gig.zendo.ui.presentation.auth.register.RegisterScreen
 import com.gig.zendo.ui.presentation.expense.CreateExpenseRecordScreen
+import com.gig.zendo.ui.presentation.expense.ExpenseRecordScreen
 import com.gig.zendo.ui.presentation.home.CreateHouseScreen
 import com.gig.zendo.ui.presentation.home.HouseViewModel
 import com.gig.zendo.ui.presentation.instruction.InstructionScreen
@@ -332,6 +333,22 @@ fun AppNavigation() {
             ) { backStackEntry ->
                 val houseId = backStackEntry.arguments?.getString("houseId") ?: ""
                 CreateExpenseRecordScreen(
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
+                    houseId = houseId,
+                    viewModelHouse = houseViewModel
+                )
+            }
+
+            composable(
+                route = Screens.ExpenseRecordScreen.route + "/{houseId}",
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ) { backStackEntry ->
+                val houseId = backStackEntry.arguments?.getString("houseId") ?: ""
+                ExpenseRecordScreen(
                     navController = navController,
                     snackbarHostState = snackbarHostState,
                     houseId = houseId,
