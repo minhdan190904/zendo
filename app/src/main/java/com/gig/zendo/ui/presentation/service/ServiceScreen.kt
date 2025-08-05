@@ -27,6 +27,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,15 +44,14 @@ import com.gig.zendo.domain.model.ChargeMethod
 import com.gig.zendo.domain.model.House
 import com.gig.zendo.domain.model.Service
 import com.gig.zendo.ui.common.CustomElevatedButton
+import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.CustomLoadingProgress
 import com.gig.zendo.ui.common.CustomRadioGroup
 import com.gig.zendo.ui.common.ExposedDropdownField
 import com.gig.zendo.ui.common.FunctionIcon
 import com.gig.zendo.ui.common.InputType
-import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.ui.presentation.home.HouseViewModel
-
 import com.gig.zendo.utils.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,19 +66,25 @@ fun ServiceScreen(
     val housesState by viewModelHouse.housesState.collectAsStateWithLifecycle()
     val houseStateUpdateHouse by viewModelHouse.updateHouseServicesState.collectAsStateWithLifecycle()
     val updateHouseServicesState by viewModelHouse.updateHouseServicesState.collectAsStateWithLifecycle()
-    val billingDay by viewModelHouse.billingDay
-    val electricCharge by viewModelHouse.electricCharge
-    val waterCharge by viewModelHouse.waterCharge
-    val rentCharge by viewModelHouse.rentCharge
-    val electricChargeMethod by viewModelHouse.electricChargeMethod
-    val waterChargeMethod by viewModelHouse.waterChargeMethod
-    val rentChargeMethod by viewModelHouse.rentChargeMethod
+
+    var electricChargeMethod by remember {mutableStateOf(ChargeMethod.BY_CONSUMPTION)}
+
+    var waterChargeMethod by remember {mutableStateOf(ChargeMethod.BY_CONSUMPTION)}
+
+    var rentChargeMethod by remember {mutableStateOf(ChargeMethod.FIXED)}
+
+    var billingDay by remember { mutableIntStateOf(1) }
+
+    var electricCharge by remember { mutableStateOf("")}
+
+    var waterCharge by remember { mutableStateOf("")}
+
+    var rentCharge by remember { mutableStateOf("")}
 
     val createServiceState by viewModelService.createServiceState.collectAsStateWithLifecycle()
     val servicesState by viewModelService.servicesState.collectAsStateWithLifecycle()
 
     var showCreateExtraServiceDialog by remember { mutableStateOf(false) }
-    var houseState by remember { mutableStateOf<House?>(null) }
 
     LaunchedEffect(Unit) {
         viewModelService.fetchServices(houseId)
@@ -92,13 +98,14 @@ fun ServiceScreen(
                 (housesState as UiState.Success<List<House>>).data.firstOrNull { it.id == houseId }
             }
             house?.let {
-                viewModelHouse.updateBillingDay(house.billingDay ?: -1)
-                viewModelHouse.updateElectricCharge(house.electricService!!.chargeValue.toString())
-                viewModelHouse.updateWaterCharge(house.waterService!!.chargeValue.toString())
-                viewModelHouse.updateRentCharge(house.rentService!!.chargeValue.toString())
-                viewModelHouse.updateElectricChargeMethod(house.electricService.chargeMethod)
-                viewModelHouse.updateWaterChargeMethod(house.waterService.chargeMethod)
-                viewModelHouse.updateRentChargeMethod(house.rentService.chargeMethod)
+                billingDay = house.billingDay ?: 1
+                electricCharge = house.electricService.chargeValue.toString()
+                waterCharge = house.waterService.chargeValue.toString()
+                rentCharge = house.rentService.chargeValue.toString()
+                rentChargeMethod = house.rentService.chargeMethod
+                electricChargeMethod = house.electricService.chargeMethod
+                waterChargeMethod = house.waterService.chargeMethod
+                rentChargeMethod = house.rentService.chargeMethod
             } ?: run {
                 snackbarHostState.showSnackbar("Không tìm thấy nhà trọ với ID: $houseId")
             }
@@ -169,7 +176,7 @@ fun ServiceScreen(
 
                                 is UiState.Failure -> {
                                     Text(
-                                        text = "Lỗi: ${(houseState as UiState.Failure).error}",
+                                        text = "Lỗi: ${(housesState as UiState.Failure).error}",
                                         color = Color.Red
                                     )
                                 }
@@ -186,7 +193,7 @@ fun ServiceScreen(
                                             options = getListDayBilling(),
                                             selectedOption = billingDay,
                                             onOptionSelected = {
-                                                viewModelHouse.updateBillingDay(it)
+                                                billingDay = it
                                             },
                                             labelMapper = { labelMapperForBillingDay(it) },
                                             label = "Ngày thu tiền hàng tháng",
@@ -197,7 +204,7 @@ fun ServiceScreen(
                                         CustomLabeledTextField(
                                             label = "⚡ Giá điện (đ/kWh)",
                                             value = electricCharge,
-                                            onValueChange = { viewModelHouse.updateElectricCharge(it) },
+                                            onValueChange = { electricCharge = it },
                                             modifier = Modifier.fillMaxWidth(),
                                             singleLine = true,
                                             useInternalLabel = false,
@@ -214,7 +221,7 @@ fun ServiceScreen(
                                             ),
                                             selectedOption = electricChargeMethod,
                                             onOptionSelected = {
-                                                viewModelHouse.updateElectricChargeMethod(it)
+                                                electricChargeMethod = it
                                             },
                                             labelMapper = { labelMapperForChargeMethod(it) },
                                             label = "Phương thức tính tiền điện",
@@ -225,7 +232,7 @@ fun ServiceScreen(
                                         CustomLabeledTextField(
                                             label = "💧 Giá nước (đ/khối)",
                                             value = waterCharge,
-                                            onValueChange = { viewModelHouse.updateWaterCharge(it) },
+                                            onValueChange = { waterCharge = it },
                                             modifier = Modifier.fillMaxWidth(),
                                             singleLine = true,
                                             useInternalLabel = false,
@@ -242,7 +249,7 @@ fun ServiceScreen(
                                             ),
                                             selectedOption = waterChargeMethod,
                                             onOptionSelected = {
-                                                viewModelHouse.updateWaterChargeMethod(it)
+                                                waterChargeMethod = it
                                             },
                                             labelMapper = { labelMapperForChargeMethod(it) },
                                             label = "Phương thức tính tiền nước",
@@ -253,7 +260,7 @@ fun ServiceScreen(
                                         CustomLabeledTextField(
                                             label = "🏠 Giá thuê (đ/tháng)",
                                             value = rentCharge,
-                                            onValueChange = { viewModelHouse.updateRentCharge(it) },
+                                            onValueChange = { rentCharge = it },
                                             modifier = Modifier.fillMaxWidth(),
                                             singleLine = true,
                                             useInternalLabel = false,
@@ -270,7 +277,7 @@ fun ServiceScreen(
                                             ),
                                             selectedOption = rentChargeMethod,
                                             onOptionSelected = {
-                                                viewModelHouse.updateRentChargeMethod(it)
+                                                rentChargeMethod = it
                                             },
                                             labelMapper = { labelMapperForChargeMethod(it) },
                                             label = "Phương thức tính tiền thuê nhà",

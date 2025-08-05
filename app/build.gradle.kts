@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.gig.zendo"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -25,7 +25,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -43,7 +44,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14" // Tương thích với Kotlin 1.9.24
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
     packaging {
         resources {
@@ -109,16 +110,12 @@ dependencies {
 
     // Animation
     implementation("com.google.accompanist:accompanist-navigation-animation:0.34.0")
-    implementation("androidx.compose.material3:material3:1.2.1")
 
     //Cloudinary
     implementation("com.cloudinary:cloudinary-android:2.5.0")
 
     //Coil
     implementation("io.coil-kt:coil-compose:2.4.0")
-
-    //activity-compose
-    implementation("androidx.activity:activity-compose:1.7.2")
 
     //gson
     implementation("com.google.code.gson:gson:2.10.1")

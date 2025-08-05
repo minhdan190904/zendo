@@ -1,10 +1,12 @@
 package com.gig.zendo.ui.presentation.home
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gig.zendo.domain.model.ChargeMethod
 import com.gig.zendo.domain.model.ExpenseRecord
+import com.gig.zendo.domain.model.FinancialReport
 import com.gig.zendo.domain.model.House
 import com.gig.zendo.domain.model.Service
 import com.gig.zendo.domain.model.ServiceRecord
@@ -51,60 +53,10 @@ class HouseViewModel @Inject constructor(
     private val _createExpenseRecordState = MutableStateFlow<UiState<Any>>(UiState.Empty)
     val createExpenseRecordState: StateFlow<UiState<Any>> = _createExpenseRecordState
 
-    var houseName = mutableStateOf("")
-        private set
+    private val _financialReportAllMonth = MutableStateFlow<UiState<List<FinancialReport>>>(UiState.Empty)
+    val financialReportAllMonth: StateFlow<UiState<List<FinancialReport>>> = _financialReportAllMonth
 
-    var houseAddress = mutableStateOf("")
-        private set
-
-    var electricChargeMethod = mutableStateOf(ChargeMethod.BY_CONSUMPTION)
-        private set
-
-    var waterChargeMethod = mutableStateOf(ChargeMethod.BY_CONSUMPTION)
-        private set
-
-    var rentChargeMethod = mutableStateOf(ChargeMethod.FIXED)
-        private set
-
-    var billingDay = mutableStateOf(1)
-        private set
-
-    var electricCharge = mutableStateOf("")
-        private set
-
-    var waterCharge = mutableStateOf("")
-        private set
-
-    var rentCharge = mutableStateOf("")
-        private set
-
-    fun updateElectricCharge(chargeString: String) {
-        electricCharge.value = chargeString
-    }
-
-    fun updateWaterCharge(chargeString: String) {
-        waterCharge.value = chargeString
-    }
-
-    fun updateRentCharge(chargeString: String) {
-        rentCharge.value = chargeString
-    }
-
-    fun updateBillingDay(day: Int) {
-        billingDay.value = day
-    }
-
-    fun updateElectricChargeMethod(method: ChargeMethod) {
-        electricChargeMethod.value = method
-    }
-
-    fun updateWaterChargeMethod(method: ChargeMethod) {
-        waterChargeMethod.value = method
-    }
-
-    fun updateRentChargeMethod(method: ChargeMethod) {
-        rentChargeMethod.value = method
-    }
+    var selectedHouse by mutableStateOf<House?>(null)
 
     fun updateHouseServices(
         houseId: String,
@@ -132,17 +84,10 @@ class HouseViewModel @Inject constructor(
         }
     }
 
-    fun addHouse(name: String, address: String, uid: String) {
+    fun addAndUpdateHouse(house: House) {
         _createHouseState.value = UiState.Loading
         viewModelScope.launch {
-            _createHouseState.value = houseRepository.addHouse(
-                House(
-                    id = "",
-                    name = name,
-                    address = address,
-                    uid = uid
-                )
-            )
+            _createHouseState.value = houseRepository.addAndUpdateHouse(house)
         }
     }
 
@@ -156,7 +101,7 @@ class HouseViewModel @Inject constructor(
     fun fetchServiceRecords(houseId: String) {
         _serviceRecordsState.value = UiState.Loading
         viewModelScope.launch {
-            _serviceRecordsState.value = houseRepository.getServiceRecords(houseId)
+            _serviceRecordsState.value = houseRepository.getServiceRecordsByHouseId(houseId)
         }
     }
 
@@ -195,19 +140,29 @@ class HouseViewModel @Inject constructor(
         }
     }
 
+    fun fetchExpenseRecords(houseId: String) {
+        _expenseRecordsState.value = UiState.Loading
+        viewModelScope.launch {
+            _expenseRecordsState.value = houseRepository.getExpenseRecords(houseId)
+        }
+    }
+
+    fun fetchFinancialReportAllMonth(houseId: String, year: Int) {
+        _financialReportAllMonth.value = UiState.Loading
+        viewModelScope.launch {
+            _financialReportAllMonth.value = houseRepository.getFinancialReportForAllMonths(houseId = houseId, year = year)
+        }
+    }
+
+    fun clearCreateHouseState() {
+        _createHouseState.value = UiState.Empty
+    }
+
     fun clearDeleteState() {
         _deleteHouseState.value = UiState.Empty
     }
 
     fun clearCreateServiceRecordState() {
         _createServiceRecordState.value = UiState.Empty
-    }
-
-    fun updateHouseName(name: String) {
-        houseName.value = name
-    }
-
-    fun updateHouseAddress(address: String) {
-        houseAddress.value = address
     }
 }

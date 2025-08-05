@@ -253,7 +253,7 @@ fun CreateTenantScreen(
 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    horizontalArrangement = Arrangement.spacedBy(24.dp),
                                 ) {
 
                                     //positionImage = 0
@@ -267,7 +267,8 @@ fun CreateTenantScreen(
                                         onImageClick = {
                                             isImagePickerOpen = true
                                             selectedImageUrl = idCardFrontImageUrl
-                                        }
+                                        },
+                                        modifier = Modifier.weight(1f)
                                     )
 
                                     //positionImage = 1
@@ -281,7 +282,8 @@ fun CreateTenantScreen(
                                         onImageClick = {
                                             isImagePickerOpen = true
                                             selectedImageUrl = idCardBackImageUrl
-                                        }
+                                        },
+                                        modifier = Modifier.weight(1f)
                                     )
                                 }
 

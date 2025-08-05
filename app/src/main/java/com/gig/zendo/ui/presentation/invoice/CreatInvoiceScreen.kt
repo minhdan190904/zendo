@@ -57,18 +57,21 @@ import androidx.navigation.NavController
 import com.gig.zendo.domain.model.ChargeMethod
 import com.gig.zendo.domain.model.Invoice
 import com.gig.zendo.domain.model.Service
+import com.gig.zendo.domain.model.ServiceRecord
 import com.gig.zendo.ui.common.CustomDateTimePicker
 import com.gig.zendo.ui.common.CustomDisplayImageDialog
 import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.CustomImagePicker
 import com.gig.zendo.ui.common.CustomImagePickerDialog
-import com.gig.zendo.ui.common.CustomLoadingProgress
-import com.gig.zendo.ui.common.InputType
 import com.gig.zendo.ui.common.CustomLabeledTextField
+import com.gig.zendo.ui.common.CustomLoadingProgress
+import com.gig.zendo.ui.common.ExposedDropdownField
+import com.gig.zendo.ui.common.InputType
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.ui.presentation.navigation.Screens
 import com.gig.zendo.ui.presentation.room.RoomViewModel
 import com.gig.zendo.ui.presentation.service.ServiceViewModel
+import com.gig.zendo.ui.presentation.tenant.StatOfDetailTextHeader
 import com.gig.zendo.ui.presentation.tenant.saveBitmapToCache
 import com.gig.zendo.ui.theme.DarkGreen
 import com.gig.zendo.utils.UiState
@@ -161,13 +164,22 @@ fun CreateInvoiceScreen(
     val currentTenant = roomsAndTenant.second
 
     val createInvoiceState by viewModel.createInvoiceState.collectAsStateWithLifecycle()
+    val serviceRecordsByRoomIdState by viewModelRoom.serviceRecordsByRoomIdState.collectAsStateWithLifecycle()
 
     var total by remember {
         mutableLongStateOf(0L)
     }
 
+    var selectedServiceRecordPrevious by remember {
+        mutableStateOf(ServiceRecord())
+    }
+
+    var selectedServiceRecordCurrent by remember {
+        mutableStateOf(ServiceRecord())
+    }
     LaunchedEffect(Unit) {
         viewModelService.fetchServices(houseId)
+        viewModelRoom.fetchServiceRecordsByRoomId(roomId = currentTenant.roomId)
     }
 
     Scaffold(
@@ -245,21 +257,65 @@ fun CreateInvoiceScreen(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                if (currentTenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
-                                    Text(
-                                        text = "Thông tin số điện cũ và mới",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp),
-                                        color = Color.Black,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        textAlign = TextAlign.Start
-                                    )
 
-                                    Spacer(modifier = Modifier.height(16.dp))
+                                if (currentTenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION
+                                    && currentTenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION
+                                )
+                                    StatOfDetailTextHeader("Thông tin điện nước cũ")
+                                else if (currentTenant.electricService.chargeMethod != ChargeMethod.BY_CONSUMPTION
+                                    && currentTenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION
+                                )
+                                    StatOfDetailTextHeader("Thông tin nước cũ")
+                                else if (currentTenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION
+                                    && currentTenant.waterService.chargeMethod != ChargeMethod.BY_CONSUMPTION
+                                )
+                                    StatOfDetailTextHeader("Thông tin điện cũ")
 
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(24.dp),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
+                                if (currentTenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION
+                                    || currentTenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION
+                                ) {
+                                    if (serviceRecordsByRoomIdState is UiState.Success) {
+                                        val serviceRecords =
+                                            (serviceRecordsByRoomIdState as UiState.Success<List<ServiceRecord>>).data
+
+                                        fun setStateForServiceRecordPrevious(
+                                            serviceRecord: ServiceRecord
+                                        ) {
+                                            numberElectricityPreviousImageUrl = serviceRecord.electricImageUrl
+                                            numberWaterPreviousImageUrl = serviceRecord.waterImageUrl
+                                            numberElectricityPrevious = serviceRecord.numberElectric.toString()
+                                            numberWaterPrevious = serviceRecord.numberWater.toString()
+                                        }
+
+                                        LaunchedEffect(serviceRecords) {
+                                            selectedServiceRecordPrevious = if(serviceRecords.size > 1) serviceRecords[1] else serviceRecords.first()
+                                            setStateForServiceRecordPrevious(selectedServiceRecordPrevious)
+                                        }
+
+                                        ExposedDropdownField(
+                                            label = "Danh sách ghi nhận dịch vụ",
+                                            options = serviceRecords,
+                                            selectedOption = selectedServiceRecordPrevious,
+                                            onOptionSelected = {
+                                                selectedServiceRecordPrevious = it
+                                                setStateForServiceRecordPrevious(it)
+                                            },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            labelMapper = {
+                                                (serviceRecords.indexOf(it) + 1).toString() + ". Ghi nhận vào ngày ${it.date}"
+                                            }
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+
+                                    if (currentTenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
                                         CustomLabeledTextField(
                                             label = "Số điện cũ",
                                             value = numberElectricityPrevious,
@@ -270,7 +326,125 @@ fun CreateInvoiceScreen(
                                             placeholder = "Ví dụ: 400",
                                             inputType = InputType.NUMBER,
                                         )
+                                    }
 
+                                    if (currentTenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                        CustomLabeledTextField(
+                                            label = "Số nước cũ",
+                                            value = numberWaterPrevious,
+                                            onValueChange = { numberWaterPrevious = it },
+                                            modifier = Modifier.weight(1f),
+                                            singleLine = true,
+                                            useInternalLabel = false,
+                                            placeholder = "Ví dụ: 400",
+                                            inputType = InputType.NUMBER,
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                                ) {
+
+                                    if (currentTenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                        //positionImage = 0
+                                        CustomImagePicker(
+                                            label = "Hình điện cũ",
+                                            imageUri = numberElectricityPreviousImageUrl,
+                                            onPickImageClick = {
+                                                positionImage = 0
+                                                showImagePickerDialog = true
+                                            },
+                                            onImageClick = {
+                                                isImagePickerOpen = true
+                                                selectedImageUrl = numberElectricityPreviousImageUrl
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                    }
+
+                                    if (currentTenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                        //positionImage = 2
+                                        CustomImagePicker(
+                                            label = "Hình nước cũ",
+                                            imageUri = numberWaterPreviousImageUrl,
+                                            onPickImageClick = {
+                                                positionImage = 2
+                                                showImagePickerDialog = true
+                                            },
+                                            onImageClick = {
+                                                isImagePickerOpen = true
+                                                selectedImageUrl = numberWaterPreviousImageUrl
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                    }
+                                }
+
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                if (currentTenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION
+                                    && currentTenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION
+                                )
+                                    StatOfDetailTextHeader("Thông tin điện nước mới")
+                                else if (currentTenant.electricService.chargeMethod != ChargeMethod.BY_CONSUMPTION
+                                    && currentTenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION
+                                )
+                                    StatOfDetailTextHeader("Thông tin nước mới")
+                                else if (currentTenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION
+                                    && currentTenant.waterService.chargeMethod != ChargeMethod.BY_CONSUMPTION
+                                )
+                                    StatOfDetailTextHeader("Thông tin điện mới")
+
+                                if (currentTenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION
+                                    || currentTenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION
+                                ) {
+                                    if (serviceRecordsByRoomIdState is UiState.Success) {
+                                        val serviceRecords =
+                                            (serviceRecordsByRoomIdState as UiState.Success<List<ServiceRecord>>).data
+
+                                        fun setStateForServiceRecordCurrent(
+                                            serviceRecord: ServiceRecord
+                                        ) {
+                                            numberElectricityCurrentImageUrl = serviceRecord.electricImageUrl
+                                            numberWaterCurrentImageUrl = serviceRecord.waterImageUrl
+                                            numberElectricityCurrent = serviceRecord.numberElectric.toString()
+                                            numberWaterCurrent = serviceRecord.numberWater.toString()
+                                        }
+
+                                        LaunchedEffect(serviceRecords) {
+                                            selectedServiceRecordCurrent = serviceRecords.first()
+                                            setStateForServiceRecordCurrent(selectedServiceRecordCurrent)
+                                        }
+
+                                        ExposedDropdownField(
+                                            label = "Danh sách ghi nhận dịch vụ",
+                                            options = serviceRecords,
+                                            selectedOption = selectedServiceRecordCurrent,
+                                            onOptionSelected = {
+                                                selectedServiceRecordCurrent = it
+                                                setStateForServiceRecordCurrent(it)
+                                            },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            labelMapper = {
+                                                (serviceRecords.indexOf(it) + 1).toString() + ". Ghi nhận vào ngày ${it.date}"
+                                            }
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+
+                                    if (currentTenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
                                         CustomLabeledTextField(
                                             label = "Số điện mới",
                                             value = numberElectricityCurrent,
@@ -283,76 +457,7 @@ fun CreateInvoiceScreen(
                                         )
                                     }
 
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                    ) {
-
-                                        //positionImage = 0
-                                        CustomImagePicker(
-                                            label = "Hình điện cũ",
-                                            imageUri = numberElectricityPreviousImageUrl,
-                                            onPickImageClick = {
-                                                positionImage = 0
-                                                showImagePickerDialog = true
-                                            },
-                                            onImageClick = {
-                                                isImagePickerOpen = true
-                                                selectedImageUrl = numberElectricityPreviousImageUrl
-                                            }
-                                        )
-
-                                        //positionImage = 1
-                                        CustomImagePicker(
-                                            label = "Hình điện mới",
-                                            imageUri = numberElectricityCurrentImageUrl,
-                                            onPickImageClick = {
-                                                positionImage = 1
-                                                showImagePickerDialog = true
-                                            },
-                                            onImageClick = {
-                                                isImagePickerOpen = true
-                                                selectedImageUrl = numberElectricityCurrentImageUrl
-                                            }
-                                        )
-                                    }
-
-                                } else {
-                                    CustomInformation(
-                                        label = "Điện tính theo số người: ${currentTenant.numberOfOccupants} người"
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                if (currentTenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
-                                    Text(
-                                        text = "Thông tin số nước cũ và mới",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp),
-                                        color = Color.Black,
-                                        textAlign = TextAlign.Start,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-
-                                    Spacer(modifier = Modifier.height(16.dp))
-
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(24.dp),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        CustomLabeledTextField(
-                                            label = "Số nước cũ",
-                                            value = numberWaterPrevious,
-                                            onValueChange = { numberWaterPrevious = it },
-                                            modifier = Modifier.weight(1f),
-                                            singleLine = true,
-                                            useInternalLabel = false,
-                                            placeholder = "Ví dụ: 400",
-                                            inputType = InputType.NUMBER,
-                                        )
-
+                                    if (currentTenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
                                         CustomLabeledTextField(
                                             label = "Số nước mới",
                                             value = numberWaterCurrent,
@@ -364,43 +469,59 @@ fun CreateInvoiceScreen(
                                             inputType = InputType.NUMBER,
                                         )
                                     }
+                                }
 
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
 
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                    ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                                ) {
 
-                                        //positionImage = 2
+                                    if (currentTenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                        //positionImage = 1
                                         CustomImagePicker(
-                                            label = "Hình nước cũ",
-                                            imageUri = numberWaterPreviousImageUrl,
+                                            label = "Hình điện mới",
+                                            imageUri = numberElectricityCurrentImageUrl,
                                             onPickImageClick = {
-                                                positionImage = 2
+                                                positionImage = 1
                                                 showImagePickerDialog = true
                                             },
                                             onImageClick = {
                                                 isImagePickerOpen = true
-                                                selectedImageUrl = numberWaterPreviousImageUrl
-                                            }
-                                        )
-
-                                        //positionImage = 3
-                                        CustomImagePicker(
-                                            label = "Hình nước mới",
-                                            imageUri = numberWaterCurrentImageUrl,
-                                            onPickImageClick = {
-                                                positionImage = 3
-                                                showImagePickerDialog = true
+                                                selectedImageUrl = numberElectricityCurrentImageUrl
                                             },
-                                            onImageClick = {
-                                                isImagePickerOpen = true
-                                                selectedImageUrl = numberWaterCurrentImageUrl
-                                            }
+                                            modifier = Modifier.weight(1f),
                                         )
                                     }
-                                } else {
+
+                                    if (currentTenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
+                                        //positionImage = 1
+                                        CustomImagePicker(
+                                            label = "Hình điện mới",
+                                            imageUri = numberElectricityCurrentImageUrl,
+                                            onPickImageClick = {
+                                                positionImage = 1
+                                                showImagePickerDialog = true
+                                            },
+                                            onImageClick = {
+                                                isImagePickerOpen = true
+                                                selectedImageUrl = numberElectricityCurrentImageUrl
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                if (currentTenant.electricService.chargeMethod != ChargeMethod.BY_CONSUMPTION) {
+                                    CustomInformation(
+                                        label = "Điện tính theo số người: ${currentTenant.numberOfOccupants} người"
+                                    )
+                                }
+
+                                if (currentTenant.waterService.chargeMethod != ChargeMethod.BY_CONSUMPTION) {
                                     CustomInformation(
                                         label = "Nước tính theo số người: ${currentTenant.numberOfOccupants} người"
                                     )
@@ -674,7 +795,6 @@ fun CreateInvoiceScreen(
                                         note = note,
                                         totalAmount = total,
                                         roomId = currentRoom.id,
-                                        roomName = currentRoom.name,
                                         houseId = houseId,
                                     )
 

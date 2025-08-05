@@ -22,9 +22,8 @@ import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.MyPopupMenu
 import com.gig.zendo.ui.common.StatOfProperty
 import com.gig.zendo.utils.HouseMenuAction
+import com.gig.zendo.utils.getCurrentMonth
 import com.gig.zendo.utils.toMoney
-import getBillingDay
-import getCurrentMonth
 
 @Composable
 fun PropertyHouseCard(
@@ -34,7 +33,8 @@ fun PropertyHouseCard(
     onEditClick: () -> Unit,
     onExportClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
-    onExpenseDetailClick: () -> Unit
+    onExpenseDetailClick: () -> Unit,
+    onFinancialReportClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -55,13 +55,15 @@ fun PropertyHouseCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                MyPopupMenu(actions = listOf(HouseMenuAction.Edit, HouseMenuAction.Delete, HouseMenuAction.ExportExcel, HouseMenuAction.AddExpense, HouseMenuAction.ExpenseDetail)) {
+                MyPopupMenu(actions = listOf(HouseMenuAction.Edit, HouseMenuAction.Delete, HouseMenuAction.ExportExcel, HouseMenuAction.AddExpense, HouseMenuAction.ExpenseDetail,
+                    HouseMenuAction.FinancialReport)) {
                     when (it) {
                         HouseMenuAction.Edit -> onEditClick()
                         HouseMenuAction.Delete -> onDeleteClick()
                         HouseMenuAction.ExportExcel -> onExportClick()
                         HouseMenuAction.AddExpense -> onAddExpenseClick()
                         HouseMenuAction.ExpenseDetail -> onExpenseDetailClick()
+                        HouseMenuAction.FinancialReport -> onFinancialReportClick()
                     }
                 }
             }

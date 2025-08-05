@@ -2,10 +2,13 @@ package com.gig.zendo.ui.presentation.room
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gig.zendo.domain.model.Room
+import com.gig.zendo.domain.model.ServiceRecord
 import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.domain.repository.RoomRepository
 import com.gig.zendo.utils.CloudinaryUploader
@@ -36,18 +39,15 @@ class RoomViewModel @Inject constructor(
     private val _upImageState = MutableStateFlow<UiState<String>>(UiState.Empty)
     val upImageState: StateFlow<UiState<String>> = _upImageState
 
-    var roomName = mutableStateOf("")
-        private set
+    private val _serviceRecordsByRoomIdState = MutableStateFlow<UiState<List<ServiceRecord>>>(UiState.Empty)
+    val serviceRecordsByRoomIdState: StateFlow<UiState<List<ServiceRecord>>> = _serviceRecordsByRoomIdState
 
-    fun addRoom(name: String, houseId: String) {
+    var selectedRoom by mutableStateOf<Room?>(null)
+
+    fun addAndUpdateRoom(room: Room) {
         _createRoomState.value = UiState.Loading
-        val room = Room(
-            id = "",
-            name = name,
-            houseId = houseId
-        )
         viewModelScope.launch {
-            _createRoomState.value = roomRepository.addRoom(room)
+            _createRoomState.value = roomRepository.addAndUpdateRoom(room)
         }
     }
 
@@ -65,6 +65,13 @@ class RoomViewModel @Inject constructor(
         }
     }
 
+    fun fetchServiceRecordsByRoomId(roomId: String){
+        _serviceRecordsByRoomIdState.value = UiState.Loading
+        viewModelScope.launch {
+            _serviceRecordsByRoomIdState.value = roomRepository.getServiceRecordsByRoomId(roomId)
+        }
+    }
+
     fun uploadImage(context: Context, uri: Uri) {
         _upImageState.value = UiState.Loading
         viewModelScope.launch {
@@ -72,8 +79,8 @@ class RoomViewModel @Inject constructor(
         }
     }
 
-    fun updateRoomName(name: String) {
-        roomName.value = name
+    fun clearCreateRoomState() {
+        _createRoomState.value = UiState.Empty
     }
 
     var currentRoomAndTenant = mutableStateOf<Pair<Room, Tenant>?>(null)

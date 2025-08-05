@@ -29,6 +29,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.gig.zendo.domain.model.Room
 import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.utils.UiState
@@ -45,17 +49,24 @@ import com.gig.zendo.utils.UiState
 @Composable
 fun CreateRoomScreen(
     navController: NavController,
-    viewModel: RoomViewModel = hiltViewModel(),
+    viewModel: RoomViewModel,
     snackbarHostState: SnackbarHostState,
     houseId: String? = null,
 ) {
-    val roomName by viewModel.roomName
+    var roomName by remember {  mutableStateOf("")}
     val createRoomState by viewModel.createRoomState.collectAsStateWithLifecycle()
+    var selectedRoom = viewModel.selectedRoom
+
+    LaunchedEffect(selectedRoom) {
+        selectedRoom?.let {
+            roomName = it.name
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tạo phòng") },
+                title = { Text(if(selectedRoom == null) "Tạo phòng" else "Chỉnh sửa phòng") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -111,7 +122,7 @@ fun CreateRoomScreen(
                         CustomLabeledTextField(
                             label = "Tên phòng",
                             value = roomName,
-                            onValueChange = { viewModel.updateRoomName(it) },
+                            onValueChange = { roomName = it },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             useInternalLabel = false,
@@ -121,7 +132,14 @@ fun CreateRoomScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Button(
-                            onClick = {viewModel.addRoom(roomName, houseId ?: "")},
+                            onClick = {viewModel.addAndUpdateRoom(
+                                Room(
+                                    id = selectedRoom?.id ?: "",
+                                    name = roomName,
+                                    houseId = houseId ?: "",
+                                    createdAt = selectedRoom?.createdAt ?: System.currentTimeMillis(),
+                                )
+                            )},
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00796B)),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier
@@ -147,6 +165,8 @@ fun CreateRoomScreen(
                 navController.previousBackStackEntry
                     ?.savedStateHandle
                     ?.set("shouldRefreshRooms", true)
+                viewModel.selectedRoom = null
+                viewModel.clearCreateRoomState()
                 navController.popBackStack()
                 snackbarHostState.showSnackbar("✓ Tạo phòng trọ thành công!")
             }

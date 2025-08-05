@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -258,6 +259,7 @@ fun StatOfDetailTextHeader(
     label: String,
     value: String = "",
     colorOfValue: Color = Color.Black,
+    styleValue: TextStyle = MaterialTheme.typography.labelSmall.copy(fontSize = 14.sp)
 ) {
     Row(
         modifier = Modifier
@@ -275,7 +277,7 @@ fun StatOfDetailTextHeader(
 
         Text(
             text = value,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 14.sp),
+            style = styleValue,
             color = colorOfValue,
         )
     }
@@ -286,7 +288,8 @@ fun StatOfDetailText(
     label: String,
     value: String,
     valueIsImageUrl: Boolean = false,
-    color: Color = Color.Black,
+    colorValue: Color = Color.Black,
+    haveDivider: Boolean = true
 ) {
     Row(
         modifier = Modifier
@@ -304,16 +307,18 @@ fun StatOfDetailText(
         Text(
             text = if (!valueIsImageUrl) value else "Chưa có ảnh",
             style = MaterialTheme.typography.labelSmall.copy(fontSize = 14.sp),
-            color = if (valueIsImageUrl) Color.Red else color,
+            color = if (valueIsImageUrl) Color.Red else colorValue,
         )
     }
 
-    HorizontalDivider(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        color = Color.LightGray
-    )
+    if(haveDivider){
+        HorizontalDivider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            color = Color.LightGray
+        )
+    }
 }
 
 @Composable

@@ -1,6 +1,5 @@
 package com.gig.zendo.ui.presentation.expense
 
-import android.widget.Space
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,14 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,23 +30,23 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.gig.zendo.R
 import com.gig.zendo.domain.model.ExpenseRecord
+import com.gig.zendo.ui.common.CustomLoadingProgress
 import com.gig.zendo.ui.common.CustomMonthYearPicker
 import com.gig.zendo.ui.presentation.home.HouseViewModel
-import com.gig.zendo.ui.theme.DarkGreen
+import com.gig.zendo.utils.UiState
 import com.gig.zendo.utils.getCurrentYear
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,6 +64,12 @@ fun ExpenseRecordScreen(
     var selectedStartYear by remember { mutableStateOf(getCurrentYear()) }
     var selectedEndMonth by remember { mutableStateOf(12.toString()) }
     var selectedEndYear by remember { mutableStateOf(getCurrentYear()) }
+
+    val expenseRecordsState by viewModelHouse.expenseRecordsState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModelHouse.fetchExpenseRecords(houseId)
+    }
 
     Scaffold(
         topBar = {
@@ -95,9 +97,12 @@ fun ExpenseRecordScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState())
         ) {
-            Column {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
                 Card(
                     shape = RoundedCornerShape(16.dp),
@@ -216,77 +221,60 @@ fun ExpenseRecordScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)
-                            .padding(horizontal = 16.dp, vertical = 24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
+                when (expenseRecordsState) {
+                    is UiState.Loading -> {
+                        CustomLoadingProgress()
+                    }
 
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.DateRange, contentDescription = null, tint = DarkGreen)
-                                Spacer(Modifier.width(4.dp))
-                                Text("1/25/2004", style = MaterialTheme.typography.bodyLarge)
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(painterResource(id = R.drawable.ic_money), contentDescription = null, tint = Color(0xFF00A67E))
-                                Spacer(Modifier.width(4.dp))
-                                Text(
-                                    "234,2343 đ",
-                                    color = DarkGreen,
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Row(
+                    is UiState.Empty -> {
+                        Text(
+                            text = "Không có dữ liệu",
+                            style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(32.dp, alignment = Alignment.CenterHorizontally),
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ){
-                                IconButton(onClick = {}) {
-                                    Icon(painter = painterResource(id = R.drawable.ic_eye), contentDescription = "Xem", tint = DarkGreen)
-                                }
-                                Text(text = "Xem", color = DarkGreen)
-                            }
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ){
-                                IconButton(onClick = {}) {
-                                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Chỉnh sửa", tint = DarkGreen)
-                                }
-                                Text(text = "Chỉnh sửa", color = DarkGreen)
-                            }
+                            color = Color.Gray,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
 
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ){
-                                IconButton(onClick = {}) {
-                                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Xóa", tint = Color.Red)
-                                }
-                                Text(text = "Xóa", color = Color.Red)
+                    is UiState.Failure -> {
+                        Text(
+                            text = "Lỗi: ${(expenseRecordsState as UiState.Failure).error}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.fillMaxWidth(),
+                            color = Color.Red,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+
+                    is UiState.Success -> {
+                        val expenseRecords =
+                            (expenseRecordsState as UiState.Success<List<ExpenseRecord>>).data
+                        LazyColumn(
+                            modifier = Modifier
+                                .weight(1f)
+                        ) {
+                            items(expenseRecords.size) { index ->
+                                val expenseRecord = expenseRecords[index]
+                                ExpenseRecordItem(
+                                    expenseRecord = expenseRecord,
+                                    onViewClick = {
+                                        // Handle view click
+
+                                    },
+                                    onEditClick = {
+                                        // Handle edit click
+
+                                    },
+                                    onDeleteClick = {
+                                        // Handle delete click
+                                    }
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
                             }
                         }
                     }
                 }
+
             }
         }
     }

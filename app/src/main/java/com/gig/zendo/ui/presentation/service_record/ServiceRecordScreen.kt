@@ -276,7 +276,7 @@ fun ServiceRecordScreen(
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                            horizontalArrangement = Arrangement.spacedBy(24.dp),
                         ) {
 
                             //positionImage = 0
@@ -290,7 +290,8 @@ fun ServiceRecordScreen(
                                 onImageClick = {
                                     isImagePickerOpen = true
                                     selectedImageUrl = numberElectricityImageUrl
-                                }
+                                },
+                                modifier = Modifier.weight(1f)
                             )
 
                             //positionImage = 1
@@ -304,7 +305,8 @@ fun ServiceRecordScreen(
                                 onImageClick = {
                                     isImagePickerOpen = true
                                     selectedImageUrl = numberWaterImageUrl
-                                }
+                                },
+                                modifier = Modifier.weight(1f)
                             )
                         }
                     }
@@ -321,9 +323,7 @@ fun ServiceRecordScreen(
                         numberWater = numberWater.toLongOrNull() ?: 0,
                         electricImageUrl = numberElectricityImageUrl,
                         waterImageUrl = numberWaterImageUrl,
-                        houseId = houseId,
-                        tenantName = selectedTenantName,
-                        roomName = selectedRoomName,
+                        houseId = houseId
                     )
                     viewModelHouse.createServiceRecord(serviceRecord)
                 }, text = "Ghi dữ liệu")
@@ -356,6 +356,17 @@ fun ServiceRecordScreen(
                         Column {
                             val serviceRecords = state.data.filter { it.roomId == selectedRoomId }
                             for (record in serviceRecords) {
+                                var recordUpdate = record
+                                if(roomsState is UiState.Success){
+                                    val roomsAndTenants = (roomsState as UiState.Success).data
+                                    val rooms = roomsAndTenants.map { it.first }
+                                    val roomNameUpdate = rooms.find { room -> room.id == record.roomId }?.name ?: ""
+                                    val tenantNameUpdate = roomsAndTenants.find { it.first.id == record.roomId }?.second?.firstOrNull()?.name ?: ""
+                                    recordUpdate = record.copy(
+                                        roomName = roomNameUpdate,
+                                        tenantName = tenantNameUpdate
+                                    )
+                                }
                                 Card(
                                     shape = RoundedCornerShape(12.dp),
                                     elevation = CardDefaults.cardElevation(8.dp),
@@ -369,8 +380,9 @@ fun ServiceRecordScreen(
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             verticalAlignment = Alignment.CenterVertically,
-                                        ){
-                                            Text(text = record.roomName,
+                                        ) {
+                                            Text(
+                                                text = recordUpdate.roomName,
                                                 style = MaterialTheme.typography.titleMedium.copy(
                                                     color = Color(
                                                         0xFFFF7043
@@ -408,28 +420,34 @@ fun ServiceRecordScreen(
                                         StatOfDetailText(label = "Ngày ghi", value = record.date)
                                         StatOfDetailText(
                                             label = "Người thuê",
-                                            value = record.tenantName
+                                            value = recordUpdate.tenantName
                                         )
                                         StatOfDetailText(
                                             label = "Số điện",
-                                            value = record.numberElectric.toString()
+                                            value = recordUpdate.numberElectric.toString()
                                         )
                                         StatOfDetailText(
                                             label = "Số nước",
-                                            value = record.numberWater.toString()
+                                            value = recordUpdate.numberWater.toString()
                                         )
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            horizontalArrangement = Arrangement.spacedBy(24.dp),
                                         ) {
-                                            CustomImageDisplay(imageUri = record.electricImageUrl) {
+                                            CustomImageDisplay(
+                                                imageUri = recordUpdate.electricImageUrl,
+                                                modifier = Modifier.weight(1f)
+                                            ) {
                                                 isImagePickerOpen = true
-                                                selectedImageUrl = record.electricImageUrl
+                                                selectedImageUrl = recordUpdate.electricImageUrl
                                             }
 
-                                            CustomImageDisplay(imageUri = record.waterImageUrl) {
+                                            CustomImageDisplay(
+                                                imageUri = recordUpdate.waterImageUrl,
+                                                modifier = Modifier.weight(1f)
+                                            ) {
                                                 isImagePickerOpen = true
-                                                selectedImageUrl = record.waterImageUrl
+                                                selectedImageUrl = recordUpdate.waterImageUrl
                                             }
                                         }
                                     }

@@ -3,6 +3,7 @@ package com.gig.zendo.data.repository
 import com.gig.zendo.domain.model.Invoice
 import com.gig.zendo.domain.model.InvoiceStatus
 import com.gig.zendo.domain.model.Room
+import com.gig.zendo.domain.model.ServiceRecord
 import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.domain.repository.RoomRepository
 import com.gig.zendo.utils.UiState
@@ -15,7 +16,7 @@ class RoomRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore
 ) : RoomRepository {
 
-    override suspend fun addRoom(room: Room): UiState<Unit> {
+    override suspend fun addAndUpdateRoom(room: Room): UiState<Unit> {
         return try {
             if (room.houseId.isEmpty()) return UiState.Failure("House ID is required")
             val roomId = room.id.ifEmpty { firestore.collection(Room.COLLECTION_NAME).document().id }
@@ -150,6 +151,20 @@ class RoomRepositoryImpl @Inject constructor(
             UiState.Success(Unit)
         } catch (e: Exception) {
             UiState.Failure(e.message ?: "Failed to check out tenant")
+        }
+    }
+
+    override suspend fun getServiceRecordsByRoomId(roomId: String): UiState<List<ServiceRecord>> {
+        return try {
+            val serviceRecordSnapshot = firestore.collection(ServiceRecord.COLLECTION_NAME)
+                .whereEqualTo(ServiceRecord.FIELD_ROOM_ID, roomId).get().await()
+
+            val serviceRecords =
+                serviceRecordSnapshot.documents.mapNotNull { it.toObject<ServiceRecord>() }
+            serviceRecords.sortedByDescending { it.createdAt }
+            if (serviceRecords.isEmpty()) UiState.Empty else UiState.Success(serviceRecords)
+        } catch (e: Exception) {
+            UiState.Failure(e.message ?: "Failed to fetch service records")
         }
     }
 

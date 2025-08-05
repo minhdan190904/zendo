@@ -23,6 +23,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.gig.zendo.domain.model.House
 import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.utils.UiState
@@ -39,18 +43,26 @@ import com.gig.zendo.utils.UiState
 @Composable
 fun CreateHouseScreen(
     navController: NavController,
-    viewModel: HouseViewModel = hiltViewModel(),
+    viewModel: HouseViewModel,
     snackbarHostState: SnackbarHostState,
     uid: String
 ) {
-    val houseName by viewModel.houseName
-    val houseAddress by viewModel.houseAddress
     val createHouseState by viewModel.createHouseState.collectAsStateWithLifecycle()
+    var houseName by remember { mutableStateOf("") }
+    var houseAddress by remember { mutableStateOf("") }
+    val selectedHouse = viewModel.selectedHouse
+
+    LaunchedEffect(selectedHouse) {
+        selectedHouse?.let {
+            houseName = it.name
+            houseAddress = it.address
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tạo nhà") },
+                title = { Text(if (selectedHouse == null) "Tạo nhà trọ" else "Chỉnh sửa nhà trọ") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -83,7 +95,6 @@ fun CreateHouseScreen(
                     .align(Alignment.TopCenter)
             ) {
                 Column {
-                    // Header màu hồng
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -106,7 +117,7 @@ fun CreateHouseScreen(
                         CustomLabeledTextField(
                             label = "Tên nhà",
                             value = houseName,
-                            onValueChange = { viewModel.updateHouseName(it) },
+                            onValueChange = { houseName = it },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             useInternalLabel = false,
@@ -118,7 +129,7 @@ fun CreateHouseScreen(
                         CustomLabeledTextField(
                             label = "Địa chỉ",
                             value = houseAddress,
-                            onValueChange = { viewModel.updateHouseAddress(it) },
+                            onValueChange = { houseAddress = it },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             useInternalLabel = false,
@@ -128,7 +139,17 @@ fun CreateHouseScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Button(
-                            onClick = {viewModel.addHouse(houseName, houseAddress, uid)},
+                            onClick = {
+                                viewModel.addAndUpdateHouse(
+                                    House(
+                                        id = selectedHouse?.id ?: "",
+                                        name = houseName,
+                                        address = houseAddress,
+                                        uid = uid,
+                                        createdAt = selectedHouse?.createdAt ?: System.currentTimeMillis(),
+                                    )
+                                )
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00796B)),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier
@@ -136,7 +157,7 @@ fun CreateHouseScreen(
                                 .align(Alignment.CenterHorizontally)
                         ) {
                             Text(
-                                "Lưu lại",
+                                text = if (selectedHouse == null) "Tạo" else "Cập nhật",
                                 color = Color.White,
                                 style = MaterialTheme.typography.labelSmall
                             )
@@ -151,6 +172,8 @@ fun CreateHouseScreen(
     LaunchedEffect(createHouseState) {
         when (val state = createHouseState) {
             is UiState.Success<*> -> {
+                viewModel.clearCreateHouseState()
+                viewModel.selectedHouse = null
                 navController.popBackStack()
                 snackbarHostState.showSnackbar("✓ Tạo nhà trọ thành công!")
             }

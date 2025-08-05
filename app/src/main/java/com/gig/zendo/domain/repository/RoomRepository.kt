@@ -1,11 +1,12 @@
 package com.gig.zendo.domain.repository
 
 import com.gig.zendo.domain.model.Room
+import com.gig.zendo.domain.model.ServiceRecord
 import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.utils.UiState
 
 interface RoomRepository {
-    suspend fun addRoom(room: Room): UiState<Unit>
+    suspend fun addAndUpdateRoom(room: Room): UiState<Unit>
     suspend fun getRooms(houseId: String): UiState<List<Room>>
     suspend fun deleteRoom(id: String): UiState<Unit>
 
@@ -20,4 +21,6 @@ interface RoomRepository {
         tenantId: String,
         endDate: String
     ): UiState<Unit>
+
+    suspend fun getServiceRecordsByRoomId(roomId: String): UiState<List<ServiceRecord>>
 }

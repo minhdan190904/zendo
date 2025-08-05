@@ -1,6 +1,5 @@
 package com.gig.zendo.ui.presentation.invoice
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
@@ -42,12 +41,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.gig.zendo.domain.model.ChargeMethod
-import com.gig.zendo.domain.model.Invoice
 import com.gig.zendo.domain.model.InvoiceStatus
 import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.CustomSwitch
 import com.gig.zendo.ui.common.LoadingScreen
-import com.gig.zendo.ui.presentation.navigation.Screens
 import com.gig.zendo.ui.presentation.tenant.StatOfDetailImage
 import com.gig.zendo.ui.presentation.tenant.StatOfDetailText
 import com.gig.zendo.ui.presentation.tenant.StatOfDetailTextHeader
@@ -81,6 +78,7 @@ fun InvoiceDetailScreen(
 
     val invoice = invoiceInRoom ?: invoiceInHouse ?: invoiceCurrent
 
+
     var invoiceStatusChecked by remember {
         mutableStateOf(
             invoice?.status ?: InvoiceStatus.NOT_PAID
@@ -96,8 +94,9 @@ fun InvoiceDetailScreen(
                 navController.previousBackStackEntry
                     ?.savedStateHandle
                     ?.set("shouldRefreshRooms", true)
-                navController.popBackStack()
                 viewModel.resetStateUpdateStatus()
+                viewModel.resetStateCreateInvoice()
+                navController.popBackStack()
             }
 
             is UiState.Failure -> {
@@ -243,7 +242,7 @@ fun InvoiceDetailScreen(
                                         StatOfDetailText(
                                             label = "Tiền nước",
                                             value = ((invoice.newNumberWater - invoice.oldNumberWater) * invoice.waterService.chargeValue).toMoney(),
-                                            color = DarkGreen
+                                            colorValue = DarkGreen
                                         )
                                         if (invoice.oldWaterImageUrl.isNotEmpty()) {
                                             StatOfDetailImage(
@@ -279,7 +278,7 @@ fun InvoiceDetailScreen(
                                         StatOfDetailText(
                                             label = "Tiền nước x " + invoice.tenant.numberOfOccupants.toString() + " người",
                                             value = (invoice.tenant.numberOfOccupants * invoice.waterService.chargeValue).toMoney(),
-                                            color = DarkGreen
+                                            colorValue = DarkGreen
                                         )
                                     }
 
@@ -305,7 +304,7 @@ fun InvoiceDetailScreen(
                                         StatOfDetailText(
                                             label = "Tiền điện",
                                             value = ((invoice.newNumberElectric - invoice.oldNumberElectric) * invoice.electricService.chargeValue).toMoney(),
-                                            color = DarkGreen
+                                            colorValue = DarkGreen
                                         )
                                         if (invoice.oldElectricImageUrl.isNotEmpty()) {
                                             StatOfDetailImage(
@@ -341,7 +340,7 @@ fun InvoiceDetailScreen(
                                         StatOfDetailText(
                                             label = "Tiền điện x ${invoice.tenant.numberOfOccupants} người",
                                             value = (invoice.tenant.numberOfOccupants * invoice.electricService.chargeValue).toMoney(),
-                                            color = DarkGreen
+                                            colorValue = DarkGreen
                                         )
                                     }
 
@@ -351,7 +350,7 @@ fun InvoiceDetailScreen(
                                         StatOfDetailText(
                                             label = "Tiền thuê phòng",
                                             value = invoice.rentService.chargeValue.toMoney(),
-                                            color = DarkGreen
+                                            colorValue = DarkGreen
                                         )
                                     } else {
 
@@ -363,7 +362,7 @@ fun InvoiceDetailScreen(
                                         StatOfDetailText(
                                             label = "Tiền thuê phòng x ${invoice.tenant.numberOfOccupants} người",
                                             value = (invoice.tenant.numberOfOccupants * invoice.rentService.chargeValue).toMoney(),
-                                            color = DarkGreen
+                                            colorValue = DarkGreen
                                         )
                                     }
 
@@ -374,13 +373,13 @@ fun InvoiceDetailScreen(
                                             StatOfDetailText(
                                                 label = service.name,
                                                 value = service.chargeValue.toMoney(),
-                                                color = DarkGreen
+                                                colorValue = DarkGreen
                                             )
                                         } else {
                                             StatOfDetailText(
                                                 label = "${service.name} x ${invoice.tenant.numberOfOccupants} người",
                                                 value = (invoice.tenant.numberOfOccupants * service.chargeValue).toMoney(),
-                                                color = DarkGreen
+                                                colorValue = DarkGreen
                                             )
                                         }
                                     }

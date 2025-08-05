@@ -28,3 +28,7 @@ fun getFirstDayOfThisMonth(): String {
 fun getCurrentYear(): String {
     return SimpleDateFormat("yyyy", Locale.getDefault()).format(Date())
 }
+
+fun getCurrentMonth(): String {
+    return SimpleDateFormat("MM", Locale.getDefault()).format(Date())
+}

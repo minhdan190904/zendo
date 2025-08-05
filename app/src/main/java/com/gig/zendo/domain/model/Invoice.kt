@@ -12,13 +12,10 @@ data class Invoice(
 
     val roomName: String = "",
 
-    // Chỉ số điện nước
     val oldNumberElectric: Long = 0L,
     val newNumberElectric: Long = 0L,
     val oldNumberWater: Long = 0L,
     val newNumberWater: Long = 0L,
-
-    //Dich vụ mac dinh
 
     val rentService: Service = Service(
         id = "",
@@ -41,7 +38,6 @@ data class Invoice(
         chargeMethod = ChargeMethod.BY_CONSUMPTION
     ),
 
-    // Link ảnh cũ/mới nếu có
     val oldElectricImageUrl: String = "",
     val newElectricImageUrl: String = "",
     val oldWaterImageUrl: String = "",

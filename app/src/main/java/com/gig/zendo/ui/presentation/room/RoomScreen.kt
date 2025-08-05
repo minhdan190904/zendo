@@ -183,6 +183,10 @@ fun RoomScreen(
                                 },
                                 onCheckAllInvoices = {
                                     navController.navigate(Screens.InvoiceHistoryScreen.route + "/${room.first.id}")
+                                },
+                                onEditRoom = {
+                                    viewModel.selectedRoom = room.first
+                                    navController.navigate(Screens.CreateRoomScreen.route + "/${houseId}")
                                 }
                             )
                         }

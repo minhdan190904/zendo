@@ -1,7 +1,6 @@
 package com.gig.zendo.ui.presentation.expense
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,48 +10,40 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.gig.zendo.R
 import com.gig.zendo.domain.model.Expense
 import com.gig.zendo.domain.model.ExpenseRecord
 import com.gig.zendo.ui.common.CustomDateTimePicker
@@ -220,7 +211,8 @@ fun CreateExpenseRecordScreen(
                                     modifier = Modifier.weight(1f)
                                 )
                                 Text(
-                                    text = (total + (electricExpense.toLongOrNull() ?: 0L) + (waterExpense.toLongOrNull() ?: 0L)).toMoney(),
+                                    text = (total + (electricExpense.toLongOrNull()
+                                        ?: 0L) + (waterExpense.toLongOrNull() ?: 0L)).toMoney(),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold
@@ -255,7 +247,8 @@ fun CreateExpenseRecordScreen(
                                 waterExpense = waterExpense.toLongOrNull() ?: 0L,
                                 otherExpenses = otherExpenses,
                                 description = description,
-                                totalAmount = (total + (electricExpense.toLongOrNull() ?: 0L) + (waterExpense.toLongOrNull() ?: 0L)),
+                                totalAmount = (total + (electricExpense.toLongOrNull()
+                                    ?: 0L) + (waterExpense.toLongOrNull() ?: 0L)),
                             )
                             viewModelHouse.createExpenseRecord(expenseRecord)
                         }, text = "Lưu lại")
@@ -274,59 +267,15 @@ fun CreateExpenseRecordScreen(
                 navController.popBackStack()
                 snackbarHostState.showSnackbar("Đã lưu chi phí thành công")
             }
+
             is UiState.Failure -> {
-                snackbarHostState.showSnackbar((createState as UiState.Failure).error ?: "Lỗi khi lưu chi phí")
+                snackbarHostState.showSnackbar(
+                    (createState as UiState.Failure).error ?: "Lỗi khi lưu chi phí"
+                )
                 viewModelHouse.clearCreateExpenseRecordState()
             }
+
             else -> {}
-        }
-    }
-}
-
-@Composable
-fun ExpenseItem(
-    expense: Expense,
-    onValueChange: (String, Long) -> Unit,
-    onDelete: () -> Unit
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 8.dp)
-    ) {
-
-        CustomLabeledTextField(
-            label = "Chi phí mới",
-            value = expense.description,
-            onValueChange = { onValueChange(it, expense.amount) },
-            singleLine = true,
-            useInternalLabel = false,
-            modifier = Modifier.weight(1f),
-            placeholder = "Ví dụ: Tiền rác",
-            inputType = InputType.TEXT,
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        CustomLabeledTextField(
-            label = "Số tiền",
-            value = expense.amount.toString(),
-            onValueChange = { amount ->
-                val amountLong = amount.toLongOrNull() ?: 0
-                onValueChange(expense.description, amountLong)
-            },
-            singleLine = true,
-            useInternalLabel = false,
-            modifier = Modifier.weight(1f),
-            placeholder = "Ví dụ: 100,000",
-            inputType = InputType.MONEY,
-        )
-
-        IconButton(onClick = onDelete) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_remove),
-                contentDescription = "Delete",
-                tint = Color.Red
-            )
         }
     }
 }

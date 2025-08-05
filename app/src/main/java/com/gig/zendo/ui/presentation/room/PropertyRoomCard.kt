@@ -33,6 +33,7 @@ fun PropertyRoomCard(
     onCheckOut: () -> Unit = {},
     onCheckDetail: () -> Unit = {},
     onCheckAllInvoices: () -> Unit = {},
+    onEditRoom: () -> Unit = {},
 ) {
 
     val actionIfRoomNotEmpty = listOf(
@@ -75,7 +76,7 @@ fun PropertyRoomCard(
                 ) {
                     when (it) {
                         RoomMenuAction.Edit -> {
-                            // Handle edit room action
+                            onEditRoom()
                         }
                         RoomMenuAction.Delete -> {
                             // Handle delete room action

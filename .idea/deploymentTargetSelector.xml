@@ -5,27 +5,27 @@
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="PreviewExpenseScreen">
+      <SelectionState runConfigName="CustomMonthYearPickerPreview">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-07-27T00:47:03.909881400Z">
+      </SelectionState>
+      <SelectionState runConfigName="CustomBarChartPreview">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2025-08-03T13:31:35.124855800Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\reale\.android\avd\Pixel_8_Pro_API_35_1.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=LFZLNN69XSEIWKZX" />
             </handle>
           </Target>
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="InvoiceScreenPreview">
+      <SelectionState runConfigName="PreviewBarChart">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="InvoiceTablePreview">
+      <SelectionState runConfigName="PreviewBarChart (1)">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="ExposedDropdownFieldPreview">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="CustomMonthYearPickerPreview">
+      <SelectionState runConfigName="PieChartWithCategoryRevenuePreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
