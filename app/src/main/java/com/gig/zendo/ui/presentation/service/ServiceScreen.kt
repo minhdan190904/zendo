@@ -67,19 +67,19 @@ fun ServiceScreen(
     val houseStateUpdateHouse by viewModelHouse.updateHouseServicesState.collectAsStateWithLifecycle()
     val updateHouseServicesState by viewModelHouse.updateHouseServicesState.collectAsStateWithLifecycle()
 
-    var electricChargeMethod by remember {mutableStateOf(ChargeMethod.BY_CONSUMPTION)}
+    var electricChargeMethod by remember { mutableStateOf(ChargeMethod.BY_CONSUMPTION) }
 
-    var waterChargeMethod by remember {mutableStateOf(ChargeMethod.BY_CONSUMPTION)}
+    var waterChargeMethod by remember { mutableStateOf(ChargeMethod.BY_CONSUMPTION) }
 
-    var rentChargeMethod by remember {mutableStateOf(ChargeMethod.FIXED)}
+    var rentChargeMethod by remember { mutableStateOf(ChargeMethod.FIXED) }
 
     var billingDay by remember { mutableIntStateOf(1) }
 
-    var electricCharge by remember { mutableStateOf("")}
+    var electricCharge by remember { mutableStateOf("") }
 
-    var waterCharge by remember { mutableStateOf("")}
+    var waterCharge by remember { mutableStateOf("") }
 
-    var rentCharge by remember { mutableStateOf("")}
+    var rentCharge by remember { mutableStateOf("") }
 
     val createServiceState by viewModelService.createServiceState.collectAsStateWithLifecycle()
     val servicesState by viewModelService.servicesState.collectAsStateWithLifecycle()
@@ -92,7 +92,7 @@ fun ServiceScreen(
 
     LaunchedEffect(housesState) {
         if (housesState is UiState.Success) {
-            val house = if(houseStateUpdateHouse is UiState.Success) {
+            val house = if (houseStateUpdateHouse is UiState.Success) {
                 (houseStateUpdateHouse as UiState.Success<House>).data
             } else {
                 (housesState as UiState.Success<List<House>>).data.firstOrNull { it.id == houseId }
@@ -345,31 +345,46 @@ fun ServiceScreen(
                                 .padding(horizontal = 16.dp, vertical = 24.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            if(servicesState is UiState.Empty || servicesState is UiState.Success){
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                ) {
-                                    IconButton(onClick = { showCreateExtraServiceDialog = true }) {
-                                        FunctionIcon(
-                                            iconRes = R.drawable.ic_add,
-                                            contentDescription = "Thêm dịch vụ"
-                                        )
-                                    }
-                                    if( servicesState is UiState.Empty) {
-                                        Text(
-                                            text = "Chưa có dịch vụ nào được tạo.",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    } else {
-                                        val services =
-                                            (servicesState as UiState.Success<List<Service>>).data
-                                        for (service in services) {
-                                            ExtraServiceItem(
-                                                service = service,
-                                                onDeleteExtraService = {},
-                                                onEditExtraService = {}
+                            when (servicesState) {
+                                is UiState.Loading -> {
+                                    CustomLoadingProgress()
+                                }
+
+                                is UiState.Failure -> {
+                                    Text(
+                                        text = "Lỗi: ${(servicesState as UiState.Failure).error}",
+                                        color = Color.Red
+                                    )
+                                }
+
+                                else -> {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                    ) {
+                                        IconButton(onClick = {
+                                            showCreateExtraServiceDialog = true
+                                        }) {
+                                            FunctionIcon(
+                                                iconRes = R.drawable.ic_add,
+                                                contentDescription = "Thêm dịch vụ"
                                             )
+                                        }
+                                        if (servicesState is UiState.Empty) {
+                                            Text(
+                                                text = "Chưa có dịch vụ nào được tạo.",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        } else {
+                                            val services =
+                                                (servicesState as UiState.Success<List<Service>>).data
+                                            for (service in services) {
+                                                ExtraServiceItem(
+                                                    service = service,
+                                                    onDeleteExtraService = {},
+                                                    onEditExtraService = {}
+                                                )
+                                            }
                                         }
                                     }
                                 }

@@ -11,6 +11,5 @@ interface InvoiceRepository {
      suspend fun getInvoicesInHouse(houseId: String): UiState<List<Invoice>>
      suspend fun updateStatusPaidForInvoices(listIdInvoice: List<String>): UiState<Unit>
      suspend fun updateStatusInvoice(invoiceId: String, status: InvoiceStatus): UiState<Unit>
-    // suspend fun updateInvoice(invoice: Invoice): Result<Unit>
-    // suspend fun deleteInvoice(invoiceId: String): Result<Unit>
+     suspend fun deleteInvoice(invoiceId: String): UiState<Unit>
 }

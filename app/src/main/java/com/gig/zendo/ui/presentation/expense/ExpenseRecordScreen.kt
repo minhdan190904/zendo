@@ -13,8 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
@@ -43,11 +44,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.gig.zendo.domain.model.ExpenseRecord
+import com.gig.zendo.ui.common.ConfirmDialog
 import com.gig.zendo.ui.common.CustomLoadingProgress
 import com.gig.zendo.ui.common.CustomMonthYearPicker
 import com.gig.zendo.ui.presentation.home.HouseViewModel
 import com.gig.zendo.utils.UiState
 import com.gig.zendo.utils.getCurrentYear
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,11 +67,27 @@ fun ExpenseRecordScreen(
     var selectedStartYear by remember { mutableStateOf(getCurrentYear()) }
     var selectedEndMonth by remember { mutableStateOf(12.toString()) }
     var selectedEndYear by remember { mutableStateOf(getCurrentYear()) }
+    var expenseRecordId by remember { mutableStateOf<String?>(null) }
 
     val expenseRecordsState by viewModelHouse.expenseRecordsState.collectAsStateWithLifecycle()
+    val deleteExpenseRecord by viewModelHouse.deleteExpenseRecordState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModelHouse.fetchExpenseRecords(houseId)
+    }
+
+    LaunchedEffect(deleteExpenseRecord) {
+        when (val state = deleteExpenseRecord) {
+            is UiState.Success -> {
+                viewModelHouse.fetchExpenseRecords(houseId)
+                viewModelHouse.clearDeleteExpenseRecordState()
+                snackbarHostState.showSnackbar("Xóa thành công")
+            }
+            is UiState.Failure -> {
+                snackbarHostState.showSnackbar("Xóa thất bại: ${state.error}")
+            }
+            else -> {}
+        }
     }
 
     Scaffold(
@@ -247,14 +266,30 @@ fun ExpenseRecordScreen(
                     }
 
                     is UiState.Success -> {
+                        fun checkDateRange(date: String): Boolean {
+                            val (day, month, year) = date.split("/").map { it.toInt() }
+                            Timber.tag("ExpenseRecordScreen").d("Checking date: $day/$month/$year")
+                            val startMonth = selectedStartMonth.toInt()
+                            val startYear = selectedStartYear.toInt()
+                            val endMonth = selectedEndMonth.toInt()
+                            val endYear = selectedEndYear.toInt()
+
+                            return (year > startYear || (year == startYear && month >= startMonth)) &&
+                                    (year < endYear || (year == endYear && month <= endMonth))
+
+                        }
+
                         val expenseRecords =
-                            (expenseRecordsState as UiState.Success<List<ExpenseRecord>>).data
-                        LazyColumn(
+                            (expenseRecordsState as UiState.Success<List<ExpenseRecord>>).data.filter {
+                                checkDateRange(it.date)
+                            }
+
+                        Column(
                             modifier = Modifier
                                 .weight(1f)
+                                .verticalScroll(rememberScrollState())
                         ) {
-                            items(expenseRecords.size) { index ->
-                                val expenseRecord = expenseRecords[index]
+                            for(expenseRecord in expenseRecords) {
                                 ExpenseRecordItem(
                                     expenseRecord = expenseRecord,
                                     onViewClick = {
@@ -266,7 +301,7 @@ fun ExpenseRecordScreen(
 
                                     },
                                     onDeleteClick = {
-                                        // Handle delete click
+                                        expenseRecordId = expenseRecord.id
                                     }
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -277,6 +312,18 @@ fun ExpenseRecordScreen(
 
             }
         }
+    }
+
+    expenseRecordId?.let{
+        ConfirmDialog(
+            title = "Xóa bản ghi chi phí",
+            message = "Bạn có chắc chắn muốn xóa chi phí này?",
+            onDismiss = { expenseRecordId = null },
+            onConfirm = {
+                viewModelHouse.deleteExpenseRecord(it)
+                expenseRecordId = null
+            }
+        )
     }
 
     if (showDialogMonthYearPickerStart) {

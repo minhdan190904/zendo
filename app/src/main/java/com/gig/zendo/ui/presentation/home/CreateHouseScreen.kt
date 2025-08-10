@@ -173,9 +173,14 @@ fun CreateHouseScreen(
         when (val state = createHouseState) {
             is UiState.Success<*> -> {
                 viewModel.clearCreateHouseState()
+                val notification = if(selectedHouse == null) {
+                    "✓ Tạo nhà trọ thành công!"
+                } else {
+                    "✓ Cập nhật nhà trọ thành công!"
+                }
                 viewModel.selectedHouse = null
                 navController.popBackStack()
-                snackbarHostState.showSnackbar("✓ Tạo nhà trọ thành công!")
+                snackbarHostState.showSnackbar(notification)
             }
 
             is UiState.Failure -> snackbarHostState.showSnackbar(

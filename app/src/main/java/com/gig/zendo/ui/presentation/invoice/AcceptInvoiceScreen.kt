@@ -1,16 +1,37 @@
 package com.gig.zendo.ui.presentation.invoice
 
-import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,13 +53,11 @@ import com.gig.zendo.ui.common.ExposedDropdownField
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.ui.presentation.navigation.Screens
 import com.gig.zendo.ui.presentation.room.RoomViewModel
-import com.gig.zendo.ui.presentation.tenant.getAnnotatedString
-import com.gig.zendo.ui.theme.DarkGreen
+import com.gig.zendo.utils.NavArgUtil
 import com.gig.zendo.utils.UiState
 import com.gig.zendo.utils.getFirstDayOfThisMonth
 import com.gig.zendo.utils.getToday
 import com.gig.zendo.utils.toDate
-import com.gig.zendo.utils.toMoney
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -296,25 +315,39 @@ fun AcceptInvoiceScreen(
                             SortFieldInvoice.STATUS -> if (isAscending) filteredInvoices.sortedBy { it.status } else filteredInvoices.sortedByDescending { it.status }
                         }
 
-                        LazyColumn(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            items(
-                                items = sortedInvoices,
-                                key = { invoice -> invoice.id }
-                            ) { invoice ->
-                                InvoiceItemRow(
-                                    invoice = invoice,
-                                    onViewClick = {
-                                        navController.navigate(Screens.InvoiceDetailScreen.route + "/${invoice.id}")
-                                    },
-                                    onCheckedChange = { isChecked ->
-                                        if (invoice.status == InvoiceStatus.NOT_PAID) {
-                                            checkedMapNotPaidInvoiceId[invoice.id] = isChecked
-                                        }
-                                    },
-                                    checkedMap = checkedMapNotPaidInvoiceId
-                                )
+                        if(roomsState is UiState.Success) {
+
+                            val roomsAndTenants = (roomsState as UiState.Success).data
+                            val rooms = roomsAndTenants.map { it.first }
+                            LazyColumn(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                items(
+                                    items = sortedInvoices,
+                                    key = { invoice -> invoice.id }
+                                ) { invoice ->
+
+                                    val roomNameUpdate = rooms.find { room -> room.id == invoice.roomId }?.name ?: ""
+                                    val tenantUpdate = roomsAndTenants.find { it.first.id == invoice.roomId }?.second?.firstOrNull()
+                                    val invoiceUpdate = invoice.copy(
+                                        roomName = roomNameUpdate,
+                                        tenant = tenantUpdate ?: invoice.tenant
+                                    )
+
+                                    InvoiceItemRow(
+                                        invoice = invoiceUpdate,
+                                        onViewClick = {
+                                            val invoiceJson = NavArgUtil.encode(invoiceUpdate)
+                                            navController.navigate(Screens.InvoiceDetailScreen.route + "/${invoiceJson}")
+                                        },
+                                        onCheckedChange = { isChecked ->
+                                            if (invoice.status == InvoiceStatus.NOT_PAID) {
+                                                checkedMapNotPaidInvoiceId[invoice.id] = isChecked
+                                            }
+                                        },
+                                        checkedMap = checkedMapNotPaidInvoiceId
+                                    )
+                                }
                             }
                         }
 
@@ -393,73 +426,4 @@ enum class SortFieldInvoice {
 private fun getRoomOptions(rooms: List<Room>): List<String> {
     rooms.sortedBy { it.name }
     return listOf("") + rooms.map { it.id }
-}
-
-@Composable
-fun InvoiceItemRow(
-    invoice: Invoice,
-    onViewClick: () -> Unit,
-    onCheckedChange: (Boolean) -> Unit,
-    checkedMap: Map<String, Boolean>
-) {
-    Box(
-        modifier = Modifier
-            .background(
-                if (invoice.status == InvoiceStatus.PAID) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
-            )
-            .padding(8.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = invoice.date,
-                modifier = Modifier.weight(2f),
-                style = MaterialTheme.typography.bodySmall
-            )
-            Text(
-                text = invoice.roomName,
-                modifier = Modifier.weight(2f),
-                style = MaterialTheme.typography.bodySmall
-            )
-            Text(
-                text = invoice.totalAmount.toMoney(),
-                modifier = Modifier.weight(2f),
-                style = MaterialTheme.typography.bodySmall
-            )
-
-            if (invoice.status == InvoiceStatus.NOT_PAID) {
-                Checkbox(
-                    checked = checkedMap[invoice.id] ?: false,
-                    onCheckedChange = { onCheckedChange(it) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .size(24.dp),
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = DarkGreen,
-                        uncheckedColor = Color.Gray,
-                    )
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = "Đã chọn",
-                    modifier = Modifier
-                        .weight(1f)
-                        .size(24.dp),
-                    tint = Color.Gray
-                )
-            }
-
-            Text(
-                text = getAnnotatedString("Xem", Color(0xFF0288D1)),
-                modifier = Modifier
-                    .clickable { onViewClick() }
-                    .weight(1.5f),
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
 }

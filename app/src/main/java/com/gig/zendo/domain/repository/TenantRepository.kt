@@ -5,7 +5,7 @@ import com.gig.zendo.utils.UiState
 import java.io.File
 
 interface TenantRepository {
-    suspend fun addTenantWithImages(tenant: Tenant): UiState<String>
+    suspend fun addAndUpdateTenantWithImages(tenant: Tenant): UiState<String>
     suspend fun getTenants(roomId: String): UiState<List<Tenant>>
     suspend fun deleteTenant(id: String): UiState<Unit>
 }

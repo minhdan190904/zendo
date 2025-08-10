@@ -1,6 +1,7 @@
 package com.gig.zendo.ui.presentation.navigation
 
 sealed class Screens(val route: String) {
+    data object SplashScreen : Screens(route = "SplashScreen")
     data object LoginScreen : Screens(route = "LoginScreen")
     data object RegisterScreen : Screens(route = "RegisterScreen")
     data object GoogleLoginScreen : Screens(route = "GoogleLoginScreen")
@@ -21,4 +22,5 @@ sealed class Screens(val route: String) {
     data object CreateExpenseRecordScreen : Screens(route = "CreateExpenseRecordScreen")
     data object ExpenseRecordScreen : Screens(route = "ExpenseRecordScreen")
     data object FinancialReportScreen: Screens(route = "FinancialReportScreen")
+    data object SupportScreen : Screens(route = "SupportScreen")
 }

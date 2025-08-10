@@ -25,5 +25,6 @@ interface HouseRepository {
     suspend fun createServiceRecord(serviceRecord: ServiceRecord): UiState<Unit>
     suspend fun createExpenseRecord(expenseRecord: ExpenseRecord): UiState<Unit>
     suspend fun getExpenseRecords(houseId: String): UiState<List<ExpenseRecord>>
+    suspend fun deleteExpenseRecord(expenseId: String): UiState<Unit>
     suspend fun getFinancialReportForAllMonths(houseId: String, year: Int): UiState<List<FinancialReport>> // list only contains 12 financial reports, one for each month
 }

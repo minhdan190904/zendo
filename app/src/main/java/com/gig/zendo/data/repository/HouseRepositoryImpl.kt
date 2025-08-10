@@ -214,6 +214,15 @@ class HouseRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteExpenseRecord(expenseId: String): UiState<Unit> {
+        return try {
+            firestore.collection(ExpenseRecord.COLLECTION_NAME).document(expenseId).delete().await()
+            UiState.Success(Unit)
+        } catch (e: Exception) {
+            UiState.Failure(e.message ?: "Failed to delete expense record")
+        }
+    }
+
     override suspend fun getFinancialReportForAllMonths(
         houseId: String, year: Int
     ): UiState<List<FinancialReport>> {

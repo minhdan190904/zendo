@@ -43,6 +43,7 @@ class RoomViewModel @Inject constructor(
     val serviceRecordsByRoomIdState: StateFlow<UiState<List<ServiceRecord>>> = _serviceRecordsByRoomIdState
 
     var selectedRoom by mutableStateOf<Room?>(null)
+    var selectedTenant by mutableStateOf<Tenant?>(null)
 
     fun addAndUpdateRoom(room: Room) {
         _createRoomState.value = UiState.Loading

@@ -24,6 +24,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,11 +35,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.gig.zendo.R
 import com.gig.zendo.domain.model.House
+import com.gig.zendo.domain.model.User
 import com.gig.zendo.ui.common.ConfirmDialog
 import com.gig.zendo.ui.common.FunctionIcon
 import com.gig.zendo.ui.presentation.auth.AuthViewModel
@@ -48,20 +51,40 @@ import java.util.Calendar
 @Composable
 fun HouseScreen(
     viewModel: HouseViewModel,
-    viewModelAuth: AuthViewModel = hiltViewModel(),
+    viewModelAuth: AuthViewModel,
     navController: NavController,
     snackbarHostState: SnackbarHostState
 ) {
 
     val housesState by viewModel.housesState.collectAsStateWithLifecycle()
     val deleteHouseState by viewModel.deleteHouseState.collectAsStateWithLifecycle()
-    val showDeleteDialog by viewModel.showDeleteDialog.collectAsStateWithLifecycle()
-    val showLogoutDialog by viewModelAuth.showLogoutDialog.collectAsStateWithLifecycle()
     val authState by viewModelAuth.authState.collectAsStateWithLifecycle()
-    val currentUser by viewModelAuth.currentUser.collectAsStateWithLifecycle()
+    var currentUser by remember {
+        mutableStateOf<User?>(null)
+    }
+
+    var showDeleteDialog by remember {
+        mutableStateOf<String?>(null)
+    }
+    var showLogoutDialog by remember {
+        mutableStateOf(false)
+    }
+
+    val shouldRefresh = navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.get<Boolean>("shouldRefreshHouses") == true || navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>(
+        "shouldRefreshHouses"
+    ) == true
 
     LaunchedEffect(Unit) {
-        viewModel.fetchHouses(currentUser?.uid ?: "")
+        currentUser = (viewModelAuth.fetchCurrentUser() as UiState.Success<*>).data as User?
+        if(shouldRefresh) {
+            viewModel.fetchHouses(currentUser?.uid ?: "")
+            navController.currentBackStackEntry
+                ?.savedStateHandle
+                ?.set("shouldRefreshHouses", false)
+            navController.previousBackStackEntry?.savedStateHandle?.set("shouldRefreshHouses", false)
+        }
     }
 
     LaunchedEffect(deleteHouseState) {
@@ -91,6 +114,7 @@ fun HouseScreen(
                 navController.navigate(Screens.LoginScreen.route) {
                     popUpTo(Screens.LoginScreen.route) { inclusive = true }
                 }
+                viewModelAuth.clearAuthState()
                 snackbarHostState.showSnackbar("Đăng xuất thành công")
             }
 
@@ -221,7 +245,7 @@ fun HouseScreen(
                                             navController.navigate(Screens.RoomScreen.route + "/${house.id}" + "/${house.name}")
                                         },
                                         onDeleteClick = {
-                                            viewModel.showDeleteHouseDialog(house.id)
+                                            showDeleteDialog = house.id
                                         },
                                         onExportClick = { /* no-op */ },
                                         onEditClick = {
@@ -255,9 +279,10 @@ fun HouseScreen(
             title = "Xóa Nhà",
             message = "Bạn có chắc chắn muốn xóa nhà trọ này?",
             onConfirm = {
+                showDeleteDialog = null
                 viewModel.deleteHouse(houseId)
             },
-            onDismiss = { viewModel.dismissDeleteDialog() }
+            onDismiss = { showDeleteDialog = null }
         )
     }
 
@@ -266,17 +291,22 @@ fun HouseScreen(
             title = "Đăng xuất",
             message = "Bạn có chắc chắn muốn đăng xuất?",
             onConfirm = {
+                showLogoutDialog = false
                 viewModelAuth.logout()
             },
-            onDismiss = { viewModelAuth.dismissLogoutDialog() }
+            onDismiss = {
+                showLogoutDialog = false
+            }
         )
     }
 
     currentUser?.let {
         ProfilePopupMenu(
             onUpgradeProClick = {},
-            onSupportClick = {},
-            onLogoutClick = { viewModelAuth.showLogoutDialog() },
+            onSupportClick = { navController.navigate(Screens.SupportScreen.route) },
+            onLogoutClick = {
+                showLogoutDialog = true
+            },
             currentUser = it,
         )
     }

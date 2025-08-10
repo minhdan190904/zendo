@@ -53,7 +53,7 @@ fun CreateRoomScreen(
     snackbarHostState: SnackbarHostState,
     houseId: String? = null,
 ) {
-    var roomName by remember {  mutableStateOf("")}
+    var roomName by remember { mutableStateOf("") }
     val createRoomState by viewModel.createRoomState.collectAsStateWithLifecycle()
     var selectedRoom = viewModel.selectedRoom
 
@@ -66,7 +66,7 @@ fun CreateRoomScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if(selectedRoom == null) "Tạo phòng" else "Chỉnh sửa phòng") },
+                title = { Text(if (selectedRoom == null) "Tạo phòng" else "Chỉnh sửa phòng") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -132,14 +132,17 @@ fun CreateRoomScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Button(
-                            onClick = {viewModel.addAndUpdateRoom(
-                                Room(
-                                    id = selectedRoom?.id ?: "",
-                                    name = roomName,
-                                    houseId = houseId ?: "",
-                                    createdAt = selectedRoom?.createdAt ?: System.currentTimeMillis(),
+                            onClick = {
+                                viewModel.addAndUpdateRoom(
+                                    Room(
+                                        id = selectedRoom?.id ?: "",
+                                        name = roomName,
+                                        houseId = houseId ?: "",
+                                        createdAt = selectedRoom?.createdAt
+                                            ?: System.currentTimeMillis(),
+                                    )
                                 )
-                            )},
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00796B)),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier
@@ -165,10 +168,12 @@ fun CreateRoomScreen(
                 navController.previousBackStackEntry
                     ?.savedStateHandle
                     ?.set("shouldRefreshRooms", true)
+                val notification =
+                    if (selectedRoom == null) "✓ Tạo phòng trọ thành công!" else "✓ Cập nhật phòng trọ thành công!"
                 viewModel.selectedRoom = null
                 viewModel.clearCreateRoomState()
                 navController.popBackStack()
-                snackbarHostState.showSnackbar("✓ Tạo phòng trọ thành công!")
+                snackbarHostState.showSnackbar(notification)
             }
 
             is UiState.Failure -> snackbarHostState.showSnackbar(

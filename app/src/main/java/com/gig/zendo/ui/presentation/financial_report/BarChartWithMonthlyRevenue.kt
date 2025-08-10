@@ -50,7 +50,11 @@ fun BarChartWithMonthlyRevenue(
 ) {
     require(values.size == 12) { "Cần đúng 12 giá trị tương ứng 12 tháng." }
     val maxValueAbs = abs(values.maxBy { abs(it) })
-    val valuesDouble = values.map { it.toDouble() / maxValueAbs * 100.0 }
+    val valuesDouble = if( maxValueAbs == 0L) {
+        List(12) { 0.0 }
+    } else {
+        values.map { it.toDouble() / maxValueAbs * 100.0 }
+    }
 
     Timber.tag("BarChart")
         .d("Max value absolute: $maxValueAbs, Values: $values, Normalized values: $valuesDouble")

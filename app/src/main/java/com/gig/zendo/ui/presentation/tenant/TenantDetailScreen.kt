@@ -11,13 +11,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,7 +29,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,12 +36,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.gig.zendo.domain.model.ChargeMethod
-import com.gig.zendo.ui.presentation.room.RoomViewModel
-import com.gig.zendo.utils.UiState
+import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.utils.toMoney
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,11 +47,9 @@ import com.gig.zendo.utils.toMoney
 fun TenantDetailScreen(
     navController: NavController,
     snackbarHostState: SnackbarHostState,
-    viewModel: RoomViewModel,
-    roomId: String,
+    tenant: Tenant? = null,
+    roomName: String = "",
 ) {
-
-    val roomsState by viewModel.roomsState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -103,16 +96,7 @@ fun TenantDetailScreen(
                                 .padding(horizontal = 16.dp),
                             contentAlignment = Alignment.CenterEnd
                         ) {
-
-                            IconButton(onClick = { }) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "Chỉnh sửa",
-                                    tint = Color.Black,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-
+                            StatOfDetailTextHeader(label = roomName)
                         }
 
                         Box(
@@ -122,128 +106,122 @@ fun TenantDetailScreen(
                                 .padding(horizontal = 16.dp, vertical = 24.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (roomsState is UiState.Success) {
 
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(Color.White),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    val rooms = (roomsState as UiState.Success).data
-                                    val tenants =
-                                        rooms.firstOrNull { it.first.id == roomId }?.second
-                                    val tenant = tenants?.firstOrNull { it.active == true }
-                                    if (tenant != null) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                if (tenant != null) {
 
-                                        StatOfDetailTextHeader(label = "Thông tin khách thuê")
+                                    StatOfDetailTextHeader(label = "Thông tin khách thuê")
 
-                                        StatOfDetailText(
-                                            label = "Họ tên",
-                                            value = tenant.name
+                                    StatOfDetailText(
+                                        label = "Họ tên",
+                                        value = tenant.name
+                                    )
+                                    StatOfDetailText(
+                                        label = "Số điện thoại",
+                                        value = tenant.phone
+                                    )
+                                    StatOfDetailText(
+                                        label = "Số người ở",
+                                        value = tenant.numberOfOccupants.toString()
+                                    )
+                                    StatOfDetailText(
+                                        label = "Quê quán/Địa chỉ",
+                                        value = tenant.address
+                                    )
+                                    StatOfDetailText(
+                                        label = "CMND/CCCD",
+                                        value = tenant.identityNumber
+                                    )
+                                    StatOfDetailText(
+                                        label = "Ngày thuê",
+                                        value = tenant.startDate
+                                    )
+
+                                    if (tenant.identityCardFrontUrl.isNotEmpty()) {
+                                        StatOfDetailImage(
+                                            label = "CMND/CCCD mặt trước",
+                                            value = tenant.identityCardFrontUrl,
                                         )
+                                    } else {
                                         StatOfDetailText(
-                                            label = "Số điện thoại",
-                                            value = tenant.phone
+                                            label = "CMND/CCCD mặt trước",
+                                            value = tenant.identityCardFrontUrl,
+                                            valueIsImageUrl = true
                                         )
-                                        StatOfDetailText(
-                                            label = "Số người ở",
-                                            value = tenant.numberOfOccupants.toString()
-                                        )
-                                        StatOfDetailText(
-                                            label = "Quê quán/Địa chỉ",
-                                            value = tenant.address
-                                        )
-                                        StatOfDetailText(
-                                            label = "CMND/CCCD",
-                                            value = tenant.identityNumber
-                                        )
-                                        StatOfDetailText(
-                                            label = "Ngày thuê",
-                                            value = tenant.startDate
-                                        )
+                                    }
 
-                                        if (tenant.identityCardFrontUrl.isNotEmpty()) {
-                                            StatOfDetailImage(
-                                                label = "CMND/CCCD mặt trước",
-                                                value = tenant.identityCardFrontUrl,
-                                            )
-                                        } else {
-                                            StatOfDetailText(
-                                                label = "CMND/CCCD mặt trước",
-                                                value = tenant.identityCardFrontUrl,
-                                                valueIsImageUrl = true
-                                            )
-                                        }
-
-                                        if (tenant.identityCardBackUrl.isNotEmpty()) {
-                                            StatOfDetailImage(
-                                                label = "CMND/CCCD mặt sau",
-                                                value = tenant.identityCardBackUrl,
-                                            )
-                                        } else {
-                                            StatOfDetailText(
-                                                label = "CMND/CCCD mặt sau",
-                                                value = tenant.identityCardBackUrl,
-                                                valueIsImageUrl = true
-                                            )
-                                        }
-
-                                        StatOfDetailTextHeader(label = "Thông tin giá thuê")
-
-                                        StatOfDetailText(
-                                            label = "Tiền cọc",
-                                            value = tenant.deposit.toMoney()
+                                    if (tenant.identityCardBackUrl.isNotEmpty()) {
+                                        StatOfDetailImage(
+                                            label = "CMND/CCCD mặt sau",
+                                            value = tenant.identityCardBackUrl,
                                         )
-
+                                    } else {
                                         StatOfDetailText(
-                                            label = "Giá điện " +
+                                            label = "CMND/CCCD mặt sau",
+                                            value = tenant.identityCardBackUrl,
+                                            valueIsImageUrl = true
+                                        )
+                                    }
+
+                                    StatOfDetailTextHeader(label = "Thông tin giá thuê")
+
+                                    StatOfDetailText(
+                                        label = "Tiền cọc",
+                                        value = tenant.deposit.toMoney()
+                                    )
+
+                                    StatOfDetailText(
+                                        label = "Giá điện " +
                                                 if (tenant.electricService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
                                                     "(đ/kWh)"
                                                 } else {
                                                     "(đ/người)"
                                                 },
-                                            value = tenant.electricService.chargeValue.toMoney()
-                                        )
+                                        value = tenant.electricService.chargeValue.toMoney()
+                                    )
 
-                                        StatOfDetailText(
-                                            label = "Giá nước " +
+                                    StatOfDetailText(
+                                        label = "Giá nước " +
                                                 if (tenant.waterService.chargeMethod == ChargeMethod.BY_CONSUMPTION) {
                                                     "(đ/khối)"
                                                 } else {
                                                     "(đ/người)"
                                                 },
-                                            value = tenant.waterService.chargeValue.toMoney()
-                                        )
+                                        value = tenant.waterService.chargeValue.toMoney()
+                                    )
 
-                                        StatOfDetailText(
-                                            label = "Giá thuê " +
+                                    StatOfDetailText(
+                                        label = "Giá thuê " +
                                                 if (tenant.rentService.chargeMethod == ChargeMethod.FIXED) {
                                                     "(đ/tháng)"
                                                 } else {
                                                     "(đ/người/tháng)"
                                                 },
-                                            value = tenant.rentService.chargeValue.toMoney()
-                                        )
+                                        value = tenant.rentService.chargeValue.toMoney()
+                                    )
 
-                                        StatOfDetailTextHeader(
-                                            label = "Trạng thái",
-                                            value = if (tenant.active) "Đang thuê" else "Đã trả phòng",
-                                            colorOfValue = if (tenant.active) Color.Green else Color.Red
-                                        )
+                                    StatOfDetailTextHeader(
+                                        label = "Trạng thái",
+                                        value = if (tenant.active) "Đang thuê" else "Đã trả phòng",
+                                        colorOfValue = if (tenant.active) Color.Green else Color.Red
+                                    )
 
-                                        StatOfDetailTextHeader(
-                                            label = "Ghi chú",
-                                            value = tenant.note
-                                        )
+                                    StatOfDetailTextHeader(
+                                        label = "Ghi chú",
+                                        value = tenant.note
+                                    )
 
-                                    } else {
-                                        Text(
-                                            text = "Không có thông tin khách thuê.",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
+                                } else {
+                                    Text(
+                                        text = "Không có thông tin khách thuê.",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
                         }
@@ -311,7 +289,7 @@ fun StatOfDetailText(
         )
     }
 
-    if(haveDivider){
+    if (haveDivider) {
         HorizontalDivider(
             modifier = Modifier
                 .fillMaxWidth()

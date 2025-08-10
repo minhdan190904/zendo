@@ -33,9 +33,9 @@ fun RegisterScreen(
     navController: NavController,
     snackbarHostState: SnackbarHostState
 ) {
-    val email by viewModel.emailRegister
-    val password by viewModel.passwordRegister
-    val confirmPassword by viewModel.confirmPasswordRegister
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
 
     val authState by viewModel.authState.collectAsStateWithLifecycle()
 
@@ -92,7 +92,7 @@ fun RegisterScreen(
                 CustomLabeledTextField(
                     label = "Email đăng ký",
                     value = email,
-                    onValueChange = { viewModel.updateEmailRegister(it) },
+                    onValueChange = { email = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     inputType = InputType.EMAIL,
@@ -105,7 +105,7 @@ fun RegisterScreen(
                 CustomLabeledTextField(
                     label = "Mật khẩu",
                     value = password,
-                    onValueChange = { viewModel.updatePasswordRegister(it) },
+                    onValueChange = { password = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     inputType = InputType.PASSWORD,
@@ -117,7 +117,7 @@ fun RegisterScreen(
                 CustomLabeledTextField(
                     label = "Mật khẩu xác nhận",
                     value = confirmPassword,
-                    onValueChange = { viewModel.updateConfirmPasswordRegister(it) },
+                    onValueChange = { confirmPassword = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     inputType = InputType.PASSWORD,
@@ -173,7 +173,7 @@ fun RegisterScreen(
 
             is UiState.Failure -> snackbarHostState.showSnackbar(
                 ("✗ " +
-                        state.error) ?: "Đăng ký thất bại"
+                        state.error)
             )
 
             is UiState.Loading, UiState.Empty -> {

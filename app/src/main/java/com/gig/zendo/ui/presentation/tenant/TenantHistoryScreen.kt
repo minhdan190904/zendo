@@ -1,7 +1,5 @@
 package com.gig.zendo.ui.presentation.tenant
 
-import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -22,10 +20,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.gig.zendo.ui.presentation.navigation.Screens
 import com.gig.zendo.ui.presentation.room.RoomViewModel
+import com.gig.zendo.utils.NavArgUtil
 import com.gig.zendo.utils.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,7 +68,12 @@ fun TenantHistoryScreen(
         ) {
             if( roomsState is UiState.Success) {
                 val rooms = (roomsState as UiState.Success).data
-                TenantHistoryTable(tenants = rooms.firstOrNull { it.first.id == roomId }?.second, onDetailClick = {})
+                val tenants = rooms.firstOrNull { it.first.id == roomId }?.second
+                TenantHistoryTable(tenants = tenants, onDetailClick = {
+                    val tenantJson = NavArgUtil.encode(it)
+                    val roomName = rooms.firstOrNull { room -> room.first.id == roomId }?.first?.name ?: ""
+                    navController.navigate(Screens.TenantDetailScreen.route + "/${tenantJson}/${roomName}")
+                })
             }
         }
     }

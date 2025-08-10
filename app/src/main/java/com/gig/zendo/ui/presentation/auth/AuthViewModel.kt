@@ -24,36 +24,6 @@ class AuthViewModel @Inject constructor(
     private val _authState = MutableStateFlow<UiState<Any>>(UiState.Empty)
     val authState: StateFlow<UiState<Any>> = _authState
 
-    private val _showLogoutDialog = MutableStateFlow(false)
-    val showLogoutDialog: StateFlow<Boolean> = _showLogoutDialog
-
-    val currentUser = MutableStateFlow<User?>(null)
-
-    init {
-//        checkUserLoggedIn()
-        getCurrentUser()
-    }
-
-    //for login screen
-    var emailLogin = mutableStateOf("")
-        private set
-    var passwordLogin = mutableStateOf("")
-        private set
-
-    //for register screen
-    var emailRegister = mutableStateOf("")
-        private set
-    var passwordRegister = mutableStateOf("")
-        private set
-    var confirmPasswordRegister = mutableStateOf("")
-        private set
-
-    fun checkUserLoggedIn() {
-        viewModelScope.launch {
-            _authState.value = authRepository.checkUserAuthenticatedInFirebase()
-        }
-    }
-
     fun login(email: String, pwd: String) {
         _authState.value = UiState.Loading
         viewModelScope.launch {
@@ -80,15 +50,9 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    private fun getCurrentUser() {
-        viewModelScope.launch {
-            val result = authRepository.getCurrentUser()
-            if (result is UiState.Success) {
-                currentUser.value = result.data
-            } else {
-                currentUser.value = null
-            }
-        }
+    fun fetchCurrentUser(): UiState<User?> {
+        val userState = authRepository.getCurrentUser()
+        return userState
     }
 
     fun logout() {
@@ -98,31 +62,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun showLogoutDialog() {
-        _showLogoutDialog.value = true
-    }
-
-    fun dismissLogoutDialog() {
-        _showLogoutDialog.value = false
-    }
-
-    fun updateEmailLogin(newEmail: String) {
-        emailLogin.value = newEmail
-    }
-
-    fun updatePasswordLogin(newPassword: String) {
-        passwordLogin.value = newPassword
-    }
-
-    fun updateEmailRegister(newEmail: String) {
-        emailRegister.value = newEmail
-    }
-
-    fun updatePasswordRegister(newPassword: String) {
-        passwordRegister.value = newPassword
-    }
-
-    fun updateConfirmPasswordRegister(newConfirmPassword: String) {
-        confirmPasswordRegister.value = newConfirmPassword
+    fun clearAuthState() {
+        _authState.value = UiState.Empty
     }
 }

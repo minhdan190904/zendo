@@ -9,6 +9,7 @@ import com.gig.zendo.ui.theme.DarkGreen
 
 @Composable
 fun CustomLoadingProgress(
+    modifier: Modifier = Modifier
 ) {
     CircularProgressIndicator(
         modifier = Modifier.size(48.dp),

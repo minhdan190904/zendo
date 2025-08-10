@@ -74,6 +74,7 @@ import com.gig.zendo.ui.presentation.service.ServiceViewModel
 import com.gig.zendo.ui.presentation.tenant.StatOfDetailTextHeader
 import com.gig.zendo.ui.presentation.tenant.saveBitmapToCache
 import com.gig.zendo.ui.theme.DarkGreen
+import com.gig.zendo.utils.NavArgUtil
 import com.gig.zendo.utils.UiState
 import com.gig.zendo.utils.getToday
 import com.gig.zendo.utils.toMoney
@@ -796,6 +797,7 @@ fun CreateInvoiceScreen(
                                         totalAmount = total,
                                         roomId = currentRoom.id,
                                         houseId = houseId,
+                                        roomName = currentRoom.name,
                                     )
 
                                     viewModel.addInvoice(invoice)
@@ -857,6 +859,7 @@ fun CreateInvoiceScreen(
                     2 -> numberWaterPreviousImageUrl = state.data
                     3 -> numberWaterCurrentImageUrl = state.data
                 }
+                viewModel.resetStateUpImage()
                 snackbarHostState.showSnackbar("✓ Tải ảnh lên thành công!")
             }
 
@@ -878,7 +881,9 @@ fun CreateInvoiceScreen(
                     ?.savedStateHandle
                     ?.set("shouldRefreshRooms", true)
                 val invoiceCurrent = state.data
-                navController.navigate(Screens.InvoiceDetailScreen.route + "/${invoiceCurrent.id}")
+                viewModel.resetStateCreateInvoice()
+                val invoiceJson = NavArgUtil.encode(invoiceCurrent)
+                navController.navigate(Screens.InvoiceDetailScreen.route + "/${invoiceJson}")
                 snackbarHostState.showSnackbar("✓ Tạo hóa đơn thành công!")
             }
 

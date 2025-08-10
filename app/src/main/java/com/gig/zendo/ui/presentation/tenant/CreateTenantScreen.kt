@@ -45,7 +45,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.gig.zendo.domain.model.ChargeMethod
@@ -57,11 +56,12 @@ import com.gig.zendo.ui.common.CustomDisplayImageDialog
 import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.CustomImagePicker
 import com.gig.zendo.ui.common.CustomImagePickerDialog
+import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.CustomRadioGroup
 import com.gig.zendo.ui.common.InputType
-import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
 import com.gig.zendo.ui.presentation.home.HouseViewModel
+import com.gig.zendo.ui.presentation.room.RoomViewModel
 import com.gig.zendo.ui.presentation.service.labelMapperForChargeMethod
 import com.gig.zendo.utils.UiState
 import com.gig.zendo.utils.getToday
@@ -73,12 +73,15 @@ import java.io.FileOutputStream
 fun CreateTenantScreen(
     navController: NavController,
     snackbarHostState: SnackbarHostState,
-    viewModel: TenantViewModel = hiltViewModel(),
+    viewModelTenant: TenantViewModel,
     viewModelHouse: HouseViewModel,
+    viewModelRoom: RoomViewModel,
     roomId: String,
     houseId: String,
 ) {
     val context = LocalContext.current
+
+    val selectedTenant = viewModelRoom.selectedTenant
 
     var nameTenant by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
@@ -95,8 +98,8 @@ fun CreateTenantScreen(
     var positionImage by remember { mutableIntStateOf(0) }
     var showImagePickerDialog by remember { mutableStateOf(false) }
 
-    val createTenantState by viewModel.createTenantState.collectAsStateWithLifecycle()
-    val upImageState by viewModel.upImageState.collectAsStateWithLifecycle()
+    val createTenantState by viewModelTenant.createTenantState.collectAsStateWithLifecycle()
+    val upImageState by viewModelTenant.upImageState.collectAsStateWithLifecycle()
 
     val housesState by viewModelHouse.housesState.collectAsStateWithLifecycle()
     val houseState by viewModelHouse.updateHouseServicesState.collectAsStateWithLifecycle()
@@ -108,27 +111,47 @@ fun CreateTenantScreen(
     var waterChargeMethod by remember { mutableStateOf(ChargeMethod.BY_CONSUMPTION) }
     var rentChargeMethod by remember { mutableStateOf(ChargeMethod.FIXED) }
 
-    val house = if (housesState is UiState.Success) {
-        if(houseState is UiState.Success) {
-            (houseState as UiState.Success<House>).data
+    LaunchedEffect(selectedTenant) {
+        if(selectedTenant != null){
+            nameTenant = selectedTenant.name
+            phoneNumber = selectedTenant.phone
+            address = selectedTenant.address
+            idCard = selectedTenant.identityNumber
+            idCardFrontImageUrl = selectedTenant.identityCardFrontUrl
+            idCardBackImageUrl = selectedTenant.identityCardBackUrl
+            numberOfPeople = selectedTenant.numberOfOccupants.toString()
+            deposit = selectedTenant.deposit.toString()
+            startDateRent = selectedTenant.startDate
+            electricityCharge = selectedTenant.electricService.chargeValue.toString()
+            waterCharge = selectedTenant.waterService.chargeValue.toString()
+            rentCharge = selectedTenant.rentService.chargeValue.toString()
+            electricChargeMethod = selectedTenant.electricService.chargeMethod
+            waterChargeMethod = selectedTenant.waterService.chargeMethod
+            rentChargeMethod = selectedTenant.rentService.chargeMethod
         } else {
-            (housesState as UiState.Success<List<House>>).data.firstOrNull{ it.id == houseId }
-        }
-    } else null
+            val house = if (housesState is UiState.Success) {
+                if(houseState is UiState.Success) {
+                    (houseState as UiState.Success<House>).data
+                } else {
+                    (housesState as UiState.Success<List<House>>).data.firstOrNull{ it.id == houseId }
+                }
+            } else null
 
-    house?.let {
-        electricityCharge = it.electricService.chargeValue.toString()
-        waterCharge = it.waterService.chargeValue.toString()
-        rentCharge = it.rentService.chargeValue.toString()
-        electricChargeMethod = it.electricService.chargeMethod
-        waterChargeMethod = it.waterService.chargeMethod
-        rentChargeMethod = it.rentService.chargeMethod
+            house?.let {
+                electricityCharge = it.electricService.chargeValue.toString()
+                waterCharge = it.waterService.chargeValue.toString()
+                rentCharge = it.rentService.chargeValue.toString()
+                electricChargeMethod = it.electricService.chargeMethod
+                waterChargeMethod = it.waterService.chargeMethod
+                rentChargeMethod = it.rentService.chargeMethod
+            }
+        }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Thêm khách") },
+                title = { Text(if(selectedTenant == null) "Thêm khách" else "Chỉnh sửa khách") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -395,8 +418,9 @@ fun CreateTenantScreen(
                                 Spacer(modifier = Modifier.height(16.dp))
 
                                 CustomElevatedButton(onClick = {
-                                    viewModel.addTenant(
+                                    viewModelTenant.addAndUpdateTenant(
                                         Tenant(
+                                            id = selectedTenant?.id ?: "",
                                             name = nameTenant,
                                             phone = phoneNumber,
                                             address = address,
@@ -409,26 +433,20 @@ fun CreateTenantScreen(
                                             startDate = startDateRent,
                                             deposit = deposit.toLongOrNull() ?: 0L,
                                             waterService = Service(
-                                                id = house?.waterService?.id ?: "",
-                                                name = house?.waterService?.name ?: "Water",
                                                 chargeValue = waterCharge.toLongOrNull() ?: 0L,
                                                 chargeMethod = waterChargeMethod
                                             ),
                                             electricService = Service(
-                                                id = house?.electricService?.id ?: "",
-                                                name = house?.electricService?.name ?: "Electricity",
                                                 chargeValue = electricityCharge.toLongOrNull() ?: 0L,
                                                 chargeMethod = electricChargeMethod
                                             ),
                                             rentService = Service(
-                                                id = house?.rentService?.id ?: "",
-                                                name = house?.rentService?.name ?: "Rent",
                                                 chargeValue = rentCharge.toLongOrNull() ?: 0L,
                                                 chargeMethod = rentChargeMethod
                                             ),
                                         )
                                     )
-                                }, text = "Lưu lại")
+                                }, text = if(selectedTenant == null) "Tạo" else "Cập nhật",)
                             }
 
                         }
@@ -451,7 +469,7 @@ fun CreateTenantScreen(
     ) { uri ->
         uri?.let {
             showImagePickerDialog = false
-            viewModel.uploadImage(context, it)
+            viewModelTenant.uploadImage(context, it)
         }
     }
 
@@ -461,7 +479,7 @@ fun CreateTenantScreen(
         bitmap?.let {
             showImagePickerDialog = false
             val uri = saveBitmapToCache(context, it)
-            viewModel.uploadImage(context, uri)
+            viewModelTenant.uploadImage(context, uri)
         }
     }
 
@@ -482,6 +500,13 @@ fun CreateTenantScreen(
                 navController.previousBackStackEntry
                     ?.savedStateHandle
                     ?.set("shouldRefreshRooms", true)
+                val notification = if(selectedTenant == null) {
+                    "✓ Tạo khách hàng mới thành công!"
+                } else {
+                    "✓ Cập nhật khách hàng thành công!"
+                }
+                viewModelTenant.clearCreateTenantState()
+                viewModelRoom.selectedTenant = null
                 navController.popBackStack()
                 snackbarHostState.showSnackbar("✓ Tạo khách hàng mới thành công!")
             }
@@ -504,6 +529,7 @@ fun CreateTenantScreen(
                     0 -> idCardFrontImageUrl = state.data
                     1 -> idCardBackImageUrl = state.data
                 }
+                viewModelTenant.clearUpImageState()
                 snackbarHostState.showSnackbar("✓ Tải ảnh lên thành công!")
             }
 

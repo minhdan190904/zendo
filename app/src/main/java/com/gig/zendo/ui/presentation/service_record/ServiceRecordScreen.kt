@@ -353,107 +353,116 @@ fun ServiceRecordScreen(
                     }
 
                     is UiState.Success -> {
-                        Column {
-                            val serviceRecords = state.data.filter { it.roomId == selectedRoomId }
-                            for (record in serviceRecords) {
-                                var recordUpdate = record
-                                if(roomsState is UiState.Success){
-                                    val roomsAndTenants = (roomsState as UiState.Success).data
-                                    val rooms = roomsAndTenants.map { it.first }
-                                    val roomNameUpdate = rooms.find { room -> room.id == record.roomId }?.name ?: ""
-                                    val tenantNameUpdate = roomsAndTenants.find { it.first.id == record.roomId }?.second?.firstOrNull()?.name ?: ""
-                                    recordUpdate = record.copy(
+                        if (roomsState is UiState.Success) {
+                            Column {
+                                val serviceRecords =
+                                    state.data.filter { it.roomId == selectedRoomId }
+
+                                val roomsAndTenants = (roomsState as UiState.Success).data
+                                val rooms = roomsAndTenants.map { it.first }
+
+                                for (record in serviceRecords) {
+                                    val roomNameUpdate =
+                                        rooms.find { room -> room.id == record.roomId }?.name ?: ""
+                                    val tenantNameUpdate =
+                                        roomsAndTenants.find { it.first.id == record.roomId }?.second?.firstOrNull()?.name
+                                            ?: ""
+                                    val recordUpdate = record.copy(
                                         roomName = roomNameUpdate,
                                         tenantName = tenantNameUpdate
                                     )
-                                }
-                                Card(
-                                    shape = RoundedCornerShape(12.dp),
-                                    elevation = CardDefaults.cardElevation(8.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(16.dp),
+
+                                    Card(
+                                        shape = RoundedCornerShape(12.dp),
+                                        elevation = CardDefaults.cardElevation(8.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
                                     ) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
+                                        Column(
+                                            modifier = Modifier.padding(16.dp),
                                         ) {
-                                            Text(
-                                                text = recordUpdate.roomName,
-                                                style = MaterialTheme.typography.titleMedium.copy(
-                                                    color = Color(
-                                                        0xFFFF7043
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Text(
+                                                    text = recordUpdate.roomName,
+                                                    style = MaterialTheme.typography.titleMedium.copy(
+                                                        color = Color(
+                                                            0xFFFF7043
+                                                        )
+                                                    ),
+                                                    modifier = Modifier.weight(1f)
+                                                )
+
+                                                IconButton(
+                                                    onClick = {
+                                                    },
+                                                    modifier = Modifier.padding(0.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Outlined.Delete,
+                                                        contentDescription = "Xoá",
+                                                        tint = Color(0xFFE0E0E0)
                                                     )
-                                                ),
-                                                modifier = Modifier.weight(1f)
+                                                }
+
+                                                IconButton(
+                                                    onClick = {
+                                                        // Handle edit action
+                                                    },
+                                                    modifier = Modifier.padding(0.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Outlined.Edit,
+                                                        contentDescription = "Chỉnh sửa",
+                                                        tint = Color(0xFFE0E0E0)
+                                                    )
+                                                }
+
+                                            }
+                                            StatOfDetailText(
+                                                label = "Ngày ghi",
+                                                value = record.date
                                             )
-
-                                            IconButton(
-                                                onClick = {
-                                                },
-                                                modifier = Modifier.padding(0.dp)
+                                            StatOfDetailText(
+                                                label = "Người thuê",
+                                                value = recordUpdate.tenantName
+                                            )
+                                            StatOfDetailText(
+                                                label = "Số điện",
+                                                value = recordUpdate.numberElectric.toString()
+                                            )
+                                            StatOfDetailText(
+                                                label = "Số nước",
+                                                value = recordUpdate.numberWater.toString()
+                                            )
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(24.dp),
                                             ) {
-                                                Icon(
-                                                    imageVector = Icons.Outlined.Delete,
-                                                    contentDescription = "Xoá",
-                                                    tint = Color(0xFFE0E0E0)
-                                                )
-                                            }
+                                                CustomImageDisplay(
+                                                    imageUri = recordUpdate.electricImageUrl,
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    isImagePickerOpen = true
+                                                    selectedImageUrl = recordUpdate.electricImageUrl
+                                                }
 
-                                            IconButton(
-                                                onClick = {
-                                                    // Handle edit action
-                                                },
-                                                modifier = Modifier.padding(0.dp)
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Outlined.Edit,
-                                                    contentDescription = "Chỉnh sửa",
-                                                    tint = Color(0xFFE0E0E0)
-                                                )
-                                            }
-
-                                        }
-                                        StatOfDetailText(label = "Ngày ghi", value = record.date)
-                                        StatOfDetailText(
-                                            label = "Người thuê",
-                                            value = recordUpdate.tenantName
-                                        )
-                                        StatOfDetailText(
-                                            label = "Số điện",
-                                            value = recordUpdate.numberElectric.toString()
-                                        )
-                                        StatOfDetailText(
-                                            label = "Số nước",
-                                            value = recordUpdate.numberWater.toString()
-                                        )
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(24.dp),
-                                        ) {
-                                            CustomImageDisplay(
-                                                imageUri = recordUpdate.electricImageUrl,
-                                                modifier = Modifier.weight(1f)
-                                            ) {
-                                                isImagePickerOpen = true
-                                                selectedImageUrl = recordUpdate.electricImageUrl
-                                            }
-
-                                            CustomImageDisplay(
-                                                imageUri = recordUpdate.waterImageUrl,
-                                                modifier = Modifier.weight(1f)
-                                            ) {
-                                                isImagePickerOpen = true
-                                                selectedImageUrl = recordUpdate.waterImageUrl
+                                                CustomImageDisplay(
+                                                    imageUri = recordUpdate.waterImageUrl,
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    isImagePickerOpen = true
+                                                    selectedImageUrl = recordUpdate.waterImageUrl
+                                                }
                                             }
                                         }
                                     }
-                                }
 
-                                Spacer(modifier = Modifier.height(16.dp))
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
                             }
                         }
                     }

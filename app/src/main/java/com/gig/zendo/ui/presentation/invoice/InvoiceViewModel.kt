@@ -38,6 +38,9 @@ class InvoiceViewModel @Inject constructor(
     private val _updateStatusInvoiceState = MutableStateFlow<UiState<Unit>>(UiState.Empty)
     val updateStatusInvoiceState: StateFlow<UiState<Unit>> = _updateStatusInvoiceState
 
+    private val _deleteInvoiceState = MutableStateFlow<UiState<Unit>>(UiState.Empty)
+    val deleteInvoiceState: StateFlow<UiState<Unit>> = _deleteInvoiceState
+
     fun uploadImage(context: Context, uri: Uri) {
         _upImageState.value = UiState.Loading
         viewModelScope.launch {
@@ -56,6 +59,13 @@ class InvoiceViewModel @Inject constructor(
         _invoicesStateInRoom.value = UiState.Loading
         viewModelScope.launch {
             _invoicesStateInRoom.value = invoiceRepository.getInvoicesInRoom(roomId)
+        }
+    }
+
+    fun deleteInvoice(invoiceId: String) {
+        _deleteInvoiceState.value = UiState.Loading
+        viewModelScope.launch {
+            _deleteInvoiceState.value = invoiceRepository.deleteInvoice(invoiceId)
         }
     }
 
@@ -86,5 +96,13 @@ class InvoiceViewModel @Inject constructor(
 
     fun resetStateCreateInvoice() {
         _createInvoiceState.value = UiState.Empty
+    }
+
+    fun resetStateUpImage() {
+        _upImageState.value = UiState.Empty
+    }
+
+    fun resetStateDeleteInvoice() {
+        _deleteInvoiceState.value = UiState.Empty
     }
 }

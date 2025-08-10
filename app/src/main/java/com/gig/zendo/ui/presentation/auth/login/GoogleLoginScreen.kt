@@ -55,7 +55,6 @@ fun GoogleLoginScreen(
             verticalArrangement = Arrangement.Center
         ) {
 
-            // Icon người dùng nằm giữa
             Surface(
                 shape = CircleShape,
                 color = Color.White,
@@ -74,12 +73,10 @@ fun GoogleLoginScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Circle + Progress ring
             Box(
                 modifier = Modifier.size(80.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Progress ring vẽ full-size
                 CircularProgressIndicator(
                     color = Color.White,
                     strokeWidth = 4.dp,
@@ -97,7 +94,6 @@ fun GoogleLoginScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Thông báo đang đăng nhập
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = Color(0x55FFFFFF),
@@ -125,7 +121,6 @@ fun GoogleLoginScreen(
 
             Spacer(Modifier.height(40.dp))
 
-            // Nút Quay lại
             Button(
                 onClick = { navController.popBackStack() },
                 shape = RoundedCornerShape(24.dp),
@@ -149,7 +144,6 @@ fun GoogleLoginScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Footer
             Text(
                 text = "Zendo - Quản lý nhà trọ dễ dàng",
                 color = Color.White.copy(alpha = 0.7f),
@@ -161,8 +155,11 @@ fun GoogleLoginScreen(
     LaunchedEffect(authState) {
         when (authState) {
             is UiState.Success<*> -> {
+                navController.currentBackStackEntry
+                    ?.savedStateHandle
+                    ?.set("shouldRefreshHouses", true)
                 navController.navigate(Screens.HouseScreen.route){
-                    popUpTo(Screens.GoogleLoginScreen.route) {
+                    popUpTo(Screens.LoginScreen.route) {
                         inclusive = true
                     }
                 }

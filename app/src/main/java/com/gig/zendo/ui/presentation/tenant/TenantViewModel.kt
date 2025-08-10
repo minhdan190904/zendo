@@ -2,6 +2,9 @@ package com.gig.zendo.ui.presentation.tenant
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gig.zendo.domain.model.Tenant
@@ -25,11 +28,19 @@ class TenantViewModel @Inject constructor(
     private val _upImageState = MutableStateFlow<UiState<String>>(UiState.Empty)
     val upImageState: StateFlow<UiState<String>> = _upImageState
 
-    fun addTenant(tenant: Tenant) {
+    fun addAndUpdateTenant(tenant: Tenant) {
         _createTenantState.value = UiState.Loading
         viewModelScope.launch {
-            _createTenantState.value = tenantRepository.addTenantWithImages(tenant)
+            _createTenantState.value = tenantRepository.addAndUpdateTenantWithImages(tenant)
         }
+    }
+
+    fun clearCreateTenantState() {
+        _createTenantState.value = UiState.Empty
+    }
+
+    fun clearUpImageState() {
+        _upImageState.value = UiState.Empty
     }
 
     fun uploadImage(context: Context, uri: Uri) {

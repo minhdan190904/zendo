@@ -14,7 +14,7 @@ class TenantRepositoryImpl @Inject constructor(
 ) : TenantRepository {
 
     //add logic: update status of room to not empty when tenant is added
-    override suspend fun addTenantWithImages(tenant: Tenant): UiState<String> {
+    override suspend fun addAndUpdateTenantWithImages(tenant: Tenant): UiState<String> {
         return try {
             val tenantId = tenant.id.ifEmpty { firestore.collection(Tenant.COLLECTION_NAME).document().id }
 

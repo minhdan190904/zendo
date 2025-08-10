@@ -34,8 +34,8 @@ fun LoginScreen(
     snackbarHostState: SnackbarHostState
 ) {
     val authState by viewModel.authState.collectAsState()
-    val email by viewModel.emailLogin
-    val password by viewModel.passwordLogin
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
@@ -122,7 +122,7 @@ fun LoginScreen(
                 CustomLabeledTextField(
                     label = "Email đăng nhập",
                     value = email,
-                    onValueChange = { viewModel.updateEmailLogin(it) },
+                    onValueChange = { email = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     inputType = InputType.EMAIL,
@@ -135,7 +135,7 @@ fun LoginScreen(
                 CustomLabeledTextField(
                     label = "Mật khẩu",
                     value = password,
-                    onValueChange = { viewModel.updatePasswordLogin(it) },
+                    onValueChange = { password = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     inputType = InputType.PASSWORD,

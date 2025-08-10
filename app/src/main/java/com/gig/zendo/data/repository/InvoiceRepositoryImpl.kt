@@ -80,4 +80,13 @@ class InvoiceRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteInvoice(invoiceId: String): UiState<Unit> {
+        return try {
+            firebaseFirestore.collection(Invoice.COLLECTION_NAME).document(invoiceId).delete().await()
+            UiState.Success(Unit)
+        } catch (e: Exception) {
+            UiState.Failure(e.message ?: "Failed to delete invoice")
+        }
+    }
+
 }

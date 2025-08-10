@@ -9,4 +9,5 @@ sealed class RoomMenuAction(override val label: String): MenuAction {
     data object Edit : RoomMenuAction("Sửa tên")
     data object CheckOut : RoomMenuAction("Trả phòng")
     data object TenantDetail : RoomMenuAction("Chi tiết")
+    data object EditTenant : RoomMenuAction("Sửa thông tin khách thuê")
 }

@@ -32,9 +32,6 @@ class HouseViewModel @Inject constructor(
     private val _deleteHouseState = MutableStateFlow<UiState<Any>>(UiState.Empty)
     val deleteHouseState: StateFlow<UiState<Any>> = _deleteHouseState
 
-    private val _showDeleteDialog = MutableStateFlow<String?>(null)
-    val showDeleteDialog: StateFlow<String?> = _showDeleteDialog
-
     private val _updateHouseServicesState = MutableStateFlow<UiState<House>>(UiState.Empty)
     val updateHouseServicesState: StateFlow<UiState<House>> = _updateHouseServicesState
 
@@ -55,6 +52,9 @@ class HouseViewModel @Inject constructor(
 
     private val _financialReportAllMonth = MutableStateFlow<UiState<List<FinancialReport>>>(UiState.Empty)
     val financialReportAllMonth: StateFlow<UiState<List<FinancialReport>>> = _financialReportAllMonth
+
+    private val _deleteExpenseRecordState = MutableStateFlow<UiState<Any>>(UiState.Empty)
+    val deleteExpenseRecordState: StateFlow<UiState<Any>> = _deleteExpenseRecordState
 
     var selectedHouse by mutableStateOf<House?>(null)
 
@@ -105,14 +105,6 @@ class HouseViewModel @Inject constructor(
         }
     }
 
-    fun showDeleteHouseDialog(houseId: String) {
-        _showDeleteDialog.value = houseId
-    }
-
-    fun dismissDeleteDialog() {
-        _showDeleteDialog.value = null
-    }
-
     fun clearCreateExpenseRecordState() {
         _createExpenseRecordState.value = UiState.Empty
     }
@@ -126,7 +118,6 @@ class HouseViewModel @Inject constructor(
 
     fun deleteHouse(houseId: String) {
         viewModelScope.launch {
-            dismissDeleteDialog()
             _housesState.value = UiState.Loading
             _deleteHouseState.value = UiState.Loading
             _deleteHouseState.value = houseRepository.deleteHouse(houseId)
@@ -147,6 +138,13 @@ class HouseViewModel @Inject constructor(
         }
     }
 
+    fun deleteExpenseRecord(expenseRecordId: String) {
+        _deleteExpenseRecordState.value = UiState.Loading
+        viewModelScope.launch {
+            _deleteExpenseRecordState.value = houseRepository.deleteExpenseRecord(expenseRecordId)
+        }
+    }
+
     fun fetchFinancialReportAllMonth(houseId: String, year: Int) {
         _financialReportAllMonth.value = UiState.Loading
         viewModelScope.launch {
@@ -156,6 +154,14 @@ class HouseViewModel @Inject constructor(
 
     fun clearCreateHouseState() {
         _createHouseState.value = UiState.Empty
+    }
+
+    fun clearDeleteHouseState() {
+        _deleteHouseState.value = UiState.Empty
+    }
+
+    fun clearDeleteExpenseRecordState() {
+        _deleteExpenseRecordState.value = UiState.Empty
     }
 
     fun clearDeleteState() {

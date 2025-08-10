@@ -31,6 +31,7 @@ import com.gig.zendo.utils.UiState
 import com.gig.zendo.domain.model.Room
 import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.ui.common.ConfirmDialog
+import com.gig.zendo.utils.NavArgUtil
 import com.gig.zendo.utils.getToday
 
 
@@ -179,7 +180,8 @@ fun RoomScreen(
                                     tenantIdState = tenant?.id
                                 },
                                 onCheckDetail = {
-                                    navController.navigate(Screens.TenantDetailScreen.route + "/${room.first.id}")
+                                    val tenantJson = NavArgUtil.encode(tenant)
+                                    navController.navigate(Screens.TenantDetailScreen.route + "/${tenantJson}/${room.first.name}")
                                 },
                                 onCheckAllInvoices = {
                                     navController.navigate(Screens.InvoiceHistoryScreen.route + "/${room.first.id}")
@@ -187,6 +189,10 @@ fun RoomScreen(
                                 onEditRoom = {
                                     viewModel.selectedRoom = room.first
                                     navController.navigate(Screens.CreateRoomScreen.route + "/${houseId}")
+                                },
+                                onEditTenant = {
+                                    viewModel.selectedTenant = tenant
+                                    navController.navigate(Screens.CreateTenantScreen.route + "/${room.first.id}/${houseId}")
                                 }
                             )
                         }
