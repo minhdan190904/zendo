@@ -179,6 +179,9 @@ fun CreateHouseScreen(
                     "✓ Cập nhật nhà trọ thành công!"
                 }
                 viewModel.selectedHouse = null
+                navController.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.set("shouldRefreshHouses", true)
                 navController.popBackStack()
                 snackbarHostState.showSnackbar(notification)
             }

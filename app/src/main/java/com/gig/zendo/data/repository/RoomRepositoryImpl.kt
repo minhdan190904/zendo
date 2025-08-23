@@ -139,15 +139,28 @@ class RoomRepositoryImpl @Inject constructor(
         }
     }
 
+    //add update room empty = true
     override suspend fun checkOutTenant(tenantId: String, endDate: String): UiState<Unit> {
         return try {
+            // Update tenant to inactive
             val tenantRef = firestore.collection(Tenant.COLLECTION_NAME).document(tenantId)
-            val tenant = tenantRef.get().await().toObject<Tenant>() ?: return UiState.Failure("Tenant not found")
+            val tenant = tenantRef.get().await().toObject<Tenant>()
+                ?: return UiState.Failure("Tenant not found")
 
-            if (!tenant.active) return UiState.Failure("Tenant is already checked out")
+            if (tenant.active) {
+                tenantRef.update(
+                    mapOf(
+                        Tenant.FIELD_ACTIVE to false,
+                        Tenant.FIELD_END_DATE to endDate
+                    )
+                ).await()
 
-            val updatedTenant = tenant.copy(active = false, endDate = endDate)
-            tenantRef.set(updatedTenant).await()
+            }
+
+            // Update room to empty
+            val roomRef = firestore.collection(Room.COLLECTION_NAME).document(tenant.roomId)
+            roomRef.update(Room.FIELD_EMPTY, true).await()
+
             UiState.Success(Unit)
         } catch (e: Exception) {
             UiState.Failure(e.message ?: "Failed to check out tenant")

@@ -12,6 +12,6 @@ data class Room(
     companion object {
         const val COLLECTION_NAME = "rooms"
         const val FIELD_HOUSE_ID = "houseId"
-        const val FIELD_IS_EMPTY = "empty"
+        const val FIELD_EMPTY = "empty"
     }
 }

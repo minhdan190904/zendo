@@ -23,4 +23,5 @@ sealed class Screens(val route: String) {
     data object ExpenseRecordScreen : Screens(route = "ExpenseRecordScreen")
     data object FinancialReportScreen: Screens(route = "FinancialReportScreen")
     data object SupportScreen : Screens(route = "SupportScreen")
+    data object ChatbotScreen : Screens(route = "ChatbotScreen")
 }

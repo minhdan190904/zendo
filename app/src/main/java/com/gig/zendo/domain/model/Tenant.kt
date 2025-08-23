@@ -40,5 +40,6 @@ data class Tenant(
         const val COLLECTION_NAME = "tenants"
         const val FIELD_ROOM_ID = "roomId"
         const val FIELD_ACTIVE = "active"
+        const val FIELD_END_DATE = "endDate"
     }
 }

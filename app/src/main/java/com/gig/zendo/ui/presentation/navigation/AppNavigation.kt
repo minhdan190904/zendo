@@ -20,6 +20,7 @@ import com.gig.zendo.ui.presentation.auth.AuthViewModel
 import com.gig.zendo.ui.presentation.auth.login.GoogleLoginScreen
 import com.gig.zendo.ui.presentation.auth.login.LoginScreen
 import com.gig.zendo.ui.presentation.auth.register.RegisterScreen
+import com.gig.zendo.ui.presentation.chatbot.ChatbotScreen
 import com.gig.zendo.ui.presentation.expense.CreateExpenseRecordScreen
 import com.gig.zendo.ui.presentation.expense.ExpenseRecordScreen
 import com.gig.zendo.ui.presentation.financial_report.FinancialReportScreen
@@ -410,6 +411,17 @@ fun AppNavigation() {
                 popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
             ) {
                  SupportScreen(navController = navController)
+            }
+
+            //chatbotscreen
+            composable(
+                route = Screens.ChatbotScreen.route,
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ) {
+                 ChatbotScreen(navController = navController)
             }
         }
     }

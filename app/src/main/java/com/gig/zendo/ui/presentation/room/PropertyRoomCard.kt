@@ -59,7 +59,7 @@ fun PropertyRoomCard(
         colors = CardDefaults.cardColors(containerColor = if (tenant != null) Color.White else Color(0xFFF0F0F0)),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(vertical = 8.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Header row: title + menu

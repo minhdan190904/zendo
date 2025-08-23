@@ -12,9 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +42,7 @@ import com.gig.zendo.domain.model.User
 import com.gig.zendo.ui.common.ConfirmDialog
 import com.gig.zendo.ui.common.FunctionIcon
 import com.gig.zendo.ui.presentation.auth.AuthViewModel
+import com.gig.zendo.ui.presentation.chatbot.ChatbotScreen
 import com.gig.zendo.ui.presentation.navigation.Screens
 import com.gig.zendo.ui.theme.DarkGreen
 import com.gig.zendo.utils.UiState
@@ -78,12 +78,15 @@ fun HouseScreen(
 
     LaunchedEffect(Unit) {
         currentUser = (viewModelAuth.fetchCurrentUser() as UiState.Success<*>).data as User?
-        if(shouldRefresh) {
+        if (shouldRefresh) {
             viewModel.fetchHouses(currentUser?.uid ?: "")
             navController.currentBackStackEntry
                 ?.savedStateHandle
                 ?.set("shouldRefreshHouses", false)
-            navController.previousBackStackEntry?.savedStateHandle?.set("shouldRefreshHouses", false)
+            navController.previousBackStackEntry?.savedStateHandle?.set(
+                "shouldRefreshHouses",
+                false
+            )
         }
     }
 
@@ -177,7 +180,6 @@ fun HouseScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
                             .padding(horizontal = 16.dp, vertical = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = if (housesState is UiState.Success)
@@ -234,36 +236,42 @@ fun HouseScreen(
                                     )
                                 }
 
-                                for (house in (housesState as UiState.Success<List<House>>).data) {
-                                    PropertyHouseCard(
-                                        house = house,
-                                        onDetailClick = {
-                                            navController.currentBackStackEntry
-                                                ?.savedStateHandle
-                                                ?.set("shouldRefreshRooms", true)
+                                val houses = (housesState as UiState.Success<List<House>>).data
 
-                                            navController.navigate(Screens.RoomScreen.route + "/${house.id}" + "/${house.name}")
-                                        },
-                                        onDeleteClick = {
-                                            showDeleteDialog = house.id
-                                        },
-                                        onExportClick = { /* no-op */ },
-                                        onEditClick = {
-                                            viewModel.selectedHouse = house
-                                            navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}")
-                                        },
-                                        onExpenseDetailClick = {
-                                            navController.navigate(Screens.ExpenseRecordScreen.route + "/${house.id}")
-                                        },
-                                        onAddExpenseClick = {
-                                            navController.navigate(Screens.CreateExpenseRecordScreen.route + "/${house.id}")
-                                        },
-                                        onFinancialReportClick = {
-                                            navController.navigate(
-                                                Screens.FinancialReportScreen.route + "/${house.id}"
-                                            )
-                                        }
-                                    )
+                                LazyColumn {
+
+                                    items(houses.size) { index ->
+                                        val house = houses[index]
+                                        PropertyHouseCard(
+                                            house = house,
+                                            onDetailClick = {
+                                                navController.currentBackStackEntry
+                                                    ?.savedStateHandle
+                                                    ?.set("shouldRefreshRooms", true)
+
+                                                navController.navigate(Screens.RoomScreen.route + "/${house.id}" + "/${house.name}")
+                                            },
+                                            onDeleteClick = {
+                                                showDeleteDialog = house.id
+                                            },
+                                            onExportClick = { /* no-op */ },
+                                            onEditClick = {
+                                                viewModel.selectedHouse = house
+                                                navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}")
+                                            },
+                                            onExpenseDetailClick = {
+                                                navController.navigate(Screens.ExpenseRecordScreen.route + "/${house.id}")
+                                            },
+                                            onAddExpenseClick = {
+                                                navController.navigate(Screens.CreateExpenseRecordScreen.route + "/${house.id}")
+                                            },
+                                            onFinancialReportClick = {
+                                                navController.navigate(
+                                                    Screens.FinancialReportScreen.route + "/${house.id}"
+                                                )
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -302,7 +310,7 @@ fun HouseScreen(
 
     currentUser?.let {
         ProfilePopupMenu(
-            onUpgradeProClick = {},
+            onUpgradeProClick = { navController.navigate(Screens.ChatbotScreen.route) },
             onSupportClick = { navController.navigate(Screens.SupportScreen.route) },
             onLogoutClick = {
                 showLogoutDialog = true

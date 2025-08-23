@@ -1,0 +1,75 @@
+package com.gig.zendo.ui.presentation.chatbot
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.gig.zendo.R
+import com.gig.zendo.ui.common.LoadingAnimation
+
+@Composable
+fun ReceiverMessageItemCard(
+    modifier: Modifier = Modifier,
+    message: String = "",
+    isLoading: Boolean
+) {
+    Row(
+        modifier = modifier
+    ) {
+        Surface(
+            modifier = Modifier
+                .wrapContentSize()
+                .align(Alignment.Bottom),
+            shape = CircleShape,
+            color = Color.White,
+            shadowElevation = 4.dp
+        ) {
+            Image(
+                modifier = Modifier
+                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                    .size(18.dp),
+                painter = painterResource(id = R.drawable.ic_robot),
+                contentDescription = ""
+            )
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Surface(
+            modifier = Modifier
+                .padding(bottom = 24.dp),
+            shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp, bottomEnd = 25.dp),
+            color = Color.LightGray
+        ) {
+            if(!isLoading){
+                Text(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 24.dp),
+                    text = message,
+                    style = MaterialTheme.typography.labelLarge.copy(color = Color(0xFF505050))
+                )
+            } else {
+                LoadingAnimation(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 24.dp),
+                    circleSize = 8.dp,
+                    circleColor = Color.Gray,
+                    spaceBetween = 4.dp,
+                    travelDistance = 8.dp
+                )
+            }
+        }
+    }
+}

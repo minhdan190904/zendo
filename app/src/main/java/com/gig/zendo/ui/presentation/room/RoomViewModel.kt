@@ -84,6 +84,10 @@ class RoomViewModel @Inject constructor(
         _createRoomState.value = UiState.Empty
     }
 
+    fun clearCheckOutTenantState() {
+        _checkOutTenantState.value = UiState.Empty
+    }
+
     var currentRoomAndTenant = mutableStateOf<Pair<Room, Tenant>?>(null)
         private set
 

@@ -31,7 +31,7 @@ class TenantRepositoryImpl @Inject constructor(
                     val room = roomSnapshot.toObject(Room::class.java)
                         ?: throw Exception("Room not found")
                     if (room.empty) {
-                        transaction.update(roomRef, Room.FIELD_IS_EMPTY, false)
+                        transaction.update(roomRef, Room.FIELD_EMPTY, false)
                     }
                 }.await()
             }
