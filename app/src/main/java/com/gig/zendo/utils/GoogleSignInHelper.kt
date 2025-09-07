@@ -1,37 +1,29 @@
+@file:Suppress("DEPRECATION")
+
 package com.gig.zendo.utils
 
+import android.content.Intent
 import android.content.Context
-import androidx.credentials.*
-import androidx.credentials.exceptions.GetCredentialException
 import com.gig.zendo.R
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 
 object GoogleSignInHelper {
-    private fun getRequest(context: Context): GetCredentialRequest {
-        val option = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(context.getString(R.string.default_web_client_id))
+
+    fun getClient(context: Context): GoogleSignInClient {
+        val gso = GoogleSignInOptions.Builder()
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
             .build()
-        return GetCredentialRequest.Builder()
-            .addCredentialOption(option)
-            .build()
+        return GoogleSignIn.getClient(context, gso)
     }
 
-    suspend fun fetchIdToken(
-        context: Context,
-        credentialManager: CredentialManager
-    ): String {
-        try {
-            val result = credentialManager.getCredential(context, getRequest(context))
-            val cred = result.credential
-            if (cred is CustomCredential && cred.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                return GoogleIdTokenCredential.createFrom(cred.data).idToken
-            }
-            throw IllegalStateException("No Google ID Token Credential")
-        } catch (e: GetCredentialException) {
-            throw e
-        }
+    fun extractIdToken(data: Intent?): String {
+        val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+        val account: GoogleSignInAccount = task.getResult(ApiException::class.java)
+        return account.idToken ?: throw IllegalStateException("Google account returned null idToken")
     }
 }

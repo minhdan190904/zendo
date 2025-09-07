@@ -17,19 +17,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,15 +35,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.gig.zendo.R
 import com.gig.zendo.domain.model.ExpenseRecord
 import com.gig.zendo.ui.common.ConfirmDialog
 import com.gig.zendo.ui.common.CustomLoadingProgress
 import com.gig.zendo.ui.common.CustomMonthYearPicker
+import com.gig.zendo.ui.common.ZendoScaffold
 import com.gig.zendo.ui.presentation.home.HouseViewModel
+import com.gig.zendo.ui.presentation.navigation.Screens
 import com.gig.zendo.utils.UiState
 import com.gig.zendo.utils.getCurrentYear
 import timber.log.Timber
@@ -83,39 +83,43 @@ fun ExpenseRecordScreen(
                 viewModelHouse.clearDeleteExpenseRecordState()
                 snackbarHostState.showSnackbar("Xóa thành công")
             }
+
             is UiState.Failure -> {
                 snackbarHostState.showSnackbar("Xóa thất bại: ${state.error}")
             }
+
             else -> {}
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Chi tiết chi phí") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+    ZendoScaffold(
+        title = "Bản ghi chi phí",
+        floatingActionButton = {
+            if (expenseRecordsState is UiState.Success || expenseRecordsState is UiState.Empty)
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        navController.navigate(Screens.CreateExpenseRecordScreen.route + "/$houseId")
+                    },
+                    icon = {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = "Quay lại",
-                            tint = Color.Black,
+                            painterResource(R.drawable.ic_add),
+                            contentDescription = null
                         )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black,
+                    },
+                    text = { Text("Thêm chi phí") },
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
                 )
-            )
         },
-        containerColor = Color.White
+        onBack = {
+            navController.popBackStack()
+        }
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(16.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -133,7 +137,7 @@ fun ExpenseRecordScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFFFFA598))
+                                .background(MaterialTheme.colorScheme.primary)
                                 .padding(vertical = 12.dp, horizontal = 16.dp)
                         ) {
                             Text(
@@ -289,7 +293,7 @@ fun ExpenseRecordScreen(
                                 .weight(1f)
                                 .verticalScroll(rememberScrollState())
                         ) {
-                            for(expenseRecord in expenseRecords) {
+                            for (expenseRecord in expenseRecords) {
                                 ExpenseRecordItem(
                                     expenseRecord = expenseRecord,
                                     onViewClick = {
@@ -314,7 +318,7 @@ fun ExpenseRecordScreen(
         }
     }
 
-    expenseRecordId?.let{
+    expenseRecordId?.let {
         ConfirmDialog(
             title = "Xóa bản ghi chi phí",
             message = "Bạn có chắc chắn muốn xóa chi phí này?",

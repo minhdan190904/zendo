@@ -19,3 +19,23 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# Giữ annotation để Firestore/Gson đọc metadata
+-keepattributes *Annotation*, Signature
+
+# (Tuỳ chọn) Giữ Firebase/Play services – tránh cảnh báo
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**
+
+# GIỮ các model dùng để (de)serialize
+# -> thay com.gig.zendo.domain.model bằng package model thực tế của bạn
+-keep class com.gig.zendo.domain.model.** { *; }
+
+# Quan trọng: giữ NO-ARG CONSTRUCTOR và FIELDS (để reflection map tên trường)
+-keepclassmembers class com.gig.zendo.domain.model.** {
+    public <init>();
+    <fields>;
+}
+
+# Nếu bạn dùng Gson
+-keep class com.google.gson.** { *; }
+-dontwarn sun.misc.**

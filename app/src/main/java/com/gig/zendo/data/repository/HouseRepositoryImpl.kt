@@ -37,21 +37,20 @@ class HouseRepositoryImpl @Inject constructor(
 
     override suspend fun getHouses(uid: String): UiState<List<House>> {
         return try {
-            val houseSnapshot =
-                firestore.collection(House.COLLECTION_NAME).whereEqualTo(House.FIELD_UID, uid).get()
-                    .await()
-
+            val houseSnapshot = firestore.collection(House.COLLECTION_NAME).whereEqualTo(House.FIELD_UID, uid).get().await()
             val roomSnapshot = firestore.collection(Room.COLLECTION_NAME).get().await()
-
             val invoiceSnapshot = firestore.collection(Invoice.COLLECTION_NAME).get().await()
+            val expenseRecordSnapshot = firestore.collection(ExpenseRecord.COLLECTION_NAME).get().await()
 
             val houses = houseSnapshot.documents.mapNotNull { it.toObject<House>() }
             val rooms = roomSnapshot.documents.mapNotNull { it.toObject<Room>() }
             val invoices = invoiceSnapshot.documents.mapNotNull { it.toObject<Invoice>() }
+            val expenseRecord = expenseRecordSnapshot.documents.mapNotNull { it.toObject<ExpenseRecord>() }
 
             val houseList = houses.map { house ->
                 val houseRooms = rooms.filter { it.houseId == house.id }
                 val houseInvoices = invoices.filter { it.houseId == house.id }
+                val houseExpenseRecord = expenseRecord.filter { it.houseId == house.id }
 
                 val numberOfRoom = houseRooms.size
                 val numberOfEmptyRoom = houseRooms.count { it.empty }
@@ -63,6 +62,9 @@ class HouseRepositoryImpl @Inject constructor(
 
                 val unpaidAmount = notPaidInvoices.sumOf { it.totalAmount }
 
+                val numberOfNotPaidInvoice = notPaidInvoices.size
+                val numberOfInvoice = houseInvoices.size
+
                 val currentMonthYear =
                     SimpleDateFormat("MM/yyyy", Locale.getDefault()).format(Date())
 
@@ -70,14 +72,22 @@ class HouseRepositoryImpl @Inject constructor(
                     houseInvoices.filter { it.date.endsWith(currentMonthYear) && it.status == InvoiceStatus.PAID }
                         .sumOf { it.totalAmount }
 
+                val monthlyExpense = houseExpenseRecord.filter { it.date.endsWith(currentMonthYear) }
+                    .sumOf { it.totalAmount }
+
                 house.copy(
                     numberOfRoom = numberOfRoom,
                     numberOfEmptyRoom = numberOfEmptyRoom,
                     numberOfNotPaidRoom = numberOfNotPaidRoom,
                     unpaidAmount = unpaidAmount,
-                    monthlyRevenue = monthlyRevenue
+                    monthlyRevenue = monthlyRevenue,
+                    numberOfInvoice = numberOfInvoice,
+                    numberOfNotPaidInvoice = numberOfNotPaidInvoice,
+                    monthlyExpense = monthlyExpense
                 )
             }
+
+            houseList.sortedByDescending { it.createdAt }
 
             if (houseList.isEmpty()) UiState.Empty else UiState.Success(houseList)
 

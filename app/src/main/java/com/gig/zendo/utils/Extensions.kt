@@ -1,5 +1,10 @@
 package com.gig.zendo.utils
 
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.foundation.clickable
+
 import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
@@ -10,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.graphics.createBitmap
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -112,5 +118,43 @@ fun saveBitmapToPictures(context: Context, bitmap: Bitmap, folderName: String = 
         contentValues.clear()
         contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
         contentResolver.update(uri, contentValues, null, null)
+    }
+}
+
+fun Modifier.debounceClickable(
+    debounceInterval: Long = 2000L,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+): Modifier = composed {
+    var lastClickTime by remember { mutableLongStateOf(0L) }
+
+    this.then(
+        Modifier.clickable(enabled = enabled) {
+            val currentTime = System.currentTimeMillis()
+            if (currentTime - lastClickTime > debounceInterval) {
+                lastClickTime = currentTime
+                onClick()
+            }
+        }
+    )
+}
+
+@Composable
+fun rememberDebouncedClick(
+    intervalMs: Long = 1000L,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+): () -> Unit {
+    val latestOnClick by rememberUpdatedState(onClick)
+    var lastClickTime by rememberSaveable { mutableLongStateOf(0L) }
+
+    return {
+        if (enabled) {
+            val now = System.currentTimeMillis()
+            if (now - lastClickTime > intervalMs) {
+                lastClickTime = now
+                latestOnClick()
+            }
+        }
     }
 }

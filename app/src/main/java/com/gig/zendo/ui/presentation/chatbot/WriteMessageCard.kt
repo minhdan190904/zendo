@@ -41,7 +41,7 @@ fun WriteMessageCard(
             },
             placeholder = {
                 Text(
-                    text = "Write your message",
+                    text = "Viết yêu cầu của bạn...",
                     fontWeight = FontWeight.Bold
                 )
             },

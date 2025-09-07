@@ -35,6 +35,9 @@ data class House(
     val numberOfNotPaidRoom: Int = 0,
     val unpaidAmount: Long = 0L,
     val monthlyRevenue: Long = 0L,
+    val numberOfInvoice: Int = 0,
+    val numberOfNotPaidInvoice: Int = 0,
+    val monthlyExpense: Long = 0L
 ){
     companion object {
         const val COLLECTION_NAME = "houses"

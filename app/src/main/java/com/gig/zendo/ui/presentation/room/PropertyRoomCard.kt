@@ -1,25 +1,30 @@
 package com.gig.zendo.ui.presentation.room
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.gig.zendo.R
 import com.gig.zendo.domain.model.Room
 import com.gig.zendo.domain.model.Tenant
-import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.MyPopupMenu
-import com.gig.zendo.ui.common.StatOfProperty
-import com.gig.zendo.ui.presentation.tenant.getAnnotatedString
+import com.gig.zendo.ui.common.SubmitButton
+import com.gig.zendo.ui.presentation.home.InfoPillIconNoBorder   // pill đã sửa có colorBackground
 import com.gig.zendo.utils.RoomMenuAction
 import com.gig.zendo.utils.toMoney
 
@@ -36,135 +41,172 @@ fun PropertyRoomCard(
     onEditRoom: () -> Unit = {},
     onEditTenant: () -> Unit = {},
 ) {
-
-    val actionIfRoomNotEmpty = listOf(
-        RoomMenuAction.Edit,
-        RoomMenuAction.Delete,
-        RoomMenuAction.Invoice,
-        RoomMenuAction.History,
-        RoomMenuAction.CheckOut,
-        RoomMenuAction.TenantDetail,
-        RoomMenuAction.EditTenant
+    val actionsIfOccupied = listOf(
+        RoomMenuAction.Edit, RoomMenuAction.Delete, RoomMenuAction.Invoice,
+        RoomMenuAction.History, RoomMenuAction.CheckOut, RoomMenuAction.TenantDetail, RoomMenuAction.EditTenant
     )
+    val actionsIfVacant = listOf(RoomMenuAction.Edit, RoomMenuAction.Delete, RoomMenuAction.History)
 
-    val actionIfRoomEmpty = listOf(
-        RoomMenuAction.Edit,
-        RoomMenuAction.Delete,
-        RoomMenuAction.History
-    )
+    val hasUnpaidInvoices = room.numberOfNotPaidInvoice > 0
+    val hasDebt = room.outstandingAmount > 0L
 
     Card(
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(8.dp),
-        colors = CardDefaults.cardColors(containerColor = if (tenant != null) Color.White else Color(0xFFF0F0F0)),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
+        shape = RoundedCornerShape(22.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(3.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header row: title + menu
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = room.name,
-                    style = MaterialTheme.typography.titleMedium.copy(color = Color(0xFFFF7043)),
-                    modifier = Modifier.weight(1f)
-                )
+        Column {
 
-                MyPopupMenu(
-                    actions = if (tenant != null) actionIfRoomNotEmpty else actionIfRoomEmpty,
-                ) {
-                    when (it) {
-                        RoomMenuAction.Edit -> {
-                            onEditRoom()
-                        }
-                        RoomMenuAction.Delete -> {
-                            // Handle delete room action
-                        }
-                        RoomMenuAction.Invoice -> {
-                            onCheckAllInvoices()
-                        }
-                        RoomMenuAction.History -> {
-                            onCheckHistory()
-                        }
-                        RoomMenuAction.CheckOut -> {
-                            onCheckOut()
-                        }
-                        RoomMenuAction.TenantDetail -> {
-                            onCheckDetail()
-                        }
-                        RoomMenuAction.EditTenant -> {
-                            onEditTenant()
-                        }
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            if (tenant != null) {
-                val pairOfWeight = Pair(1f, 1f)
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        // Room stats
-                        StatOfProperty(
-                            title = "Người thuê:",
-                            value = tenant.name,
-                            pairOfWeight = pairOfWeight
-                        )
-                        StatOfProperty(
-                            title = "Số điện thoại:",
-                            value = tenant.phone,
-                            pairOfWeight = pairOfWeight
-                        )
-                        //ngay thue
-                        StatOfProperty(
-                            title = "Ngày thuê:",
-                            value = tenant.startDate,
-                            pairOfWeight = pairOfWeight
-                        )
-                        // so hoa don chua thu
-
-
-                        if(room.numberOfNotPaidInvoice > 0) {
-                            StatOfProperty(
-                                title = "Số hóa đơn chưa thu:",
-                                value = room.numberOfNotPaidInvoice.toString(),
-                                pairOfWeight = pairOfWeight,
-                                color = Color(0xFFEF5350)
-                            )
-                        }
-
-                        // so tien con no
-                        StatOfProperty(
-                            title = "Số tiền còn nợ:",
-                            value = room.outstandingAmount.toMoney(),
-                            pairOfWeight = pairOfWeight
-                        )
-                    }
-                }
-
-            } else {
-                Text(text = "Trống", fontWeight = MaterialTheme.typography.bodyMedium.fontWeight, fontSize = 20.sp, color = Color(0xFF666666))
-            }
-
-            Spacer(Modifier.height(12.dp))
-            Row(
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp))
             ) {
-                CustomElevatedButton(onClick = {
-                    if(tenant != null) {
-                        onCreateInvoice()
-                    } else {
-                        onAddTenant()
+                Image(
+                    painter = painterResource(R.drawable.image_room),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                StatusBadgeTranslucent(
+                    text = if (tenant != null) "Đang thuê" else "Trống",
+                    container = if (tenant != null)
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
+                    else
+                        Color.White.copy(alpha = 0.30f),
+                    textColor = if (tenant != null)
+                        MaterialTheme.colorScheme.onPrimary
+                    else
+                        MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(10.dp)
+                )
+            }
+
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = room.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MyPopupMenu(actions = if (tenant != null) actionsIfOccupied else actionsIfVacant) {
+                        when (it) {
+                            RoomMenuAction.Edit -> onEditRoom()
+                            RoomMenuAction.Delete -> { }
+                            RoomMenuAction.Invoice -> onCheckAllInvoices()
+                            RoomMenuAction.History -> onCheckHistory()
+                            RoomMenuAction.CheckOut -> onCheckOut()
+                            RoomMenuAction.TenantDetail -> onCheckDetail()
+                            RoomMenuAction.EditTenant -> onEditTenant()
+                        }
                     }
-                }, text = if(tenant != null) "Tạo hóa đơn" else "Thêm khách")
+                }
+
+                Spacer(Modifier.height(6.dp))
+
+                if (tenant != null) {
+
+                    Column {
+                        InformationRow(imageVector = Icons.Outlined.Person, info = tenant.name)
+                        Spacer(Modifier.height(12.dp))
+                        InformationRow(imageVector = Icons.Outlined.Phone, info = tenant.phone.ifBlank { "—" })
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                        InfoPillIconNoBorder(
+                            icon = R.drawable.ic_bar_chart,
+                            label = "HĐ chưa thu",
+                            value = room.numberOfNotPaidInvoice.toString(),
+                            colorBackground = if (hasUnpaidInvoices)
+                                MaterialTheme.colorScheme.error
+                            else
+                                MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.weight(1f)
+                        )
+                        InfoPillIconNoBorder(
+                            icon = R.drawable.ic_money_off,
+                            label = "Còn nợ",
+                            value = room.outstandingAmount.toMoney(),
+                            colorBackground = if (hasDebt)
+                                MaterialTheme.colorScheme.error
+                            else
+                                MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(Modifier.height(10.dp))
+
+                    InfoPillIconNoBorder(
+                        icon = R.drawable.ic_bar_chart,
+                        label = "Ngày thuê",
+                        value = tenant.startDate.ifBlank { "—" },
+                        colorBackground = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    SubmitButton(
+                        onClick = onCreateInvoice,
+                        text = "Tạo hóa đơn",
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = true
+                    )
+                } else {
+                    Spacer(Modifier.height(12.dp))
+                    SubmitButton(
+                        onClick = onAddTenant,
+                        text = "Thêm khách",
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = true
+                    )
+                }
             }
         }
+    }
+}
 
+@Composable
+private fun StatusBadgeTranslucent(
+    text: String,
+    container: Color,
+    textColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = container
+    ) {
+        Text(
+            text = text,
+            color = textColor,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+        )
+    }
+}
+
+@Composable
+private fun InformationRow(
+    imageVector: ImageVector,
+    info: String
+){
+    Row{
+        Icon(imageVector, null, tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.width(6.dp))
+        Text(
+            info,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1, overflow = TextOverflow.Ellipsis
+        )
     }
 }

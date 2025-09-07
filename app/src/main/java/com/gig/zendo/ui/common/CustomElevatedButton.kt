@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -19,8 +20,8 @@ fun CustomElevatedButton(
     modifier: Modifier = Modifier,
     text: String,
     enabled: Boolean = true,
-    textColor: Color = Color.White,
-    buttonColor: Color = DarkGreen,
+    textColor: Color = MaterialTheme.colorScheme.onSecondary,
+    buttonColor: Color = MaterialTheme.colorScheme.secondary,
     contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
 ) {
     ElevatedButton(

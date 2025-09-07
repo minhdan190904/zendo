@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Zendo</string>
+    <string name="default_web_client_id" translatable="false">608701591996-2jhmd24v69atd6o5esmtv9hfau3iembp.apps.googleusercontent.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">608701591996</string>
+    <string name="google_api_key" translatable="false">AIzaSyAHmJTaZ28Cgcwc-4JVY_82gi_7JcU6W8Y</string>
+    <string name="google_app_id" translatable="false">1:608701591996:android:15e272a2702b22a2953bb9</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyAHmJTaZ28Cgcwc-4JVY_82gi_7JcU6W8Y</string>
+    <string name="google_storage_bucket" translatable="false">zendo-a38a3.firebasestorage.app</string>
+    <string name="project_id" translatable="false">zendo-a38a3</string>
 </resources>

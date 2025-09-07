@@ -9,6 +9,9 @@ import com.gig.zendo.domain.repository.RoomRepository
 import com.gig.zendo.utils.UiState
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -19,8 +22,10 @@ class RoomRepositoryImpl @Inject constructor(
     override suspend fun addAndUpdateRoom(room: Room): UiState<Unit> {
         return try {
             if (room.houseId.isEmpty()) return UiState.Failure("House ID is required")
-            val roomId = room.id.ifEmpty { firestore.collection(Room.COLLECTION_NAME).document().id }
-            firestore.collection(Room.COLLECTION_NAME).document(roomId).set(room.copy(id = roomId)).await()
+            val roomId =
+                room.id.ifEmpty { firestore.collection(Room.COLLECTION_NAME).document().id }
+            firestore.collection(Room.COLLECTION_NAME).document(roomId).set(room.copy(id = roomId))
+                .await()
             UiState.Success(Unit)
         } catch (e: Exception) {
             UiState.Failure(e.message ?: "Failed to add room")
@@ -56,88 +61,73 @@ class RoomRepositoryImpl @Inject constructor(
         }
     }
 
-    //one room can have a tenant behalf for many people of the room at the a time
-    //if room exists, tenant can be null
-    override suspend fun getRoomsWithTenant(houseId: String): UiState<List<Pair<Room, Tenant?>>> {
-        return try {
-            val snapshot = firestore.collection(Room.COLLECTION_NAME)
-                .whereEqualTo(Room.FIELD_HOUSE_ID, houseId)
-                .get()
-                .await()
-
-            val roomsWithTenants = snapshot.documents.mapNotNull { document ->
-                try {
-                    val room = document.toObject<Room>() ?: return@mapNotNull null
-                    val tenantSnapshot = firestore.collection(Tenant.COLLECTION_NAME)
-                        .whereEqualTo(Tenant.FIELD_ROOM_ID, room.id)
-                        .whereEqualTo(Tenant.FIELD_ACTIVE, true)
-                        .get()
-                        .await()
-
-                    val tenant = tenantSnapshot.documents.firstOrNull()?.toObject<Tenant>()
-                    Pair(room, tenant)
-                } catch (e: Exception) {
-                    println("Failed to map document ${document.id}: ${e.message}")
-                    null
-                }
-            }
-
-            if (roomsWithTenants.isEmpty()) UiState.Empty else UiState.Success(roomsWithTenants)
-        } catch (e: Exception) {
-            UiState.Failure(e.message ?: "Failed to fetch rooms with tenants")
-        }
-    }
-
-    //add for rooms is invoice information
-    //    val numberOfNotPaidInvoice: Int = 0,
-    //    val outstandingAmount: Long = 0L,
-    //query invoices and update room information
+    @OptIn(DelicateCoroutinesApi::class)
     override suspend fun getRoomsWithTenants(houseId: String): UiState<List<Pair<Room, List<Tenant>>>> {
         return try {
-            val snapshot = firestore.collection(Room.COLLECTION_NAME)
+            val roomsSnapshot = firestore.collection(Room.COLLECTION_NAME)
                 .whereEqualTo(Room.FIELD_HOUSE_ID, houseId)
                 .get()
                 .await()
 
-            val roomsWithTenants = snapshot.documents.mapNotNull { document ->
-                try {
-                    val room = document.toObject<Room>() ?: return@mapNotNull null
+            val rooms = roomsSnapshot.documents.mapNotNull { it.toObject<Room>() }
+            if (rooms.isEmpty()) return UiState.Empty
 
-                    val invoiceSnapshot = firestore.collection(Invoice.COLLECTION_NAME)
-                        .whereEqualTo(Invoice.FIELD_ROOM_ID, room.id)
+            val roomIds = rooms.map { it.id }.filter { it.isNotEmpty() }
+
+            val chunkSize = 10
+
+            val invoiceDeferred = roomIds.chunked(chunkSize).map { chunk ->
+                GlobalScope.async {
+                    firestore.collection(Invoice.COLLECTION_NAME)
+                        .whereIn(Invoice.FIELD_ROOM_ID, chunk)
                         .whereEqualTo(Invoice.FIELD_INVOICE_STATUS, InvoiceStatus.NOT_PAID)
                         .get()
                         .await()
-
-                    val notPaidInvoices = invoiceSnapshot.documents.mapNotNull { it.toObject<Invoice>() }
-
-                    val numberOfNotPaidInvoice = notPaidInvoices.size
-
-                    val outstandingAmount = notPaidInvoices.sumOf { it.totalAmount }
-
-                    val updatedRoom = room.copy(
-                        numberOfNotPaidInvoice = numberOfNotPaidInvoice,
-                        outstandingAmount = outstandingAmount
-                    )
-
-                    val tenantSnapshot = firestore.collection(Tenant.COLLECTION_NAME)
-                        .whereEqualTo(Tenant.FIELD_ROOM_ID, room.id)
-                        .get()
-                        .await()
-
-                    val tenants = tenantSnapshot.documents.mapNotNull { it.toObject<Tenant>() }
-                    Pair(updatedRoom, tenants)
-                } catch (e: Exception) {
-                    println("Failed to map document ${document.id}: ${e.message}")
-                    null
+                        .documents.mapNotNull { it.toObject<Invoice>() }
                 }
             }
 
-            if (roomsWithTenants.isEmpty()) UiState.Empty else UiState.Success(roomsWithTenants)
+            val tenantDeferred = roomIds.chunked(chunkSize).map { chunk ->
+                GlobalScope.async {
+                    firestore.collection(Tenant.COLLECTION_NAME)
+                        .whereIn(Tenant.FIELD_ROOM_ID, chunk)
+                        .get()
+                        .await()
+                        .documents.mapNotNull { it.toObject<Tenant>() }
+                }
+            }
+
+            val allInvoices = invoiceDeferred
+                .map { it.await() }
+                .flatten()
+
+            val allTenants = tenantDeferred
+                .map { it.await() }
+                .flatten()
+
+            val invoicesByRoom = allInvoices.groupBy { it.roomId }
+            val tenantsByRoom = allTenants.groupBy { it.roomId }
+
+            val result = rooms.map { room ->
+                val notPaid = invoicesByRoom[room.id].orEmpty()
+                val numberOfNotPaidInvoice = notPaid.size
+                val outstandingAmount = notPaid.sumOf { it.totalAmount }
+
+                val updatedRoom = room.copy(
+                    numberOfNotPaidInvoice = numberOfNotPaidInvoice,
+                    outstandingAmount = outstandingAmount
+                )
+
+                val tenants = tenantsByRoom[room.id].orEmpty()
+                Pair(updatedRoom, tenants)
+            }
+
+            UiState.Success(result)
         } catch (e: Exception) {
             UiState.Failure(e.message ?: "Failed to fetch rooms with tenants")
         }
     }
+
 
     //add update room empty = true
     override suspend fun checkOutTenant(tenantId: String, endDate: String): UiState<Unit> {

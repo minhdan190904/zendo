@@ -30,7 +30,8 @@ import com.gig.zendo.domain.model.Role
 @Composable
 fun ChatbotScreen(
     navController: NavController,
-    vm: ChatbotViewModel = viewModel()
+    vm: ChatbotViewModel = viewModel(),
+    houseId: String
 ) {
     val messages by vm.messages.collectAsState()
     var input by remember { mutableStateOf("") }
@@ -44,7 +45,6 @@ fun ChatbotScreen(
 
     Scaffold(
         topBar = { ToolbarMessage { navController.popBackStack() } },
-
         bottomBar = {
             WriteMessageCard(
                 modifier = Modifier
@@ -55,11 +55,12 @@ fun ChatbotScreen(
                 value = input,
                 onValueChange = { input = it },
                 onClickSend = {
-                    vm.send(input.trim())
+                    vm.send(input.trim(), houseId)
                     input = ""
                 }
             )
-        }
+        },
+        modifier = Modifier.padding(bottom = 16.dp)
     ) { innerPadding ->
 
         Column(

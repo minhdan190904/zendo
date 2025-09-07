@@ -18,17 +18,15 @@ import com.gig.zendo.domain.model.Invoice
 import com.gig.zendo.domain.model.Tenant
 import com.gig.zendo.ui.presentation.auth.AuthViewModel
 import com.gig.zendo.ui.presentation.auth.login.GoogleLoginScreen
-import com.gig.zendo.ui.presentation.auth.login.LoginScreen
-import com.gig.zendo.ui.presentation.auth.register.RegisterScreen
 import com.gig.zendo.ui.presentation.chatbot.ChatbotScreen
 import com.gig.zendo.ui.presentation.expense.CreateExpenseRecordScreen
 import com.gig.zendo.ui.presentation.expense.ExpenseRecordScreen
 import com.gig.zendo.ui.presentation.financial_report.FinancialReportScreen
 import com.gig.zendo.ui.presentation.home.CreateHouseScreen
+import com.gig.zendo.ui.presentation.home.HouseOverviewScreen
 import com.gig.zendo.ui.presentation.home.HouseScreen
 import com.gig.zendo.ui.presentation.home.HouseViewModel
 import com.gig.zendo.ui.presentation.home.SupportScreen
-import com.gig.zendo.ui.presentation.instruction.InstructionScreen
 import com.gig.zendo.ui.presentation.invoice.AcceptInvoiceScreen
 import com.gig.zendo.ui.presentation.invoice.CreateInvoiceScreen
 import com.gig.zendo.ui.presentation.invoice.InvoiceDetailScreen
@@ -67,7 +65,7 @@ fun AppNavigation() {
                         "✗" in data.visuals.message -> Color.Red
                         else -> Color.DarkGray
                     },
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    contentColor = Color.White,
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(data.visuals.message)
@@ -83,28 +81,31 @@ fun AppNavigation() {
 
             composable(
                 route = Screens.SplashScreen.route,
+                enterTransition = { scaleIn(initialScale = 0.8f) + fadeIn() },
+                exitTransition = { scaleOut(targetScale = 0.8f) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
             ) {
                 SplashScreen(navController = navController, viewModelAuth = authViewModel)
             }
 
             composable(
-                route = Screens.LoginScreen.route,
-                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
-                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                route = Screens.HouseOverviewScreen.route + "/{houseId}/{houseName}",
+                enterTransition = { scaleIn(initialScale = 0.8f) + fadeIn() },
+                exitTransition = { scaleOut(targetScale = 0.8f) + fadeOut() },
                 popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
                 popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
             ) {
-                LoginScreen(navController = navController, snackbarHostState = snackbarHostState)
+                val houseId = it.arguments?.getString("houseId") ?: ""
+                val houseName = it.arguments?.getString("houseName") ?: ""
+                HouseOverviewScreen(
+                    navController = navController,
+                    houseId = houseId,
+                    viewModelHouse = houseViewModel,
+                    houseName = houseName
+                )
             }
-            composable(
-                route = Screens.RegisterScreen.route,
-                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
-                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
-                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
-                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
-            ) {
-                RegisterScreen(navController = navController, snackbarHostState = snackbarHostState)
-            }
+
             composable(
                 route = Screens.GoogleLoginScreen.route,
                 enterTransition = { scaleIn(initialScale = 0.8f) + fadeIn() },
@@ -113,8 +114,7 @@ fun AppNavigation() {
                 popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
             ) {
                 GoogleLoginScreen(
-                    navController = navController,
-                    snackbarHostState = snackbarHostState
+                    navController = navController
                 )
             }
 
@@ -202,16 +202,6 @@ fun AppNavigation() {
                     viewModelHouse = houseViewModel,
                     houseId = houseId,
                 )
-            }
-
-            composable(
-                route = Screens.InstructionScreen.route,
-                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
-                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
-                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
-                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
-            ) {
-                InstructionScreen(navController = navController)
             }
 
             composable(
@@ -410,18 +400,18 @@ fun AppNavigation() {
                 popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
                 popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
             ) {
-                 SupportScreen(navController = navController)
+                SupportScreen(navController = navController)
             }
 
-            //chatbotscreen
             composable(
-                route = Screens.ChatbotScreen.route,
+                route = Screens.ChatbotScreen.route + "/{houseId}",
                 enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
                 exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
                 popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
                 popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
-            ) {
-                 ChatbotScreen(navController = navController)
+            ) { backStackEntry ->
+                val houseId = backStackEntry.arguments?.getString("houseId") ?: ""
+                ChatbotScreen(navController = navController, houseId = houseId)
             }
         }
     }

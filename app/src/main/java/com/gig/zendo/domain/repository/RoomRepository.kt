@@ -10,9 +10,6 @@ interface RoomRepository {
     suspend fun getRooms(houseId: String): UiState<List<Room>>
     suspend fun deleteRoom(id: String): UiState<Unit>
 
-    //Only one room can have a tenant behalf for many people of the room at the a time
-    suspend fun getRoomsWithTenant(houseId: String): UiState<List<Pair<Room, Tenant?>>>
-
     //Include all tenants in the rooms tented, include active and inactive tenants
     suspend fun getRoomsWithTenants(houseId: String): UiState<List<Pair<Room, List<Tenant>>>>
 

@@ -44,7 +44,8 @@ fun ToolbarMessage(
                 .fillMaxWidth()
                 .background(color = Color.White)
                 .statusBarsPadding()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
                 modifier = Modifier
@@ -57,46 +58,20 @@ fun ToolbarMessage(
             Image(
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
+                    .size(48.dp)
                     .padding(start = 12.dp),
-                painter = painterResource(id = R.drawable.ic_robot),
+                painter = painterResource(id = R.drawable.ic_chat_bot),
                 contentDescription = ""
             )
 
-            Column(
-                modifier = Modifier.padding(start = 20.dp)
-            ) {
-                Text(
-                    text = "Trợ lý ảo Zendes",
-                    fontSize = 20.sp,
-                    color = DarkGreen.copy(alpha = 0.5f),
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp
-                    )
+            Text(
+                text = "Trợ lý ảo Zendes",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 20.sp
                 )
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Row {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterVertically)
-                            .size(6.dp)
-                            .background(color = Color.Green, shape = CircleShape)
-                    )
-
-                    Spacer(modifier = Modifier.width(4.dp))
-
-                    Text(
-                        text = "Online",
-                        color = Color.Green,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp
-                        )
-                    )
-                }
-            }
+            )
         }
 
         HorizontalDivider(

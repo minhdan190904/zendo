@@ -1,5 +1,6 @@
 package com.gig.zendo.ui.presentation.financial_report
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -18,7 +19,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -104,20 +104,25 @@ fun DetailsPieChart(
         verticalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.CenterVertically)
     ) {
         data.forEach { (label, valueColorPair) ->
+            val totalValue = data.values.sumOf { it.first }
+            val percentage = if (totalValue == 0L) 0f else valueColorPair.first * 100f / totalValue
             DetailsPieChartItem(
                 label = label,
                 amount = valueColorPair.first,
-                color = valueColorPair.second
+                color = valueColorPair.second,
+                percentage = percentage
             )
         }
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun DetailsPieChartItem(
     label: String,
     amount: Long,
     color: Color,
+    percentage: Float,
     height: Dp = 10.dp
 ) {
     Surface(
@@ -137,7 +142,7 @@ fun DetailsPieChartItem(
             Column {
                 Text(
                     modifier = Modifier.padding(start = 10.dp),
-                    text = label,
+                    text = label + " (" + String.format("%.1f", percentage) + "%)",
                     fontWeight = FontWeight.Medium,
                     fontSize = 12.sp,
                     color = Color.Black
@@ -151,24 +156,5 @@ fun DetailsPieChartItem(
                 )
             }
         }
-    }
-}
-
-@Preview
-@Composable
-fun PieChartWithCategoryRevenuePreview() {
-    val previewData = mapOf(
-        "Sample-1" to (150L to Color(0xFF4CAF50)),
-        "Sample-2" to (120L to Color(0xFFFF9800)),
-        "Sample-3" to (110L to Color(0xFF2196F3)),
-        "Sample-4" to (170L to Color(0xFFF44336)),
-        "Sample-5" to (120L to Color(0xFF9C27B0)),
-    )
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center
-    ) {
-        PieChartWithCategoryRevenue(data = previewData)
     }
 }

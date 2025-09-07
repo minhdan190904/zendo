@@ -1,53 +1,66 @@
 package com.gig.zendo.ui.presentation.home
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.gig.zendo.R
 import com.gig.zendo.domain.model.House
 import com.gig.zendo.domain.model.User
 import com.gig.zendo.ui.common.ConfirmDialog
-import com.gig.zendo.ui.common.FunctionIcon
 import com.gig.zendo.ui.presentation.auth.AuthViewModel
-import com.gig.zendo.ui.presentation.chatbot.ChatbotScreen
 import com.gig.zendo.ui.presentation.navigation.Screens
-import com.gig.zendo.ui.theme.DarkGreen
 import com.gig.zendo.utils.UiState
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HouseScreen(
     viewModel: HouseViewModel,
@@ -55,34 +68,25 @@ fun HouseScreen(
     navController: NavController,
     snackbarHostState: SnackbarHostState
 ) {
-
     val housesState by viewModel.housesState.collectAsStateWithLifecycle()
     val deleteHouseState by viewModel.deleteHouseState.collectAsStateWithLifecycle()
     val authState by viewModelAuth.authState.collectAsStateWithLifecycle()
-    var currentUser by remember {
-        mutableStateOf<User?>(null)
-    }
 
-    var showDeleteDialog by remember {
-        mutableStateOf<String?>(null)
-    }
-    var showLogoutDialog by remember {
-        mutableStateOf(false)
-    }
+    var currentUser by remember { mutableStateOf<User?>(null) }
+    var showDeleteDialog by remember { mutableStateOf<String?>(null) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
-    val shouldRefresh = navController.currentBackStackEntry
-        ?.savedStateHandle
-        ?.get<Boolean>("shouldRefreshHouses") == true || navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>(
-        "shouldRefreshHouses"
-    ) == true
+    val context = LocalContext.current
+
+    val shouldRefresh =
+        navController.currentBackStackEntry?.savedStateHandle?.get<Boolean>("shouldRefreshHouses") == true ||
+                navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>("shouldRefreshHouses") == true
 
     LaunchedEffect(Unit) {
         currentUser = (viewModelAuth.fetchCurrentUser() as UiState.Success<*>).data as User?
         if (shouldRefresh) {
             viewModel.fetchHouses(currentUser?.uid ?: "")
-            navController.currentBackStackEntry
-                ?.savedStateHandle
-                ?.set("shouldRefreshHouses", false)
+            navController.currentBackStackEntry?.savedStateHandle?.set("shouldRefreshHouses", false)
             navController.previousBackStackEntry?.savedStateHandle?.set(
                 "shouldRefreshHouses",
                 false
@@ -99,187 +103,304 @@ fun HouseScreen(
             }
 
             is UiState.Failure -> {
-                snackbarHostState.showSnackbar("Lỗi xóa nhà trọ: ${(deleteHouseState as UiState.Failure).error} ")
+                snackbarHostState.showSnackbar("Lỗi xóa nhà trọ: ${(deleteHouseState as UiState.Failure).error}")
                 viewModel.clearDeleteState()
             }
 
-            else -> {}
+            else -> Unit
         }
     }
 
     LaunchedEffect(authState) {
         when (authState) {
-            is UiState.Failure -> {
-                snackbarHostState.showSnackbar("Lỗi không đăng xuất được: ${(authState as UiState.Failure).error}")
-            }
-
+            is UiState.Failure -> snackbarHostState.showSnackbar("Lỗi không đăng xuất được: ${(authState as UiState.Failure).error}")
             is UiState.Success -> {
-                navController.navigate(Screens.LoginScreen.route) {
-                    popUpTo(Screens.LoginScreen.route) { inclusive = true }
+                navController.navigate(Screens.GoogleLoginScreen.route) {
+                    popUpTo(0) {
+                        inclusive = true
+                    }
                 }
                 viewModelAuth.clearAuthState()
+                viewModel.clearHousesState()
                 snackbarHostState.showSnackbar("Đăng xuất thành công")
             }
 
-            else -> {
-                // No action needed for loading or empty state
-            }
+            else -> Unit
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Header background and icon
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFFFC0B3))
-        )
+    val colors = MaterialTheme.colorScheme
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Image(
-                painter = painterResource(R.drawable.ic_house),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(200.dp)
-                    .padding(top = 32.dp),
-                contentScale = ContentScale.FillBounds
+    val brandBrush = remember {
+        Brush.linearGradient(
+            listOf(
+                Color(0xFF0D47A1),
+                Color(0xFF1976D2),
+                Color(0xFF42A5F5),
+                Color(0xFF64B5F6),
             )
-            Surface(
-                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-                color = Color.White,
+        )
+    }
+
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    val canInteractWithDrawer by remember {
+        derivedStateOf {
+            drawerState.isClosed && !drawerState.isAnimationRunning
+        }
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerContainerColor = MaterialTheme.colorScheme.surface,
+                drawerContentColor = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.width(300.dp)
+            ) {
+                DrawerHeader(
+                    name = currentUser?.getUsernameByEmail() ?: "",
+                    email = currentUser?.email ?: "",
+                    avatarUrl = currentUser?.imageUrl
+                )
+                Spacer(Modifier.height(8.dp))
+                DRAWER_ITEMS.forEach { item ->
+                    NavigationDrawerItem(
+                        label = { Text(item.title) },
+                        selected = false,
+                        onClick = {
+                            scope.launch {
+                                drawerState.close()
+                            }
+                            navController.navigate(item.route)
+                        },
+                        icon = {
+                            Icon(
+                                painter = painterResource(item.icon),
+                                null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        modifier = Modifier
+                            .padding(NavigationDrawerItemDefaults.ItemPadding)
+                            .clip(RoundedCornerShape(12.dp)),
+                        colors = NavigationDrawerItemDefaults.colors(
+                            selectedContainerColor = Color(0xFFF1E6FF),
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            unselectedContainerColor = Color.Transparent
+                        )
+                    )
+                }
+
+                val context = LocalContext.current
+                val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                val versionName = packageInfo.versionName
+
+                NavigationDrawerItem(
+                    label = { Text("Phiên bản: $versionName") },
+                    selected = false,
+                    onClick = {
+                    },
+                    icon = {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_version),
+                            null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    modifier = Modifier
+                        .padding(NavigationDrawerItemDefaults.ItemPadding)
+                        .clip(RoundedCornerShape(12.dp)),
+                    colors = NavigationDrawerItemDefaults.colors(
+                        selectedContainerColor = Color(0xFFF1E6FF),
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        unselectedContainerColor = Color.Transparent
+                    )
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                NavigationDrawerItem(
+                    label = { Text("Đăng xuất") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        showLogoutDialog = true
+                    },
+                    icon = {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_logout),
+                            contentDescription = "Đăng xuất",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    },
+                    modifier = Modifier
+                        .padding(NavigationDrawerItemDefaults.ItemPadding)
+                        .clip(RoundedCornerShape(12.dp)),
+                    colors = NavigationDrawerItemDefaults.colors(
+                        unselectedContainerColor = Color.Transparent,
+                        unselectedTextColor = MaterialTheme.colorScheme.error,
+                        unselectedIconColor = MaterialTheme.colorScheme.error
+                    )
+                )
+            }
+        }
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        if (canInteractWithDrawer) {
+                                            scope.launch { drawerState.open() }
+                                        }
+                                    },
+                                    enabled = canInteractWithDrawer
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_menu),
+                                        contentDescription = "Menu",
+                                        tint = colors.primary
+                                    )
+                                }
+
+                                Image(
+                                    painter = painterResource(R.drawable.logo_app),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp)
+                                )
+
+                                Text(
+                                    text = "Zendo",
+                                    style = TextStyle(
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                                        brush = brandBrush
+                                    )
+                                )
+                            }
+                        }
+                    }
+                )
+            },
+            floatingActionButton = {
+                if (housesState is UiState.Success || housesState is UiState.Empty)
+                    ExtendedFloatingActionButton(
+                        onClick = {
+                            navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}")
+                        },
+                        icon = {
+                            Icon(
+                                painterResource(R.drawable.ic_add),
+                                contentDescription = null
+                            )
+                        },
+                        text = { Text("Thêm nhà trọ") },
+                        containerColor = colors.secondary,
+                        contentColor = colors.onSecondary
+                    )
+            }
+        ) { padding ->
+            PullToRefreshBox(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(padding),
+                isRefreshing = housesState is UiState.Loading,
+                onRefresh = {
+                    viewModel.fetchHouses(currentUser?.uid ?: "")
+                }
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(IntrinsicSize.Max),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text(
-                            text = "Zendo",
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF7043)
-                        )
-                        Text(
-                            text = "Quản lý nhà trọ thật dễ dàng",
-                            fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(32.dp))
+                when (housesState) {
+                    is UiState.Loading -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                                start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp
+                            )
+                        ) {
+                            items(5) {
+                                PropertyHouseCardShimmer()
+                            }
+                        }
                     }
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp, vertical = 16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = if (housesState is UiState.Success)
-                            Arrangement.Top
-                        else
-                            Arrangement.Center
-                    ) {
+                    is UiState.Failure -> {
+                        Text(
+                            text = "Lỗi tải dữ liệu: ${(housesState as UiState.Failure).error}",
+                            color = colors.error,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(16.dp)
+                        )
+                    }
 
-                        when (housesState) {
-                            is UiState.Empty -> {
-                                IconButton(onClick = { navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}") }) {
-                                    FunctionIcon(
-                                        iconRes = R.drawable.ic_add,
-                                        contentDescription = "Tạo nhà trọ mới"
-                                    )
-                                }
+                    is UiState.Empty -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(24.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "Bạn chưa tạo nhà trọ nào",
+                                style = MaterialTheme.typography.titleMedium,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "Bấm nút “Thêm nhà trọ” ở góc phải để bắt đầu",
+                                color = colors.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
 
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Text(
-                                    text = "Bạn chưa tạo nhà trọ nào",
-                                    fontSize = 14.sp,
-                                    color = Color.Black
-                                )
-
-                                Text(
-                                    text = "Bấm icon + để tạo nhà trọ mới",
-                                    fontSize = 14.sp,
-                                    color = Color.Black
-                                )
-                            }
-
-                            is UiState.Loading -> {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(48.dp),
-                                    color = DarkGreen
-                                )
-                            }
-
-                            is UiState.Failure -> {
-                                Text(
-                                    text = "Lỗi tải dữ liệu: ${(housesState as UiState.Failure).error}",
-                                    color = Color.Red
-                                )
-                            }
-
-                            is UiState.Success -> {
-
-                                IconButton(onClick = { navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}") }) {
-                                    FunctionIcon(
-                                        iconRes = R.drawable.ic_add,
-                                        contentDescription = "Tạo nhà trọ mới"
-                                    )
-                                }
-
-                                val houses = (housesState as UiState.Success<List<House>>).data
-
-                                LazyColumn {
-
-                                    items(houses.size) { index ->
-                                        val house = houses[index]
-                                        PropertyHouseCard(
-                                            house = house,
-                                            onDetailClick = {
-                                                navController.currentBackStackEntry
-                                                    ?.savedStateHandle
-                                                    ?.set("shouldRefreshRooms", true)
-
-                                                navController.navigate(Screens.RoomScreen.route + "/${house.id}" + "/${house.name}")
-                                            },
-                                            onDeleteClick = {
-                                                showDeleteDialog = house.id
-                                            },
-                                            onExportClick = { /* no-op */ },
-                                            onEditClick = {
-                                                viewModel.selectedHouse = house
-                                                navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}")
-                                            },
-                                            onExpenseDetailClick = {
-                                                navController.navigate(Screens.ExpenseRecordScreen.route + "/${house.id}")
-                                            },
-                                            onAddExpenseClick = {
-                                                navController.navigate(Screens.CreateExpenseRecordScreen.route + "/${house.id}")
-                                            },
-                                            onFinancialReportClick = {
-                                                navController.navigate(
-                                                    Screens.FinancialReportScreen.route + "/${house.id}"
-                                                )
-                                            }
+                    is UiState.Success -> {
+                        val houses = (housesState as UiState.Success<List<House>>).data
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                                start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp
+                            )
+                        ) {
+                            items(houses.size) { index ->
+                                val house = houses[index]
+                                PropertyHouseCard(
+                                    house = house,
+                                    onDetailClick = {
+                                        navController.navigate(
+                                            Screens.HouseOverviewScreen.route + "/${house.id}/${house.name}"
                                         )
-                                    }
-                                }
+                                    },
+                                    onDeleteClick = { showDeleteDialog = house.id },
+                                    onEditClick = {
+                                        viewModel.selectedHouse = house
+                                        navController.navigate(Screens.CreateHouseScreen.route + "/${currentUser?.uid}")
+                                    },
+                                )
                             }
                         }
                     }
                 }
             }
         }
-
     }
 
     showDeleteDialog?.let { houseId ->
@@ -300,25 +421,13 @@ fun HouseScreen(
             message = "Bạn có chắc chắn muốn đăng xuất?",
             onConfirm = {
                 showLogoutDialog = false
-                viewModelAuth.logout()
+                viewModelAuth.logout(context)
             },
-            onDismiss = {
-                showLogoutDialog = false
-            }
-        )
-    }
-
-    currentUser?.let {
-        ProfilePopupMenu(
-            onUpgradeProClick = { navController.navigate(Screens.ChatbotScreen.route) },
-            onSupportClick = { navController.navigate(Screens.SupportScreen.route) },
-            onLogoutClick = {
-                showLogoutDialog = true
-            },
-            currentUser = it,
+            onDismiss = { showLogoutDialog = false }
         )
     }
 }
+
 
 fun getBillingDay(day: Int): Int {
     if (day == -1) {

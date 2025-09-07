@@ -22,6 +22,22 @@
           }
         },
         {
+          "client_id": "608701591996-c3oo1k4mangiugup99is9dug38a0l2lj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gig.zendo",
+            "certificate_hash": "553fafec5027f241ddcf7ebba7fb92a738e30fd5"
+          }
+        },
+        {
+          "client_id": "608701591996-ut4prmr13jhbfdil9uit51r8p8tvsuvb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gig.zendo",
+            "certificate_hash": "4552d9b07de4395f654f043cf8f995558d5433b7"
+          }
+        },
+        {
           "client_id": "608701591996-2jhmd24v69atd6o5esmtv9hfau3iembp.apps.googleusercontent.com",
           "client_type": 3
         }

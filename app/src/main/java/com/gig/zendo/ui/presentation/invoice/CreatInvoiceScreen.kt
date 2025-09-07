@@ -18,7 +18,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,13 +26,9 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,7 +55,6 @@ import com.gig.zendo.domain.model.Service
 import com.gig.zendo.domain.model.ServiceRecord
 import com.gig.zendo.ui.common.CustomDateTimePicker
 import com.gig.zendo.ui.common.CustomDisplayImageDialog
-import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.CustomImagePicker
 import com.gig.zendo.ui.common.CustomImagePickerDialog
 import com.gig.zendo.ui.common.CustomLabeledTextField
@@ -68,12 +62,13 @@ import com.gig.zendo.ui.common.CustomLoadingProgress
 import com.gig.zendo.ui.common.ExposedDropdownField
 import com.gig.zendo.ui.common.InputType
 import com.gig.zendo.ui.common.LoadingScreen
+import com.gig.zendo.ui.common.ZendoScaffold
+import com.gig.zendo.ui.common.SubmitButton
 import com.gig.zendo.ui.presentation.navigation.Screens
 import com.gig.zendo.ui.presentation.room.RoomViewModel
 import com.gig.zendo.ui.presentation.service.ServiceViewModel
 import com.gig.zendo.ui.presentation.tenant.StatOfDetailTextHeader
 import com.gig.zendo.ui.presentation.tenant.saveBitmapToCache
-import com.gig.zendo.ui.theme.DarkGreen
 import com.gig.zendo.utils.NavArgUtil
 import com.gig.zendo.utils.UiState
 import com.gig.zendo.utils.getToday
@@ -183,28 +178,9 @@ fun CreateInvoiceScreen(
         viewModelRoom.fetchServiceRecordsByRoomId(roomId = currentTenant.roomId)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Hóa đơn") },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        navController.popBackStack()
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = "Quay lại",
-                            tint = Color.Black,
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black,
-                )
-            )
-        },
-        containerColor = Color.White
+    ZendoScaffold(
+        title = "Tạo hóa đơn",
+        onBack = { navController.popBackStack() },
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -226,13 +202,13 @@ fun CreateInvoiceScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFFFFA598))
+                                .background(MaterialTheme.colorScheme.primary)
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                         ) {
                             Text(
                                 text = "Thông tin hóa đơn",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp),
-                                color = Color.Black
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
 
                         }
@@ -282,15 +258,22 @@ fun CreateInvoiceScreen(
                                         fun setStateForServiceRecordPrevious(
                                             serviceRecord: ServiceRecord
                                         ) {
-                                            numberElectricityPreviousImageUrl = serviceRecord.electricImageUrl
-                                            numberWaterPreviousImageUrl = serviceRecord.waterImageUrl
-                                            numberElectricityPrevious = serviceRecord.numberElectric.toString()
-                                            numberWaterPrevious = serviceRecord.numberWater.toString()
+                                            numberElectricityPreviousImageUrl =
+                                                serviceRecord.electricImageUrl
+                                            numberWaterPreviousImageUrl =
+                                                serviceRecord.waterImageUrl
+                                            numberElectricityPrevious =
+                                                serviceRecord.numberElectric.toString()
+                                            numberWaterPrevious =
+                                                serviceRecord.numberWater.toString()
                                         }
 
                                         LaunchedEffect(serviceRecords) {
-                                            selectedServiceRecordPrevious = if(serviceRecords.size > 1) serviceRecords[1] else serviceRecords.first()
-                                            setStateForServiceRecordPrevious(selectedServiceRecordPrevious)
+                                            selectedServiceRecordPrevious =
+                                                if (serviceRecords.size > 1) serviceRecords[1] else serviceRecords.first()
+                                            setStateForServiceRecordPrevious(
+                                                selectedServiceRecordPrevious
+                                            )
                                         }
 
                                         ExposedDropdownField(
@@ -411,15 +394,20 @@ fun CreateInvoiceScreen(
                                         fun setStateForServiceRecordCurrent(
                                             serviceRecord: ServiceRecord
                                         ) {
-                                            numberElectricityCurrentImageUrl = serviceRecord.electricImageUrl
+                                            numberElectricityCurrentImageUrl =
+                                                serviceRecord.electricImageUrl
                                             numberWaterCurrentImageUrl = serviceRecord.waterImageUrl
-                                            numberElectricityCurrent = serviceRecord.numberElectric.toString()
-                                            numberWaterCurrent = serviceRecord.numberWater.toString()
+                                            numberElectricityCurrent =
+                                                serviceRecord.numberElectric.toString()
+                                            numberWaterCurrent =
+                                                serviceRecord.numberWater.toString()
                                         }
 
                                         LaunchedEffect(serviceRecords) {
                                             selectedServiceRecordCurrent = serviceRecords.first()
-                                            setStateForServiceRecordCurrent(selectedServiceRecordCurrent)
+                                            setStateForServiceRecordCurrent(
+                                                selectedServiceRecordCurrent
+                                            )
                                         }
 
                                         ExposedDropdownField(
@@ -775,34 +763,41 @@ fun CreateInvoiceScreen(
                                     }
 
                                 }
-                                CustomElevatedButton(onClick = {
-                                    val invoice = Invoice(
-                                        tenant = currentTenant,
-                                        date = dateCreateInvoice,
-                                        oldNumberElectric = numberElectricityPrevious.toLongOrNull()
-                                            ?: 0L,
-                                        newNumberElectric = numberElectricityCurrent.toLongOrNull()
-                                            ?: 0L,
-                                        oldNumberWater = numberWaterPrevious.toLongOrNull() ?: 0L,
-                                        newNumberWater = numberWaterCurrent.toLongOrNull() ?: 0L,
-                                        rentService = currentTenant.rentService,
-                                        electricService = currentTenant.electricService,
-                                        waterService = currentTenant.waterService,
-                                        oldElectricImageUrl = numberElectricityPreviousImageUrl,
-                                        newElectricImageUrl = numberElectricityCurrentImageUrl,
-                                        oldWaterImageUrl = numberWaterPreviousImageUrl,
-                                        newWaterImageUrl = numberWaterCurrentImageUrl,
-                                        otherServices = listServiceExtraUsedState,
-                                        note = note,
-                                        totalAmount = total,
-                                        roomId = currentRoom.id,
-                                        houseId = houseId,
-                                        roomName = currentRoom.name,
-                                    )
+                                SubmitButton(
+                                    onClick = {
+                                        val invoice = Invoice(
+                                            tenant = currentTenant,
+                                            date = dateCreateInvoice,
+                                            oldNumberElectric = numberElectricityPrevious.toLongOrNull()
+                                                ?: 0L,
+                                            newNumberElectric = numberElectricityCurrent.toLongOrNull()
+                                                ?: 0L,
+                                            oldNumberWater = numberWaterPrevious.toLongOrNull()
+                                                ?: 0L,
+                                            newNumberWater = numberWaterCurrent.toLongOrNull()
+                                                ?: 0L,
+                                            rentService = currentTenant.rentService,
+                                            electricService = currentTenant.electricService,
+                                            waterService = currentTenant.waterService,
+                                            oldElectricImageUrl = numberElectricityPreviousImageUrl,
+                                            newElectricImageUrl = numberElectricityCurrentImageUrl,
+                                            oldWaterImageUrl = numberWaterPreviousImageUrl,
+                                            newWaterImageUrl = numberWaterCurrentImageUrl,
+                                            otherServices = listServiceExtraUsedState,
+                                            note = note,
+                                            totalAmount = total,
+                                            roomId = currentRoom.id,
+                                            houseId = houseId,
+                                            roomName = currentRoom.name,
+                                        )
 
-                                    viewModel.addInvoice(invoice)
+                                        viewModel.addInvoice(invoice)
 
-                                }, text = "Tạo hóa đơn")
+                                    },
+                                    text = "Tạo hóa đơn",
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                )
                             }
                         }
                     }
@@ -939,8 +934,8 @@ fun CustomCheckBoxExtraService(
         Checkbox(
             checked = checked, onCheckedChange = onCheckedChange,
             colors = CheckboxDefaults.colors(
-                checkedColor = DarkGreen,
-                uncheckedColor = Color.Gray,
+                checkedColor = MaterialTheme.colorScheme.secondary,
+                uncheckedColor = MaterialTheme.colorScheme.onSurface,
             )
         )
         CustomLabeledTextField(

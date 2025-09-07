@@ -77,7 +77,7 @@ fun BarChartWithMonthlyRevenue(
             valuesDouble.forEachIndexed { index, value ->
                 BarWithLabel(
                     value = value,
-                    color = if (value >= 0) DarkGreen else Color(0xFFFFA598),
+                    color = if (value >= 0) DarkGreen else MaterialTheme.colorScheme.error,
                     maxHeight = maxHeight,
                     isSelected = index == selectedBarIndex,
                     onClick = {
@@ -144,7 +144,7 @@ fun BarChartWithMonthlyRevenue(
                         modifier = Modifier
                             .size(10.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFFFA598))
+                            .background(MaterialTheme.colorScheme.error)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
@@ -154,6 +154,17 @@ fun BarChartWithMonthlyRevenue(
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        //* Nhấn vào cột để chuyển đến các tháng tương ứng
+        Text(
+            text = "* Nhấn vào cột để chuyển đến tháng tương ứng",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
     }
 }
 

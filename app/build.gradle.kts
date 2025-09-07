@@ -5,24 +5,40 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
-    id("com.google.dagger.hilt.android") // Di chuyển Hilt vào đây
-    id("com.google.devtools.ksp") version "2.2.10-2.0.2"
+    id("com.google.dagger.hilt.android")
+    id("com.google.devtools.ksp")
 }
+
+val RELEASE_STORE_FILE: String by project
+val RELEASE_STORE_PASSWORD: String by project
+val RELEASE_KEY_ALIAS: String by project
+val RELEASE_KEY_PASSWORD: String by project
 
 android {
     namespace = "com.gig.zendo"
-    compileSdk = 34
+    //noinspection GradleDependency
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.gig.zendo"
-        minSdk = 26
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        minSdk = 23
+        //noinspection OldTargetApi,EditedTargetSdkVersion
+        targetSdk = 35
+        versionCode = 17
+        versionName = "1.1.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
+        }
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file(RELEASE_STORE_FILE)
+            storePassword = RELEASE_STORE_PASSWORD
+            keyAlias = RELEASE_KEY_ALIAS
+            keyPassword = RELEASE_KEY_PASSWORD
         }
     }
 
@@ -34,6 +50,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -42,11 +59,12 @@ android {
     }
     kotlin {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_1_8) // Sửa deprecated jvmTarget
+            jvmTarget.set(JvmTarget.JVM_1_8)
         }
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.15"
@@ -85,11 +103,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-messaging")
-    implementation("com.firebaseui:firebase-ui-auth:8.0.2")
-    implementation("androidx.credentials:credentials:1.3.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
-    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 
     // Dagger Hilt
     implementation("com.google.dagger:hilt-android:2.57")
@@ -117,7 +131,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.3")
 
     // Cloudinary
-    implementation("com.cloudinary:cloudinary-android:2.5.0")
+    implementation("com.cloudinary:cloudinary-android-core:2.5.0")
 
     // Coil
     implementation("io.coil-kt:coil-compose:2.7.0")
@@ -129,6 +143,12 @@ dependencies {
     implementation("com.google.firebase:firebase-functions")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.9.0")
 
-    // ✅ For ai gemini
+    //Firebase ai gemini
     implementation("com.google.firebase:firebase-ai")
+
+    //animation
+    implementation("com.google.accompanist:accompanist-placeholder-material3:0.36.0")
+
+    //update app
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
 }

@@ -11,6 +11,11 @@ import com.gig.zendo.domain.model.House
 import com.gig.zendo.domain.model.Service
 import com.gig.zendo.domain.model.ServiceRecord
 import com.gig.zendo.domain.repository.HouseRepository
+import com.gig.zendo.domain.validation.FieldState
+import com.gig.zendo.domain.validation.HouseFormUiState
+import com.gig.zendo.domain.validation.TextFieldValidator
+import com.gig.zendo.domain.validation.ValidationResult
+import com.gig.zendo.domain.validation.errorOrNull
 import com.gig.zendo.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +62,64 @@ class HouseViewModel @Inject constructor(
     val deleteExpenseRecordState: StateFlow<UiState<Any>> = _deleteExpenseRecordState
 
     var selectedHouse by mutableStateOf<House?>(null)
+
+    private val _houseFormState = MutableStateFlow(HouseFormUiState())
+    val houseFormState: StateFlow<HouseFormUiState> = _houseFormState
+
+    fun initForCreate() {
+        selectedHouse = null
+        _houseFormState.value = HouseFormUiState()
+    }
+
+    fun initForEdit(house: House) {
+        selectedHouse = house
+        val vName = TextFieldValidator.validate(house.name)
+        val vAddr = TextFieldValidator.validate(house.address)
+        _houseFormState.value = HouseFormUiState(
+            name = FieldState(house.name, vName.errorOrNull()),
+            address = FieldState(house.address, vAddr.errorOrNull()),
+            canSubmit = vName is ValidationResult.Valid && vAddr is ValidationResult.Valid
+        )
+    }
+
+    fun onHouseNameChange(newValue: String) {
+        val vName = TextFieldValidator.validate(newValue)
+        val vAddr = TextFieldValidator.validate(_houseFormState.value.address.text)
+        _houseFormState.value = _houseFormState.value.copy(
+            name = FieldState(newValue, vName.errorOrNull()),
+            canSubmit = vName is ValidationResult.Valid && vAddr is ValidationResult.Valid
+        )
+    }
+
+    fun onHouseAddressChange(newValue: String) {
+        val vAddr = TextFieldValidator.validate(newValue)
+        val vName = TextFieldValidator.validate(_houseFormState.value.name.text)
+        _houseFormState.value = _houseFormState.value.copy(
+            address = FieldState(newValue, vAddr.errorOrNull()),
+            canSubmit = vName is ValidationResult.Valid && vAddr is ValidationResult.Valid
+        )
+    }
+
+    fun submitHouse(uid: String) {
+        val form = _houseFormState.value
+
+        _createHouseState.value = UiState.Loading
+
+        val now = System.currentTimeMillis()
+        val house = House(
+            id = selectedHouse?.id ?: "",
+            name = form.name.text.trim(),
+            address = form.address.text.trim(),
+            uid = uid,
+            createdAt = selectedHouse?.createdAt ?: now
+        )
+
+        viewModelScope.launch {
+            val res = houseRepository.addAndUpdateHouse(house)
+            _createHouseState.value = res
+        }
+    }
+
 
     fun updateHouseServices(
         houseId: String,
@@ -150,6 +213,10 @@ class HouseViewModel @Inject constructor(
         viewModelScope.launch {
             _financialReportAllMonth.value = houseRepository.getFinancialReportForAllMonths(houseId = houseId, year = year)
         }
+    }
+
+    fun clearHousesState() {
+        _housesState.value = UiState.Empty
     }
 
     fun clearCreateHouseState() {

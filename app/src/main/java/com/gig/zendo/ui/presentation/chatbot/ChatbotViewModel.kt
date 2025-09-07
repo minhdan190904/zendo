@@ -14,26 +14,28 @@ class ChatbotViewModel : ViewModel() {
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages
 
-    fun send(prompt: String) {
+    fun send(prompt: String, houseId: String) {
         if (prompt.isBlank()) return
 
-        _messages.value += ChatMessage(role = Role.USER, text = prompt)
-        _messages.value += ChatMessage(role = Role.BOT, text = "")
+        // 1) Append user + bot placeholder
+        val userMsg = ChatMessage(role = Role.USER, text = prompt)
+        val botPlaceholder = ChatMessage(role = Role.BOT, text = "")
+
+        _messages.value = _messages.value + userMsg + botPlaceholder
 
         viewModelScope.launch {
-            val builder = StringBuilder()
-            ChatRemoteDataSource.chatStream(prompt).collect { chunk ->
-                builder.append(chunk)
-                val botMsg = ChatMessage(role = Role.BOT, text = builder.toString())
+            // 2) Gọi non-stream (trả về String), có try/catch trong ChatRemoteDataSource
+            val reply = ChatRemoteDataSource.chatOnce(prompt, houseId)
 
-                //replace the last bot message with the updated text
-                _messages.value = _messages.value.map { msg ->
-                    if (msg.role == Role.BOT && msg.text.isEmpty()) {
-                        botMsg
-                    } else {
-                        msg
-                    }
-                }
+            // 3) Tìm placeholder BOT rỗng cuối cùng để thay nội dung
+            val current = _messages.value.toMutableList()
+            val idx = current.indexOfLast { it.role == Role.BOT && it.text.isEmpty() }
+            if (idx >= 0) {
+                current[idx] = ChatMessage(role = Role.BOT, text = reply)
+                _messages.value = current
+            } else {
+                // Phòng hờ: nếu không tìm thấy placeholder (đã bị thay đổi do race condition)
+                _messages.value = _messages.value + ChatMessage(role = Role.BOT, text = reply)
             }
         }
     }

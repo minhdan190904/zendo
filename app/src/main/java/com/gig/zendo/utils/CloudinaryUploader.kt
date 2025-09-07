@@ -2,7 +2,6 @@ package com.gig.zendo.utils
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import com.cloudinary.Cloudinary
 import com.cloudinary.utils.ObjectUtils
 import kotlinx.coroutines.Dispatchers

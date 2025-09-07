@@ -1,37 +1,12 @@
 package com.gig.zendo.ui.presentation.room
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,55 +15,42 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.gig.zendo.domain.model.Room
 import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.LoadingScreen
+import com.gig.zendo.ui.common.ZendoScaffold
+import com.gig.zendo.ui.common.SubmitButton
+import com.gig.zendo.utils.MaxLengthTextFields
 import com.gig.zendo.utils.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateRoomScreen(
     navController: NavController,
-    viewModel: RoomViewModel,
+    viewModel: RoomViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState,
     houseId: String? = null,
 ) {
-    var roomName by remember { mutableStateOf("") }
+    val form by viewModel.roomFormState.collectAsStateWithLifecycle()
     val createRoomState by viewModel.createRoomState.collectAsStateWithLifecycle()
-    var selectedRoom = viewModel.selectedRoom
+    val selectedRoom = viewModel.selectedRoom
 
     LaunchedEffect(selectedRoom) {
-        selectedRoom?.let {
-            roomName = it.name
+        if (selectedRoom == null) {
+            viewModel.initForCreate()
+        } else {
+            viewModel.initForEdit(selectedRoom)
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(if (selectedRoom == null) "Tạo phòng" else "Chỉnh sửa phòng") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = "Quay lại",
-                            tint = Color.Black,
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black,
-                )
-            )
-        },
-        containerColor = Color.White
+    ZendoScaffold(
+        title = if (selectedRoom == null) "Tạo phòng trọ" else "Chỉnh sửa phòng trọ",
+        onBack = { navController.popBackStack() }
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             Card(
@@ -99,15 +61,14 @@ fun CreateRoomScreen(
                     .align(Alignment.TopCenter)
             ) {
                 Column {
-                    // Header màu hồng
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFFFFA598))
+                            .background(MaterialTheme.colorScheme.primary)
                             .padding(vertical = 12.dp, horizontal = 16.dp)
                     ) {
                         Text(
-                            text = "Thông tin nhà",
+                            text = "Thông tin phòng",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp),
                             color = Color.Black
                         )
@@ -121,45 +82,30 @@ fun CreateRoomScreen(
                     ) {
                         CustomLabeledTextField(
                             label = "Tên phòng",
-                            value = roomName,
-                            onValueChange = { roomName = it },
+                            value = form.name.text,
+                            onValueChange = viewModel::onRoomNameChange,
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             useInternalLabel = false,
                             placeholder = "Ví dụ: Phòng 101",
+                            maxLength = MaxLengthTextFields.MAX_LENGTH_ROOM_NAME,
+                            errorMessage = form.name.error
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        Button(
-                            onClick = {
-                                viewModel.addAndUpdateRoom(
-                                    Room(
-                                        id = selectedRoom?.id ?: "",
-                                        name = roomName,
-                                        houseId = houseId ?: "",
-                                        createdAt = selectedRoom?.createdAt
-                                            ?: System.currentTimeMillis(),
-                                    )
-                                )
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00796B)),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier
-                                .height(48.dp)
-                                .align(Alignment.CenterHorizontally)
-                        ) {
-                            Text(
-                                "Lưu lại",
-                                color = Color.White,
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
+                        SubmitButton(
+                            text = if (selectedRoom == null) "Lưu lại" else "Cập nhật",
+                            onClick = { viewModel.updateRoom(houseId = houseId ?: "") },
+                            enabled = form.canSubmit && createRoomState !is UiState.Loading,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }
         }
     }
+
     LoadingScreen(isLoading = createRoomState is UiState.Loading)
 
     LaunchedEffect(createRoomState) {
@@ -168,22 +114,19 @@ fun CreateRoomScreen(
                 navController.previousBackStackEntry
                     ?.savedStateHandle
                     ?.set("shouldRefreshRooms", true)
+
                 val notification =
                     if (selectedRoom == null) "✓ Tạo phòng trọ thành công!" else "✓ Cập nhật phòng trọ thành công!"
-                viewModel.selectedRoom = null
+
+                // reset
                 viewModel.clearCreateRoomState()
                 navController.popBackStack()
                 snackbarHostState.showSnackbar(notification)
             }
-
-            is UiState.Failure -> snackbarHostState.showSnackbar(
-                ("✗ " +
-                        state.error)
-            )
-
-            is UiState.Loading, UiState.Empty -> {
-                // Do nothing while loading or empty state
+            is UiState.Failure -> {
+                snackbarHostState.showSnackbar("✗ ${state.error}")
             }
+            is UiState.Loading, UiState.Empty -> Unit
         }
     }
 }

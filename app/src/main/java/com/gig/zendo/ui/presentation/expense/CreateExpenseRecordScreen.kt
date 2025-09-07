@@ -14,21 +14,14 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,6 +44,7 @@ import com.gig.zendo.ui.common.CustomElevatedButton
 import com.gig.zendo.ui.common.CustomLabeledTextField
 import com.gig.zendo.ui.common.InputType
 import com.gig.zendo.ui.common.LoadingScreen
+import com.gig.zendo.ui.common.ZendoScaffold
 import com.gig.zendo.ui.presentation.home.HouseViewModel
 import com.gig.zendo.ui.theme.DarkGreen
 import com.gig.zendo.utils.UiState
@@ -75,32 +69,17 @@ fun CreateExpenseRecordScreen(
 
     val createState by viewModelHouse.createExpenseRecordState.collectAsStateWithLifecycle()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Thêm chi phí") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = "Quay lại",
-                            tint = Color.Black,
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black,
-                )
-            )
-        },
-        containerColor = Color.White
+    ZendoScaffold(
+        title = "Thêm chi phí mới",
+        onBack = {
+            navController.popBackStack()
+        }
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             Card(
@@ -114,7 +93,7 @@ fun CreateExpenseRecordScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFFFFA598))
+                            .background(MaterialTheme.colorScheme.primary)
                             .padding(vertical = 12.dp, horizontal = 16.dp)
                     ) {
                         Text(
@@ -166,19 +145,26 @@ fun CreateExpenseRecordScreen(
                             ExpenseItem(
                                 expense = expense,
                                 onValueChange = { description, amount ->
-                                    otherExpenses = otherExpenses.toMutableList().apply {
-                                        this[index] =
-                                            expense.copy(description = description, amount = amount)
+                                    // ✅ GUARD index
+                                    if (index in otherExpenses.indices) {
+                                        otherExpenses = otherExpenses.toMutableList().apply {
+                                            this[index] = expense.copy(description = description, amount = amount)
+                                        }
+                                        total = otherExpenses.sumOf { it.amount }
                                     }
-                                    total = otherExpenses.sumOf { it.amount }
                                 },
                                 onDelete = {
-                                    otherExpenses =
-                                        otherExpenses.toMutableList().apply { removeAt(index) }
-                                    total = otherExpenses.sumOf { it.amount }
+                                    // ✅ GUARD index
+                                    if (index in otherExpenses.indices) {
+                                        otherExpenses = otherExpenses.toMutableList().apply {
+                                            removeAt(index)
+                                        }
+                                        total = otherExpenses.sumOf { it.amount }
+                                    }
                                 }
                             )
                         }
+
 
                         Button(
                             onClick = {

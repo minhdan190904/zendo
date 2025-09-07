@@ -1,80 +1,91 @@
 package com.gig.zendo.data.remote
 
-import com.gig.zendo.domain.model.toUser
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.functions.StreamResponse
 import com.google.firebase.functions.functions
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.tasks.await
-import timber.log.Timber
 
 object ChatRemoteDataSource {
 
     private val functions = Firebase.functions("us-central1")
-    val userCurrent = FirebaseAuth.getInstance().currentUser?.toUser()
-        ?: throw IllegalStateException("User not authenticated")
 
-    /* -------------------- helper pretty() -------------------- */
     private fun Map<*, *>?.pretty(): String {
         if (this == null) return "(no data)"
         val sb = StringBuilder()
 
-        (this["message"]?.toString())?.let { sb.append(it) }
+        val message = this["message"]?.toString()
+        val itemType = this["itemType"]?.toString()
+        val items = this["items"] as? List<*>
 
-        fun appendList(key: String) {
-            val list = this[key] as? List<*> ?: return
-            if (list.isEmpty()) return
-            sb.append("\n\n$key:")
-            list.forEach { item ->
-                sb.append("\n• ").append(item.toString())
-            }
-        }
-        appendList("houses")
-        appendList("rooms")
-        appendList("tenants")
-        appendList("invoices")
+        if (!message.isNullOrBlank()) sb.append(message)
 
-        return sb.toString()
-    }
-
-    /* -------------------- payload -------------------- */
-    private fun makePayload(prompt: String) = mapOf(
-        "text" to prompt,
-        "uid"  to userCurrent.uid
-    )
-
-    /* -------------------- STREAM -------------------- */
-    fun chatStream(prompt: String): Flow<String> = flow {
-        val callable = functions.getHttpsCallable("aiChatGemini")
-        callable.stream(makePayload(prompt))
-            .asFlow()
-            .collect { resp ->
-                when (resp) {
-                    is StreamResponse.Message -> {
-                        val chunk = (resp.message.data as? Map<*, *>)?.pretty()
-                            ?: resp.message.data.toString()
-                        emit(chunk)
+        if (!items.isNullOrEmpty()) {
+            when (itemType) {
+                "room" -> {
+                    sb.append("\n")
+                    items.filterIsInstance<Map<*, *>>().forEach { m ->
+                        val label = m["label"]?.toString() ?: "Phòng"
+                        val price = m["price"]?.toString()
+                        val empty = m["empty"] == true
+                        sb.append("\n• ").append(label)
+                        if (empty) sb.append(" (trống)")
+                        if (!price.isNullOrBlank()) sb.append(" – ").append(price)
                     }
-                    is StreamResponse.Result -> {
-                        val final = (resp.result.data as? Map<*, *>)?.pretty()
-                            ?: resp.result.data.toString()
-                        emit(final)
+                }
+                "tenant" -> {
+                    sb.append("\n")
+                    items.filterIsInstance<Map<*, *>>().forEach { m ->
+                        val name = m["name"]?.toString() ?: "Người thuê"
+                        val room = m["room"]?.toString()
+                        val occ = (m["occupants"] as? Number)?.toInt() ?: 1
+                        sb.append("\n• ").append(name)
+                        if (!room.isNullOrBlank()) sb.append(" – ").append(room)
+                        if (occ > 1) sb.append(" (").append(occ).append(" người)")
+                    }
+                }
+                "invoice" -> {
+                    sb.append("\n")
+                    items.filterIsInstance<Map<*, *>>().forEach { m ->
+                        val room = m["room"]?.toString() ?: "Phòng"
+                        val amt = m["amount"]?.toString() ?: ""
+                        val st = m["status"]?.toString()
+                        sb.append("\n• ").append(room).append(": ").append(amt)
+                        if (!st.isNullOrBlank()) sb.append(" (").append(st).append(")")
+                    }
+                }
+                "unpaid-group" -> {
+                    sb.append("\n")
+                    items.filterIsInstance<Map<*, *>>().forEach { m ->
+                        val room = m["room"]?.toString() ?: "Phòng"
+                        val count = (m["count"] as? Number)?.toInt() ?: 0
+                        val total = m["total"]?.toString()
+                        sb.append("\n• ").append(room)
+                            .append(": ").append(count).append(" hoá đơn")
+                        if (!total.isNullOrBlank()) sb.append(" – tổng ").append(total)
                     }
                 }
             }
+        }
+
+        return if (sb.isNotEmpty()) sb.toString() else "(no data)"
     }
 
-    /* -------------------- ONCE -------------------- */
-    suspend fun chatOnce(prompt: String): String {
-        val result = functions
-            .getHttpsCallable("aiChatGemini")
-            .call(makePayload(prompt))
-            .await()
-            .data as? Map<*, *>
+    private fun payload(prompt: String, houseId: String) = mapOf(
+        "text" to prompt,
+        "houseId" to houseId
+    )
 
-        return result.pretty()
+    /** Gọi 1 lần (non-stream), đã try/catch để không làm app văng. */
+    suspend fun chatOnce(prompt: String, houseId: String): String {
+        return try {
+            val data = functions
+                .getHttpsCallable("aiChatGemini")
+                .call(payload(prompt, houseId))
+                .await()
+                .data as? Map<*, *>
+
+            data.pretty()
+        } catch (e: Exception) {
+            "Lỗi máy chủ: ${e.message ?: "không rõ"}"
+        }
     }
 }

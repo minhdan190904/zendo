@@ -179,14 +179,14 @@ fun SortFilterBottomSheet(
                 OutlinedButton(
                     onClick = onReset,
                     modifier = Modifier.weight(1f)
-                ) { Text("Reset") }
+                ) { Text("Đặt lại") }
 
                 Button(
                     onClick = {
                         onApply(RoomSortState(selectedSort, ascending), f)
                     },
                     modifier = Modifier.weight(2f)
-                ) { Text("Apply") }
+                ) { Text("Áp dụng") }
             }
         }
     }

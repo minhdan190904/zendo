@@ -1,3 +1,4 @@
+// file: com/gig/zendo/ui/common/CustomLabeledTextField.kt
 package com.gig.zendo.ui.common
 
 import androidx.compose.foundation.layout.Column
@@ -23,9 +24,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-enum class InputType {
-    TEXT, NUMBER, ALPHANUMERIC, EMAIL, PASSWORD, MONEY
-}
+enum class InputType { TEXT, NUMBER, ALPHANUMERIC, EMAIL, PASSWORD, MONEY }
 
 class MoneyVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
@@ -37,20 +36,15 @@ class MoneyVisualTransformation : VisualTransformation {
 
         val offsetMapping = object : OffsetMapping {
             override fun originalToTransformed(offset: Int): Int {
-                val commasBefore = (offset - 1) / 3
+                val commasBefore = (offset - 1).coerceAtLeast(0) / 3
                 return offset + commasBefore
             }
-
             override fun transformedToOriginal(offset: Int): Int {
-                val commasBefore = (offset - 1) / 4
-                return offset - commasBefore
+                val commasBefore = (offset - 1).coerceAtLeast(0) / 4
+                return (offset - commasBefore).coerceAtLeast(0)
             }
         }
-
-        return TransformedText(
-            text = AnnotatedString(formattedText),
-            offsetMapping = offsetMapping
-        )
+        return TransformedText(AnnotatedString(formattedText), offsetMapping)
     }
 }
 
@@ -71,14 +65,11 @@ fun CustomLabeledTextField(
     heightSize: Int = 56,
     readOnly: Boolean = false,
     trailingIcon: @Composable (() -> Unit)? = null,
+    maxLength: Int = Int.MAX_VALUE,
 ) {
     Column(modifier = modifier) {
         if (!useInternalLabel) {
-            Text(
-                text = label,
-                style = labelStyle,
-                color = labelColor
-            )
+            Text(text = label, style = labelStyle, color = labelColor)
             Spacer(modifier = Modifier.height(4.dp))
         }
         OutlinedTextField(
@@ -86,33 +77,28 @@ fun CustomLabeledTextField(
             onValueChange = { newValue ->
                 if (onValueChange != null && enabled) {
                     when (inputType) {
-                        InputType.TEXT -> {
-                            onValueChange(newValue)
+                        InputType.TEXT, InputType.EMAIL, InputType.PASSWORD, InputType.ALPHANUMERIC -> {
+                            if (newValue.length <= maxLength) {
+                                onValueChange(newValue)
+                            }
                         }
                         InputType.NUMBER, InputType.MONEY -> {
-                            if(newValue.isEmpty()){
+                            if (newValue.isEmpty()) {
                                 onValueChange("")
-                            }
-                            else if (newValue.all { it.isDigit()}) {
+                            } else if (newValue.all { it.isDigit() } && newValue.length <= maxLength) {
                                 onValueChange(newValue)
                             }
-                        }
-                        InputType.ALPHANUMERIC -> {
-                            if (newValue.all { it.isLetterOrDigit() || it.isWhitespace() }) {
-                                onValueChange(newValue)
-                            }
-                        }
-                        InputType.EMAIL, InputType.PASSWORD -> {
-                            onValueChange(newValue)
                         }
                     }
                 }
             },
-            modifier = Modifier.fillMaxWidth().height(heightSize.dp),
-            placeholder = if (placeholder.isNotEmpty()) { { Text(placeholder) } } else null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(heightSize.dp),
+            placeholder = if (placeholder.isNotEmpty()) ({ Text(placeholder) }) else null,
             singleLine = singleLine,
             enabled = enabled,
-            label = if (useInternalLabel) { { Text(label, style = labelStyle, color = labelColor) } } else null,
+            label = if (useInternalLabel) ({ Text(label, style = labelStyle, color = labelColor) }) else null,
             keyboardOptions = KeyboardOptions(
                 keyboardType = when (inputType) {
                     InputType.TEXT, InputType.ALPHANUMERIC -> KeyboardType.Text
@@ -153,3 +139,4 @@ fun CustomLabeledTextField(
         }
     }
 }
+

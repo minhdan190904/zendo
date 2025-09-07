@@ -128,18 +128,3 @@ fun SearchBar(
         }
     }
 }
-
-@Composable
-@Preview
-fun SearchBarPreview() {
-    SearchBar(
-        hint = "Search here...",
-        modifier = Modifier.fillMaxWidth(),
-        height = Dimens.dp40,
-        elevation = Dimens.dp3,
-        cornerShape = RoundedCornerShape(Dimens.dp8),
-        backgroundColor = Color.White,
-        onSearchClicked = { /* Handle search click */ },
-        onTextChange = { /* Handle text change */ }
-    )
-}
