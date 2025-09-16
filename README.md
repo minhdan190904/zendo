@@ -43,8 +43,6 @@
   <img src="https://github.com/user-attachments/assets/d39f003d-8b5b-40a9-9c42-71abe723810b" alt="Notifications" width="280">
 </div>
 
-> *Ảnh chỉ minh họa: một số màn hình có thể thay đổi nhẹ theo từng phiên bản.*
-
 ---
 
 ## 🏗️ Cấu trúc dự án (rút gọn)
