@@ -37,9 +37,10 @@
   <br/>
   <img src="https://github.com/user-attachments/assets/88730595-e6f3-4a35-a380-c69ec4f61180" alt="Forms" width="280">
   <img src="https://github.com/user-attachments/assets/533fb319-6afa-4761-9b43-5b3b1810d0f5" alt="Room/Tenant" width="280">
+    <br/>
   <img src="https://github.com/user-attachments/assets/747c33b7-0ecb-4858-b4a3-7051a5bfe187" alt="Invoices" width="280">
-  <br/>
   <img src="https://github.com/user-attachments/assets/26e6c29c-b3f1-4104-84b4-88cfd4c090df" alt="AI Assistant" width="280">
+    <br/>
   <img src="https://github.com/user-attachments/assets/d39f003d-8b5b-40a9-9c42-71abe723810b" alt="Notifications" width="280">
 </div>
 
