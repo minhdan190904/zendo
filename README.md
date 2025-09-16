@@ -32,7 +32,6 @@
 ## 📸 Screenshots
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/345251ab-7b1c-4548-b219-64747c6f57f5" alt="Overview" width="280">
   <img src="https://github.com/user-attachments/assets/8d9e2c0f-053a-4532-b330-403d188c857f" alt="List & Detail" width="280">
   <img src="https://github.com/user-attachments/assets/fb64f6cd-fb09-41c1-9857-acdbf0a0cc40" alt="Charts" width="280">
   <br/>
