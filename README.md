@@ -1,6 +1,3 @@
-# Create a README file for the user's Zendo project with embedded screenshots
-
-readme = """
 # Zendo — Rental Management App (Android, Jetpack Compose)
 
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.9+-blue)](#)
@@ -29,7 +26,6 @@ readme = """
 - **Dữ liệu**: Firebase Firestore (NoSQL), Cloud Storage
 - **Xác thực**: Firebase Auth (Email/Google)
 - **Notification & Logic**: Firebase Cloud Functions, FCM
-- **Khác**: Retrofit/OkHttp, Coil/Glide (tải ảnh), Timber/Logger, WorkManager (tác vụ nền)
 
 ---
 
