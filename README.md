@@ -9,6 +9,11 @@
 
 ---
 
+## 📱 Download & Testing
+
+[![Join Testers](https://img.shields.io/badge/Join-Tester%20Group-blue)](https://groups.google.com/g/testerappzendo)
+[![Google Play](https://img.shields.io/badge/Download-Google%20Play-brightgreen?logo=googleplay)](https://play.google.com/store/apps/details?id=com.gig.zendo)  
+
 ## ✨ Chức năng chính
 - Quản lý **nhà, phòng, khách thuê, hóa đơn, dịch vụ**.
 - **Báo cáo & thống kê** theo biểu đồ Bar/Pie.
