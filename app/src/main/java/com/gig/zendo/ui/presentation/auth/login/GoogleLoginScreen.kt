@@ -2,7 +2,6 @@ package com.gig.zendo.ui.presentation.auth.login
 
 import android.app.Activity
 import android.content.Context
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -37,6 +36,7 @@ import com.gig.zendo.ui.presentation.auth.AuthViewModel
 import com.gig.zendo.ui.presentation.navigation.Screens
 import com.gig.zendo.utils.GoogleSignInHelper
 import com.gig.zendo.utils.UiState
+import timber.log.Timber
 
 @Composable
 fun GoogleLoginScreen(
@@ -45,29 +45,34 @@ fun GoogleLoginScreen(
 ) {
     val context: Context = LocalContext.current
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     // Legacy GoogleSignIn client
     val googleClient = remember(context) { GoogleSignInHelper.getClient(context) }
 
-    // Nhận kết quả đăng nhập
     val googleLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            try {
-                val idToken = GoogleSignInHelper.extractIdToken(result.data)
-                authViewModel.loginWithGoogleIdToken(idToken)
-            } catch (e: Exception) {
-                authViewModel.onAuthFailure("Google Sign-In error: ${e.message}")
-            }
-        } else {
-            authViewModel.onAuthFailure("Sign-In cancelled (code=${result.resultCode})")
+        val data = result.data
+        val task = com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(data)
+        try {
+            val account = task.getResult(com.google.android.gms.common.api.ApiException::class.java)
+            val idToken = account.idToken
+            authViewModel.loginWithGoogleIdToken(idToken!!)
+        } catch (e: com.google.android.gms.common.api.ApiException) {
+            authViewModel.onAuthFailure("Google Sign-In failed: status=${e.statusCode} msg=${e.message}")
+            Timber.e(e, "Google Sign-In failed: status=${e.statusCode}")
+        } catch (e: Exception) {
+            authViewModel.onAuthFailure("Google Sign-In error: ${e.message}")
+            Timber.e(e, "Google Sign-In error")
         }
     }
 
+
     LaunchedEffect(authState) {
-        when (authState) {
+        when (val currentState = authState) {
             is UiState.Success -> {
+                errorMessage = null
                 navController.navigate(Screens.HouseScreen.route) {
                     popUpTo(Screens.GoogleLoginScreen.route) { inclusive = true }
                 }
@@ -75,7 +80,9 @@ fun GoogleLoginScreen(
                     .savedStateHandle["shouldRefreshHouses"] = true
             }
             is UiState.Failure -> {
-                Log.i("GoogleLoginScreen", "Login failed: ${(authState as UiState.Failure).error}")
+                val error = currentState.error
+                errorMessage = error
+                Timber.e("Login failed: $error")
             }
             else -> Unit
         }
@@ -134,16 +141,37 @@ fun GoogleLoginScreen(
             )
             Spacer(Modifier.height(56.dp))
 
-            // NÚT GOOGLE – legacy flow
+            // Google Sign-In Button
             GoogleButton(
                 onClick = {
+                    errorMessage = null
                     authViewModel.beginGoogleLogin()
-                    // (tuỳ chọn) luôn hiện chọn tài khoản:
-                    // googleClient.signOut().addOnCompleteListener { googleLauncher.launch(googleClient.signInIntent) }
                     googleLauncher.launch(googleClient.signInIntent)
                 },
                 isLoading = authState is UiState.Loading
             )
+
+            // Error message display
+            errorMessage?.let { error ->
+                Spacer(Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.Red.copy(alpha = 0.2f)
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = error,
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(16.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
 
             Spacer(Modifier.height(26.dp))
             Text(

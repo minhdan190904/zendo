@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "608701591996-ujhooed95td664273j9kc2qn85pjpftm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gig.zendo",
+            "certificate_hash": "9d7c93f007dbfc6fcac4e390069341a5ae4f7058"
+          }
+        },
+        {
           "client_id": "608701591996-ut4prmr13jhbfdil9uit51r8p8tvsuvb.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
