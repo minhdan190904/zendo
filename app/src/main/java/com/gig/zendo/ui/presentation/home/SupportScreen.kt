@@ -36,7 +36,7 @@ import androidx.core.net.toUri
 import androidx.navigation.NavController
 
 private const val SUPPORT_EMAIL = "minhdan190904@gmail.com"
-private const val PRIVACY_URL = "https://minhdan190904.github.io/zendo-privacy/"
+private const val PRIVACY_URL = "hhttps://tranminhdancnttva2.github.io/zendo-privacy/"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
