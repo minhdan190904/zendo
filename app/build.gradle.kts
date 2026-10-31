@@ -17,15 +17,15 @@ val RELEASE_KEY_PASSWORD: String by project
 android {
     namespace = "com.gig.zendo"
     //noinspection GradleDependency
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.gig.zendo"
-        minSdk = 23
+        minSdk = 24
         //noinspection OldTargetApi,EditedTargetSdkVersion
-        targetSdk = 35
-        versionCode = 29
-        versionName = "1.2.8"
+        targetSdk = 36
+        versionCode = 32
+        versionName = "1.3.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
